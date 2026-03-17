@@ -1,47 +1,80 @@
-# Taskly — Productivity Tracker Walkthrough
+# Flux: Productivity Companion
 
-## What Was Built
+A modern, minimalist productivity tracker with a Pomodoro timer, task management, and real-time progress tracking. Built as a fully installable PWA — works offline and can be added to your home screen.
 
-Overhauled the todo app into a full-featured productivity tracker called **Taskly**, across three files:
+🌐 **Live app:** [yuvrajkap22.github.io/todo-list-app](https://yuvrajkap22.github.io/todo-list-app/)
 
-| File | Key Changes |
-|------|-------------|
-| [index.html](file:///Users/yuvrajkapoor/Documents/GitHub/todo-list-app/index.html) | Branded header, theme toggle, Pomodoro timer with circular ring, keyboard shortcuts overlay, progress bar, filter tabs, empty state |
-| [style.css](file:///Users/yuvrajkapoor/Documents/GitHub/todo-list-app/style.css) | Dual dark/light theme via CSS custom properties. Colors: sky blue (focus), green (growth), warm amber (energy), soft red (urgency). Glassmorphism, micro-animations, responsive layout |
-| [script.js](file:///Users/yuvrajkapoor/Documents/GitHub/todo-list-app/script.js) | Pomodoro timer (25/5 min cycles with audio notification), per-task focus linking, theme toggle, keyboard shortcuts, task CRUD, progress tracking, localStorage persistence |
+---
 
-## Design
+## ✨ Features
 
-````carousel
-![Dark mode — initial state with Pomodoro timer and empty task list](/Users/yuvrajkapoor/.gemini/antigravity/brain/16541b0f-cafd-4483-b97a-76b9998d10f9/initial_dark_mode_1773773325955.png)
-<!-- slide -->
-![Dark mode — tasks added with 33% progress, completed task strikethrough](/Users/yuvrajkapoor/.gemini/antigravity/brain/16541b0f-cafd-4483-b97a-76b9998d10f9/task_marked_done_dark_mode_1773773378120.png)
-<!-- slide -->
-![Light mode — same state in clean light theme](/Users/yuvrajkapoor/.gemini/antigravity/brain/16541b0f-cafd-4483-b97a-76b9998d10f9/light_mode_state_1773773392643.png)
-<!-- slide -->
-![Keyboard shortcuts overlay in light mode](/Users/yuvrajkapoor/.gemini/antigravity/brain/16541b0f-cafd-4483-b97a-76b9998d10f9/keyboard_shortcuts_overlay_1773773400172.png)
-````
+- **Task Management** — Add, complete, and delete tasks with smooth animations
+- **Progress Tracking** — Live progress bar and completion counter
+- **Pomodoro Timer** — Editable work/break durations (1–60 min), circular ring, audio notification, and task linking
+- **Bloom Animations** — Glowing ring bloom, check-circle ripple, ambient orb drift
+- **Dark / Light Mode** — Toggle with a click or press `D`
+- **Filters** — View All / Active / Completed tasks
+- **Keyboard Shortcuts** — Full keyboard control (press `?` for help)
+- **Offline Support** — Works without internet via service worker cache
+- **Installable PWA** — "Add to Home Screen" on iOS and Android
 
-## Keyboard Shortcuts
+---
+
+## ⌨️ Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
-| `N` | Focus the input to add a new task |
+| `N` | Focus input to add a new task |
 | `P` | Start / Pause Pomodoro timer |
 | `D` | Toggle dark / light mode |
-| `?` | Open shortcuts help overlay |
-| `1` `2` `3` | Switch filter: All / Active / Completed |
-| `Esc` | Close overlay or blur input |
+| `?` | Open shortcuts help |
+| `1` `2` `3` | Filter: All / Active / Completed |
+| `Esc` | Close overlay / Blur input |
 
-## Verification Results
+---
 
-All features tested in the browser — **no bugs found**:
-- ✅ Add, complete, and delete tasks — progress bar updates
-- ✅ Dark ↔ Light theme toggle — persists on reload
-- ✅ Pomodoro timer ring, start/pause/reset
-- ✅ Focus button links task to Pomodoro
-- ✅ Keyboard shortcuts all functional
-- ✅ LocalStorage persistence for tasks and theme
-- ✅ Responsive layout
+## 📱 Install as an App
 
-![Full app demo recording](/Users/yuvrajkapoor/.gemini/antigravity/brain/16541b0f-cafd-4483-b97a-76b9998d10f9/full_app_demo_1773773309071.webp)
+1. Open the live URL in **Safari (iOS)** or **Chrome (Android)**
+2. Tap **Share → Add to Home Screen** (iOS) or the **Install** prompt (Android/Desktop)
+3. Flux launches in fullscreen, just like a native app
+
+---
+
+## 🛠️ Tech Stack
+
+- **HTML / CSS / JavaScript** — no frameworks, no build step
+- **Web Audio API** — Pomodoro notification chimes
+- **localStorage** — task and settings persistence
+- **Service Worker** — offline caching
+- **GitHub Actions** — automatic deployment to GitHub Pages
+
+---
+
+## 🚀 Local Development
+
+Just open `index.html` in a browser — no server or install needed.
+
+```bash
+git clone https://github.com/yuvrajkap22/todo-list-app.git
+cd todo-list-app
+open index.html
+```
+
+---
+
+## 📁 Project Structure
+
+```
+├── index.html          # App markup
+├── style.css           # Dual-theme styles + animations
+├── script.js           # App logic (tasks, timer, shortcuts)
+├── manifest.json       # PWA manifest
+├── sw.js               # Service worker (offline support)
+├── icons/
+│   ├── icon-192.png
+│   └── icon-512.png
+└── .github/
+    └── workflows/
+        └── pages.yml   # Auto-deploy to GitHub Pages
+```
