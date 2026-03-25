@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flux: Productivity Companion</title>
     <meta name="description"
-        content="A modern productivity tracker with Pomodoro timer, task management, and progress tracking.">
+        content="A modern productivity tracker with Pomodoro timer, task management, focus stats, and progress tracking.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Flux">
-    <meta name="theme-color" content="#0ea5e9">
+    <meta name="theme-color" content="#7c3aed">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -29,16 +29,22 @@
                 <div class="logo" aria-hidden="true">
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 11 12 14 22 4"></polyline>
-                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        <polyline points="13 2 3 14 12 14 11 22 21 10 12 10"></polyline>
                     </svg>
                 </div>
                 <div>
-                    <h1>Flux: Productivity Companion</h1>
+                    <h1>Flux</h1>
                     <p class="tagline" id="dateDisplay"></p>
                 </div>
             </div>
             <div class="header-actions">
+                <a class="icon-btn discord-btn" href="https://discord.gg/XxVmF3HtzE" target="_blank"
+                    rel="noopener noreferrer" title="Join our Discord">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" />
+                    </svg>
+                </a>
                 <button class="icon-btn" id="shortcutsBtn" title="Keyboard shortcuts (?)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -68,6 +74,15 @@
             </div>
         </header>
 
+        <!-- ===== Motivational Quote ===== -->
+        <div class="quote-card" id="quoteCard">
+            <svg class="quote-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.4">
+                <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" />
+            </svg>
+            <p class="quote-text" id="quoteText"></p>
+            <span class="quote-author" id="quoteAuthor"></span>
+        </div>
+
         <!-- ===== Stats + Progress ===== -->
         <div class="stats-row">
             <div class="stat-pill">
@@ -79,6 +94,47 @@
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
                 <span class="progress-text" id="progressText">0%</span>
+            </div>
+        </div>
+
+        <!-- ===== Focus Stats ===== -->
+        <div class="focus-stats-row">
+            <div class="focus-stat-card">
+                <div class="focus-stat-icon sessions-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                </div>
+                <div class="focus-stat-info">
+                    <span class="focus-stat-value" id="todaySessions">0</span>
+                    <span class="focus-stat-label">Sessions</span>
+                </div>
+            </div>
+            <div class="focus-stat-card">
+                <div class="focus-stat-icon minutes-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <div class="focus-stat-info">
+                    <span class="focus-stat-value" id="todayMinutes">0</span>
+                    <span class="focus-stat-label">Minutes</span>
+                </div>
+            </div>
+            <div class="focus-stat-card">
+                <div class="focus-stat-icon streak-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                </div>
+                <div class="focus-stat-info">
+                    <span class="focus-stat-value" id="streakCount">0</span>
+                    <span class="focus-stat-label">Day Streak</span>
+                </div>
             </div>
         </div>
 
@@ -114,11 +170,22 @@
             </div>
             <div class="pomo-body" id="pomoBody">
                 <div class="pomo-timer-ring">
-                    <svg class="pomo-ring-svg" width="120" height="120" viewBox="0 0 120 120">
-                        <circle class="pomo-ring-bg" cx="60" cy="60" r="52" fill="none" stroke-width="6"></circle>
-                        <circle class="pomo-ring-progress" id="pomoRing" cx="60" cy="60" r="52" fill="none"
-                            stroke-width="6" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="0"
-                            transform="rotate(-90 60 60)"></circle>
+                    <svg class="pomo-ring-svg" width="140" height="140" viewBox="0 0 140 140">
+                        <defs>
+                            <linearGradient id="ringGradWork" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#a78bfa" />
+                                <stop offset="50%" stop-color="#38bdf8" />
+                                <stop offset="100%" stop-color="#34d399" />
+                            </linearGradient>
+                            <linearGradient id="ringGradBreak" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#34d399" />
+                                <stop offset="100%" stop-color="#2dd4bf" />
+                            </linearGradient>
+                        </defs>
+                        <circle class="pomo-ring-bg" cx="70" cy="70" r="60" fill="none" stroke-width="5"></circle>
+                        <circle class="pomo-ring-progress" id="pomoRing" cx="70" cy="70" r="60" fill="none"
+                            stroke="url(#ringGradWork)" stroke-width="5" stroke-linecap="round"
+                            stroke-dasharray="376.99" stroke-dashoffset="0" transform="rotate(-90 70 70)"></circle>
                     </svg>
                     <div class="pomo-time" id="pomoTime">25:00</div>
                 </div>
@@ -154,7 +221,7 @@
                             Work
                         </label>
                         <div class="pomo-input-group">
-                            <input type="number" id="workDurationInput" min="1" max="60" value="25">
+                            <input type="number" id="workDurationInput" min="1" max="180" value="25">
                             <span>min</span>
                         </div>
                     </div>
@@ -171,7 +238,7 @@
                             Break
                         </label>
                         <div class="pomo-input-group">
-                            <input type="number" id="breakDurationInput" min="1" max="60" value="5">
+                            <input type="number" id="breakDurationInput" min="1" max="180" value="5">
                             <span>min</span>
                         </div>
                     </div>
@@ -226,6 +293,18 @@
             <p>No tasks yet</p>
             <span>Press <kbd>N</kbd> or click above to get started</span>
         </div>
+
+        <!-- ===== Footer ===== -->
+        <footer class="app-footer">
+            <span class="footer-version">Flux v1.01</span>
+            <a class="footer-discord" href="https://discord.gg/XxVmF3HtzE" target="_blank" rel="noopener noreferrer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" />
+                </svg>
+                Join Discord
+            </a>
+        </footer>
     </div>
 
     <!-- ===== Keyboard Shortcuts Overlay ===== -->

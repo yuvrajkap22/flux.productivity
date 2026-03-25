@@ -1,7 +1,7 @@
 // =============================================
-//  TASKLY — Productivity Tracker Script
-//  Fixes: editable Pomodoro, audio phase bug,
-//         active-focus always visible, const->let
+//  FLUX v1.01 — Productivity Companion Script
+//  Features: Tasks, Pomodoro (up to 180 min),
+//  Focus Stats, Streak, Daily Quotes
 // =============================================
 
 // ===== DOM =====
@@ -38,12 +38,21 @@ const workDurationInput = $('workDurationInput');
 const breakDurationInput = $('breakDurationInput');
 const pomoApply = $('pomoApply');
 
+// Focus Stats DOM
+const todaySessionsEl = $('todaySessions');
+const todayMinutesEl = $('todayMinutes');
+const streakCountEl = $('streakCount');
+
+// Quote DOM
+const quoteText = $('quoteText');
+const quoteAuthor = $('quoteAuthor');
+
 // ===== State =====
 let tasks = [];
 let currentFilter = 'all';
 let focusedTaskId = null;
 
-// Pomodoro — mutable durations (user-editable)
+// Pomodoro — mutable durations (user-editable, up to 180 min)
 let workDuration = 25 * 60;   // default 25 min
 let breakDuration = 5 * 60;   // default 5 min
 let pomoSeconds = workDuration;
@@ -51,7 +60,31 @@ let pomoIsRunning = false;
 let pomoIsBreak = false;
 let pomoInterval = null;
 
-const RING_CIRCUMFERENCE = 2 * Math.PI * 52; // matches r=52 on the SVG
+const RING_CIRCUMFERENCE = 2 * Math.PI * 60; // matches r=60 on the SVG
+
+// ===== Motivational Quotes =====
+const QUOTES = [
+    { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+    { text: "It's not about having time, it's about making time.", author: "Unknown" },
+    { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+    { text: "Small daily improvements are the key to staggering long-term results.", author: "Unknown" },
+    { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+    { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+    { text: "Productivity is never an accident. It is always the result of a commitment to excellence.", author: "Paul J. Meyer" },
+    { text: "The way to get started is to quit talking and begin doing.", author: "Walt Disney" },
+    { text: "Your future is created by what you do today, not tomorrow.", author: "Robert Kiyosaki" },
+    { text: "Do the hard jobs first. The easy jobs will take care of themselves.", author: "Dale Carnegie" },
+    { text: "Amateurs sit and wait for inspiration. The rest of us just get up and go to work.", author: "Stephen King" },
+    { text: "Start where you are. Use what you have. Do what you can.", author: "Arthur Ashe" },
+    { text: "One thing at a time. Most important thing first. Start now.", author: "Caroline Webb" },
+    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "Discipline is choosing what you want most over what you want now.", author: "Abraham Lincoln" },
+    { text: "Until we can manage time, we can manage nothing else.", author: "Peter Drucker" },
+    { text: "A year from now you may wish you had started today.", author: "Karen Lamb" },
+    { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+    { text: "You are never too old to set another goal or to dream a new dream.", author: "C.S. Lewis" }
+];
 
 // ===== Initialize =====
 function init() {
@@ -59,6 +92,8 @@ function init() {
     loadTheme();
     loadPomoSettings();
     renderDate();
+    renderQuote();
+    updateFocusStats();
     render();
     updatePomoDisplay();
 }
@@ -71,9 +106,21 @@ function renderDate() {
     });
 }
 
+// ===== Daily Quote =====
+function renderQuote() {
+    // Rotate quote daily based on day of year
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const quote = QUOTES[dayOfYear % QUOTES.length];
+    quoteText.textContent = `"${quote.text}"`;
+    quoteAuthor.textContent = `— ${quote.author}`;
+}
+
 // ===== Theme =====
 function loadTheme() {
-    const saved = localStorage.getItem('taskly-theme') || 'dark';
+    const saved = localStorage.getItem('flux-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
 }
 
@@ -81,39 +128,102 @@ function toggleTheme() {
     const current = document.documentElement.getAttribute('data-theme');
     const next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('taskly-theme', next);
+    localStorage.setItem('flux-theme', next);
 }
 
 // ===== LocalStorage — Tasks =====
 function saveTasks() {
-    localStorage.setItem('taskly-tasks', JSON.stringify(tasks));
+    localStorage.setItem('flux-tasks', JSON.stringify(tasks));
 }
 function loadTasks() {
-    const stored = localStorage.getItem('taskly-tasks');
+    const stored = localStorage.getItem('flux-tasks') || localStorage.getItem('taskly-tasks');
     tasks = stored ? JSON.parse(stored) : [];
 }
 
 // ===== LocalStorage — Pomodoro Settings =====
 function savePomoSettings() {
-    localStorage.setItem('taskly-pomo', JSON.stringify({
+    localStorage.setItem('flux-pomo', JSON.stringify({
         work: workDuration / 60,
         break: breakDuration / 60
     }));
 }
 function loadPomoSettings() {
-    const stored = localStorage.getItem('taskly-pomo');
+    const stored = localStorage.getItem('flux-pomo') || localStorage.getItem('taskly-pomo');
     if (stored) {
-        const { work, brk } = JSON.parse(stored);
-        // legacy key fix
-        const breakVal = JSON.parse(stored).break ?? brk ?? 5;
-        const workVal = work ?? 25;
-        workDuration = Math.max(1, Math.min(60, workVal)) * 60;
-        breakDuration = Math.max(1, Math.min(60, breakVal)) * 60;
+        const parsed = JSON.parse(stored);
+        const breakVal = parsed.break ?? parsed.brk ?? 5;
+        const workVal = parsed.work ?? 25;
+        workDuration = Math.max(1, Math.min(180, workVal)) * 60;
+        breakDuration = Math.max(1, Math.min(180, breakVal)) * 60;
         pomoSeconds = workDuration;
     }
     // Sync inputs
     workDurationInput.value = workDuration / 60;
     breakDurationInput.value = breakDuration / 60;
+}
+
+// ===== Focus Stats =====
+function getTodayKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+function loadFocusData() {
+    const stored = localStorage.getItem('flux-focus');
+    return stored ? JSON.parse(stored) : {};
+}
+
+function saveFocusData(data) {
+    localStorage.setItem('flux-focus', JSON.stringify(data));
+}
+
+function recordSession(durationMinutes) {
+    const data = loadFocusData();
+    const key = getTodayKey();
+    if (!data[key]) {
+        data[key] = { sessions: 0, minutes: 0 };
+    }
+    data[key].sessions += 1;
+    data[key].minutes += durationMinutes;
+    saveFocusData(data);
+    updateFocusStats();
+}
+
+function getStreak() {
+    const data = loadFocusData();
+    let streak = 0;
+    const today = new Date();
+
+    // Check if today has sessions — if so, start counting from today, otherwise from yesterday
+    const todayKey = getTodayKey();
+    let checkDate = new Date(today);
+
+    if (!data[todayKey] || data[todayKey].sessions === 0) {
+        // No session today — check from yesterday
+        checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    while (true) {
+        const key = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+        if (data[key] && data[key].sessions > 0) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+            break;
+        }
+    }
+
+    return streak;
+}
+
+function updateFocusStats() {
+    const data = loadFocusData();
+    const todayKey = getTodayKey();
+    const today = data[todayKey] || { sessions: 0, minutes: 0 };
+
+    todaySessionsEl.textContent = today.sessions;
+    todayMinutesEl.textContent = Math.round(today.minutes);
+    streakCountEl.textContent = getStreak();
 }
 
 // ===== Add Task =====
@@ -304,15 +414,12 @@ function updatePomoDisplay() {
 }
 
 function playChime(isBreakJustEnded) {
-    // BUG FIX: receive intent directly rather than reading pomoIsBreak which
-    // is flipped before this call
     try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
-        // Higher pitched = break ended (back to work); lower = work ended (break time)
         osc.frequency.value = isBreakJustEnded ? 880 : 660;
         osc.type = 'sine';
         gain.gain.setValueAtTime(0.28, ctx.currentTime);
@@ -330,7 +437,12 @@ function pomoTick() {
 
         // Capture what phase just finished BEFORE flipping
         const justFinishedBreak = pomoIsBreak;
-        playChime(justFinishedBreak); // BUG FIX: pass the correct phase
+        playChime(justFinishedBreak);
+
+        // Record completed work session in focus stats
+        if (!justFinishedBreak) {
+            recordSession(workDuration / 60);
+        }
 
         // Auto-switch phase
         pomoIsBreak = !pomoIsBreak;
@@ -359,7 +471,7 @@ function pomoResetTimer() {
     pomoInterval = null;
     pomoIsRunning = false;
     pomoIsBreak = false;
-    pomoSeconds = workDuration; // BUG FIX: use mutable workDuration not a hardcoded const
+    pomoSeconds = workDuration;
     updatePomoDisplay();
 }
 
@@ -368,8 +480,8 @@ function applyPomoSettings() {
     const newWork = parseInt(workDurationInput.value, 10);
     const newBreak = parseInt(breakDurationInput.value, 10);
 
-    if (isNaN(newWork) || newWork < 1 || newWork > 60) return;
-    if (isNaN(newBreak) || newBreak < 1 || newBreak > 60) return;
+    if (isNaN(newWork) || newWork < 1 || newWork > 180) return;
+    if (isNaN(newBreak) || newBreak < 1 || newBreak > 180) return;
 
     workDuration = newWork * 60;
     breakDuration = newBreak * 60;

@@ -1,9 +1,9 @@
 // =============================================
-//  Flux: Productivity Companion — Service Worker
+//  Flux v1.01 — Service Worker
 //  Cache-first strategy for offline support
 // =============================================
 
-const CACHE_NAME = 'flux-v1';
+const CACHE_NAME = 'flux-v1.01';
 
 const ASSETS = [
   './',
@@ -11,6 +11,7 @@ const ASSETS = [
   './style.css',
   './script.js',
   './manifest.json',
+  './icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
