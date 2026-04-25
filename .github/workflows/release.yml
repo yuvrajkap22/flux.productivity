@@ -44,9 +44,10 @@ jobs:
             in_section { print }
           ' CHANGELOG.md > RELEASE_NOTES.md
 
-          if [ ! -s RELEASE_NOTES.md ]; then
-            echo "No changelog entry found for ${TAG}." > RELEASE_NOTES.md
-            echo "Please add a section in CHANGELOG.md like: ## [${VERSION}] - YYYY-MM-DD" >> RELEASE_NOTES.md
+          if ! grep -q '[^[:space:]]' RELEASE_NOTES.md; then
+            echo "Error: no changelog entry found for ${TAG}."
+            echo "Expected a section like: ## [${VERSION}] - YYYY-MM-DD"
+            exit 1
           fi
 
       - name: Create GitHub release
