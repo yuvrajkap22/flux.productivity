@@ -1,0 +1,15 @@
+{
+  "name": "flux-productivity",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Flux static web app with deployment minification pipeline.",
+  "scripts": {
+    "build": "npm run build:dist",
+    "build:dist": "node scripts/build-dist.mjs"
+  },
+  "devDependencies": {
+    "clean-css": "^5.3.3",
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.39.2"
+  }
+}

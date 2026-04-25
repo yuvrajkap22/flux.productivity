@@ -2,349 +2,750 @@
 <html lang="en" data-theme="dark">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flux: Productivity Companion</title>
-    <meta name="description"
-        content="A modern productivity tracker with Pomodoro timer, task management, focus stats, and progress tracking.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-    <link rel="shortcut icon" href="favicon.svg">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Flux">
-    <meta name="theme-color" content="#7c3aed">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flux — Your Productivity Companion</title>
+  <meta name="description"
+    content="Flux is a premium productivity companion featuring Pomodoro timer, task tracking, ambient sounds, and focus statistics." />
+  <meta name="theme-color" content="#0a0905" />
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/flux-favicon.svg" />
+  <link rel="shortcut icon" href="assets/flux-favicon.svg" />
+  <link rel="mask-icon" href="assets/flux-mask-icon.svg" color="#f59e0b" />
+  <style>
+    body.flux-loading {
+      margin: 0;
+      overflow: hidden;
+      background: #090909;
+    }
+
+    #flux-page-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 200000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(65% 45% at 25% 20%, rgba(245, 166, 35, 0.16), transparent 70%),
+        radial-gradient(50% 35% at 80% 80%, rgba(245, 166, 35, 0.1), transparent 70%),
+        #090909;
+      color: #f4eadb;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.45s ease, visibility 0.45s ease;
+      pointer-events: all;
+    }
+
+    #flux-page-loader.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .flux-loader-panel {
+      width: min(420px, calc(100vw - 40px));
+      padding: 24px;
+      border: 1px solid rgba(245, 166, 35, 0.2);
+      border-radius: 16px;
+      background: rgba(17, 16, 16, 0.78);
+      backdrop-filter: blur(12px);
+      text-align: center;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .flux-loader-brand {
+      margin: 0;
+      font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+      font-size: clamp(32px, 6vw, 44px);
+      line-height: 1;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #f4eadb 0%, #f5a623 80%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .flux-loader-copy {
+      margin: 10px 0 18px;
+      color: rgba(244, 234, 219, 0.72);
+      font: 500 14px/1.5 Inter, system-ui, sans-serif;
+      letter-spacing: 0.01em;
+    }
+
+    .flux-loader-bar {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .flux-loader-bar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: 40%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #f59e0b, #ffcf70);
+      box-shadow: 0 0 20px rgba(245, 166, 35, 0.45);
+      animation: fluxLoaderSweep 1.2s ease-in-out infinite;
+    }
+
+    .flux-loader-hint {
+      margin-top: 12px;
+      color: rgba(244, 234, 219, 0.6);
+      font: 500 12px/1.4 Inter, system-ui, sans-serif;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    @keyframes fluxLoaderSweep {
+      0% { transform: translateX(-120%); }
+      100% { transform: translateX(360%); }
+    }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.classList.add('flux-loading');
+      var domReadyAt = Date.now();
+      var pageLoaded = false;
+      var authReady = false;
+      var hidden = false;
+
+      var hideLoader = function () {
+        if (hidden) return;
+        hidden = true;
+        var loader = document.getElementById('flux-page-loader');
+        if (!loader) {
+          document.body.classList.remove('flux-loading');
+          return;
+        }
+
+        loader.classList.add('is-hidden');
+        window.setTimeout(function () {
+          loader.remove();
+          document.body.classList.remove('flux-loading');
+        }, 460);
+      };
+
+      var maybeHide = function () {
+        if (!pageLoaded || !authReady) return;
+
+        var minVisibleMs = 900;
+        var elapsed = Date.now() - domReadyAt;
+        var delay = Math.max(0, minVisibleMs - elapsed);
+        window.setTimeout(hideLoader, delay);
+      };
+
+      window.addEventListener('load', function () {
+        pageLoaded = true;
+        maybeHide();
+
+        // In case auth does not emit, fail open to keep the app accessible.
+        window.setTimeout(hideLoader, 3500);
+      }, { once: true });
+
+      window.addEventListener('flux-auth-ready', function () {
+        authReady = true;
+        maybeHide();
+      });
+
+      window.setTimeout(hideLoader, 9000);
+    });
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-    <div class="container">
+  <div id="flux-page-loader" role="status" aria-live="polite" aria-label="Loading Flux workspace">
+    <div class="flux-loader-panel">
+      <h1 class="flux-loader-brand">Flux</h1>
+      <p class="flux-loader-copy">Setting up your productivity workspace...</p>
+      <div class="flux-loader-bar" aria-hidden="true"></div>
+      <div class="flux-loader-hint">Loading modules and syncing UI</div>
+    </div>
+  </div>
 
-        <!-- ===== Header ===== -->
-        <header class="app-header">
-            <div class="brand">
-                <div class="logo" aria-hidden="true">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="13 2 3 14 12 14 11 22 21 10 12 10"></polyline>
-                    </svg>
-                </div>
-                <div>
-                    <h1>Flux</h1>
-                    <p class="tagline" id="dateDisplay"></p>
-                </div>
-            </div>
-            <div class="header-actions">
-                <a class="icon-btn discord-btn" href="https://discord.gg/XxVmF3HtzE" target="_blank"
-                    rel="noopener noreferrer" title="Join our Discord">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" />
-                    </svg>
-                </a>
-                <button class="icon-btn" id="shortcutsBtn" title="Keyboard shortcuts (?)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                        <path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10">
-                        </path>
-                    </svg>
-                </button>
-                <button class="icon-btn" id="themeToggle" title="Toggle theme (D)">
-                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                </button>
-            </div>
-        </header>
+  <!-- Custom Cursor -->
+  <div id="cursor-dot" class="cursor-dot"></div>
+  <div id="cursor-ring" class="cursor-ring"></div>
 
-        <!-- ===== Motivational Quote ===== -->
-        <div class="quote-card" id="quoteCard">
-            <svg class="quote-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.4">
-                <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" />
-            </svg>
-            <p class="quote-text" id="quoteText"></p>
-            <span class="quote-author" id="quoteAuthor"></span>
-        </div>
+  <!-- Bloom Orbs -->
+  <div class="bloom-container" id="bloom-container">
+    <div class="bloom-orb orb-1"></div>
+    <div class="bloom-orb orb-2"></div>
+    <div class="bloom-orb orb-3"></div>
+    <div class="bloom-orb orb-4"></div>
+  </div>
 
-        <!-- ===== Stats + Progress ===== -->
-        <div class="stats-row">
-            <div class="stat-pill">
-                <span class="stat-number" id="completedCount">0</span>
-                <span class="stat-label">/ <span id="totalCount">0</span> done</span>
-            </div>
-            <div class="progress-wrapper">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <span class="progress-text" id="progressText">0%</span>
-            </div>
-        </div>
+  <!-- Noise Overlay -->
+  <div class="noise-overlay"></div>
 
-        <!-- ===== Focus Stats ===== -->
-        <div class="focus-stats-row">
-            <div class="focus-stat-card">
-                <div class="focus-stat-icon sessions-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                    </svg>
-                </div>
-                <div class="focus-stat-info">
-                    <span class="focus-stat-value" id="todaySessions">0</span>
-                    <span class="focus-stat-label">Sessions</span>
-                </div>
-            </div>
-            <div class="focus-stat-card">
-                <div class="focus-stat-icon minutes-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                </div>
-                <div class="focus-stat-info">
-                    <span class="focus-stat-value" id="todayMinutes">0</span>
-                    <span class="focus-stat-label">Minutes</span>
-                </div>
-            </div>
-            <div class="focus-stat-card">
-                <div class="focus-stat-icon streak-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-                    </svg>
-                </div>
-                <div class="focus-stat-info">
-                    <span class="focus-stat-value" id="streakCount">0</span>
-                    <span class="focus-stat-label">Day Streak</span>
-                </div>
-            </div>
-        </div>
+  <div id="app-shell" class="app-shell">
+    <!-- Header -->
+    <header class="app-header" id="app-header">
+    <div class="header-left">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <div class="logo">
+        <img class="logo-icon" src="assets/flux-logo.svg" alt="Flux" width="28" height="28" />
+        <span class="logo-text">Flux</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="https://discord.gg/2xTpqYBuuw" target="_blank" rel="noopener noreferrer" class="header-btn discord-btn"
+        id="header-discord-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
+        </svg>
+        <span>Discord</span>
+      </a>
+      <a href="https://link.yeolpumta.com/P3R5cGU9Z3JvdXBJbnZpdGUmaWQ9NjQxMjUwNA==" target="_blank"
+        rel="noopener noreferrer" class="header-btn ypt-btn" id="header-ypt-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" /><text x="12" y="16"
+            text-anchor="middle" font-size="12" font-weight="bold" fill="currentColor">Y</text>
+        </svg>
+        <span>YPT</span>
+      </a>
+      <button class="header-icon-btn" id="theme-toggle" aria-label="Toggle theme">
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
+      <button class="header-icon-btn" id="sound-master-toggle" aria-label="Toggle sounds">
+        <svg class="icon-speaker-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+        </svg>
+        <svg class="icon-speaker-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <line x1="23" y1="9" x2="17" y2="15" />
+          <line x1="17" y1="9" x2="23" y2="15" />
+        </svg>
+      </button>
+      <button class="profile-avatar-btn hidden" id="profile-avatar-btn" aria-label="Open profile">
+        <img class="profile-avatar-img" id="profile-avatar-img" src="" alt="" />
+        <span class="profile-avatar-initials" id="profile-avatar-initials">?</span>
+        <span class="profile-avatar-ring"></span>
+      </button>
+      <div class="profile-avatar-menu hidden" id="profile-avatar-menu" role="menu" aria-label="Profile actions">
+        <button class="profile-menu-btn" id="profile-menu-open" type="button" role="menuitem">Edit profile</button>
+        <button class="profile-menu-btn signout" id="profile-menu-signout" type="button" role="menuitem">Sign out</button>
+      </div>
+    </div>
+  </header>
 
-        <!-- ===== Pomodoro Timer ===== -->
-        <div class="pomodoro-card" id="pomodoroCard">
-            <div class="pomo-header">
-                <div class="pomo-title-row">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span class="pomo-label">Pomodoro</span>
-                    <span class="pomo-phase" id="pomoPhase">Work</span>
-                </div>
-                <div class="pomo-header-actions">
-                    <button class="pomo-minimize pomo-settings-btn" id="pomoSettingsBtn" title="Edit durations">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path
-                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
-                            </path>
-                        </svg>
-                    </button>
-                    <button class="pomo-minimize" id="pomoMinimize" title="Minimize">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="pomo-body" id="pomoBody">
-                <div class="pomo-timer-ring">
-                    <svg class="pomo-ring-svg" width="140" height="140" viewBox="0 0 140 140">
-                        <defs>
-                            <linearGradient id="ringGradWork" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#a78bfa" />
-                                <stop offset="50%" stop-color="#38bdf8" />
-                                <stop offset="100%" stop-color="#34d399" />
-                            </linearGradient>
-                            <linearGradient id="ringGradBreak" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#34d399" />
-                                <stop offset="100%" stop-color="#2dd4bf" />
-                            </linearGradient>
-                        </defs>
-                        <circle class="pomo-ring-bg" cx="70" cy="70" r="60" fill="none" stroke-width="5"></circle>
-                        <circle class="pomo-ring-progress" id="pomoRing" cx="70" cy="70" r="60" fill="none"
-                            stroke="url(#ringGradWork)" stroke-width="5" stroke-linecap="round"
-                            stroke-dasharray="376.99" stroke-dashoffset="0" transform="rotate(-90 70 70)"></circle>
-                    </svg>
-                    <div class="pomo-time" id="pomoTime">25:00</div>
-                </div>
-                <p class="pomo-task-label" id="pomoTaskLabel">No task selected</p>
-                <div class="pomo-controls">
-                    <button class="pomo-btn" id="pomoStartPause" title="Start / Pause (P)">
-                        <svg class="play-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                        <svg class="pause-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                            <rect x="6" y="4" width="4" height="16"></rect>
-                            <rect x="14" y="4" width="4" height="16"></rect>
-                        </svg>
-                    </button>
-                    <button class="pomo-btn secondary" id="pomoReset" title="Reset">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="1 4 1 10 7 10"></polyline>
-                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                        </svg>
-                    </button>
-                </div>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="dashboard" id="nav-dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <rect x="3" y="3" width="7" height="7" rx="2" />
+          <rect x="14" y="3" width="7" height="7" rx="2" />
+          <rect x="3" y="14" width="7" height="7" rx="2" />
+          <rect x="14" y="14" width="7" height="7" rx="2" />
+        </svg>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-view="tasks" id="nav-tasks">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M9 11l3 3L22 4" />
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+        <span class="nav-label">Today's Tasks</span>
+      </button>
+      <button class="nav-item" data-view="pomodoro" id="nav-pomodoro">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span class="nav-label">Pomodoro</span>
+      </button>
+      <button class="nav-item" data-view="stats" id="nav-stats">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+        <span class="nav-label">Stats</span>
+      </button>
+      <button class="nav-item" data-view="challenges" id="nav-challenges">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M8 21h8M12 21v-4M12 17c-4 0-7-3-7-7V4h14v6c0 4-3 7-7 7z"/>
+          <path d="M5 8H2M22 8h-3"/>
+        </svg>
+        <span class="nav-label">Challenges</span>
+      </button>
+      <div class="nav-divider"></div>
+      <button class="nav-item" data-view="sounds" id="nav-sounds">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
+        </svg>
+        <span class="nav-label">Sounds</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-stats-card" id="sidebar-stats-card">
+        <div class="sidebar-stat-value" id="sidebar-focus-time">0h 0m</div>
+        <div class="sidebar-stat-label">Focus today</div>
+        <div class="sidebar-stat-sessions"><span id="sidebar-sessions">0</span> sessions</div>
+      </div>
+      <div class="sidebar-community">
+        <a href="https://discord.gg/2xTpqYBuuw" target="_blank" rel="noopener noreferrer"
+          class="community-link discord-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
+          </svg>
+          <span class="nav-label">Discord</span>
+        </a>
+        <a href="https://link.yeolpumta.com/P3R5cGU9Z3JvdXBJbnZpdGUmaWQ9NjQxMjUwNA==" target="_blank"
+          rel="noopener noreferrer" class="community-link ypt-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" /><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="bold"
+              fill="currentColor">Y</text>
+          </svg>
+          <span class="nav-label">YPT Group</span>
+        </a>
+      </div>
+    </div>
+  </aside>
 
-                <!-- Editable duration settings (hidden by default) -->
-                <div class="pomo-settings" id="pomoSettings">
-                    <div class="pomo-setting-row">
-                        <label for="workDurationInput">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                            Work
-                        </label>
-                        <div class="pomo-input-group">
-                            <input type="number" id="workDurationInput" min="1" max="180" value="25">
-                            <span>min</span>
-                        </div>
-                    </div>
-                    <div class="pomo-setting-row">
-                        <label for="breakDurationInput">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-                                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-                                <line x1="6" y1="1" x2="6" y2="4"></line>
-                                <line x1="10" y1="1" x2="10" y2="4"></line>
-                                <line x1="14" y1="1" x2="14" y2="4"></line>
-                            </svg>
-                            Break
-                        </label>
-                        <div class="pomo-input-group">
-                            <input type="number" id="breakDurationInput" min="1" max="180" value="5">
-                            <span>min</span>
-                        </div>
-                    </div>
-                    <button class="pomo-apply-btn" id="pomoApply">Apply &amp; Reset</button>
-                </div>
-            </div>
-        </div>
+  <!-- Main Content -->
+  <main class="main-content" id="main-content">
 
-        <!-- ===== Input Area ===== -->
-        <div class="input-area">
-            <div class="input-wrapper">
-                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="16"></line>
-                    <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
-                <input type="text" id="taskInput" placeholder="What are you working on?" autocomplete="off">
-                <kbd class="input-hint">N</kbd>
+    <!-- Quote Bar -->
+    <div class="quote-bar" id="quote-bar">
+      <div class="quote-accent-stripe"></div>
+      <div class="quote-content">
+        <p class="quote-text" id="quote-text">"The secret of getting ahead is getting started."</p>
+        <span class="quote-author" id="quote-author">— Mark Twain</span>
+      </div>
+      <button class="quote-next-btn" id="quote-next-btn" aria-label="Next quote">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Dashboard View -->
+    <div class="view-panel active" id="view-dashboard">
+      <div class="bento-grid">
+        <!-- Todo Panel -->
+        <div class="bento-card todo-panel glass-panel" id="todo-panel">
+          <div class="panel-header">
+            <h2>Today's Tasks</h2>
+            <div class="todo-filters" id="todo-filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="active">Active</button>
+              <button class="filter-btn" data-filter="completed">Done</button>
             </div>
-            <button id="addBtn" title="Add task (Enter)">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
+          </div>
+          <div class="todo-list" id="todo-list"></div>
+          <div class="todo-add">
+            <input type="text" id="todo-input" class="todo-input" placeholder="Add a new task..." maxlength="200" />
+            <select id="todo-category" class="todo-category-select">
+              <option value="work">💼 Work</option>
+              <option value="study">📚 Study</option>
+              <option value="personal">🏠 Personal</option>
+              <option value="health">💪 Health</option>
+              <option value="creative">🎨 Creative</option>
+            </select>
+            <button class="todo-add-btn" id="todo-add-btn" aria-label="Add task">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
             </button>
+          </div>
         </div>
 
-        <!-- ===== Filters ===== -->
-        <div class="filter-bar">
-            <div class="filter-tabs">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="active">Active</button>
-                <button class="filter-btn" data-filter="completed">Completed</button>
-            </div>
-            <button class="clear-btn" id="clearCompleted">Clear done</button>
-        </div>
-
-        <!-- ===== Task List ===== -->
-        <ul id="taskList"></ul>
-
-        <!-- ===== Empty State ===== -->
-        <div class="empty-state" id="emptyState">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="12" y1="18" x2="12" y2="12"></line>
-                <line x1="9" y1="15" x2="15" y2="15"></line>
+        <!-- Pomodoro Panel -->
+        <div class="bento-card pomo-panel glass-panel" id="pomo-panel">
+          <div class="panel-header">
+            <h2>Pomodoro</h2>
+            <button class="pomo-settings-btn" id="pomo-settings-btn" aria-label="Timer settings">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+          </div>
+          <!-- Pomo Settings Dropdown -->
+          <div class="pomo-settings-dropdown hidden" id="pomo-settings-dropdown">
+            <label>Focus (min) <input type="number" id="setting-focus" min="1" max="120" value="25" /></label>
+            <label>Short Break <input type="number" id="setting-short" min="1" max="30" value="5" /></label>
+            <label>Long Break <input type="number" id="setting-long" min="1" max="60" value="15" /></label>
+            <label>Long break after <input type="number" id="setting-interval" min="2" max="10" value="4" />
+              sessions</label>
+            <label class="toggle-label"><input type="checkbox" id="setting-autobreak" /> Auto-start breaks</label>
+            <label class="toggle-label"><input type="checkbox" id="setting-autofocus" /> Auto-start focus</label>
+          </div>
+          <div class="pomo-modes" id="pomo-modes">
+            <button class="mode-btn active" data-mode="focus">Focus</button>
+            <button class="mode-btn" data-mode="short">Short</button>
+            <button class="mode-btn" data-mode="long">Long</button>
+          </div>
+          <div class="pomo-ring-container">
+            <svg class="pomo-ring" viewBox="0 0 200 200" id="pomo-ring-svg">
+              <circle class="pomo-ring-bg" cx="100" cy="100" r="88" />
+              <circle class="pomo-ring-progress" cx="100" cy="100" r="88" id="pomo-ring-progress" />
             </svg>
-            <p>No tasks yet</p>
-            <span>Press <kbd>N</kbd> or click above to get started</span>
+            <div class="pomo-time-display">
+              <span class="pomo-time" id="pomo-time">25:00</span>
+              <span class="pomo-mode-label" id="pomo-mode-label">FOCUS</span>
+            </div>
+          </div>
+          <div class="pomo-controls">
+            <button class="pomo-ctrl-btn" id="pomo-reset" aria-label="Reset"><svg width="18" height="18"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="1 4 1 10 7 10" />
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+              </svg></button>
+            <button class="pomo-ctrl-btn pomo-play-btn" id="pomo-play" aria-label="Play/Pause">
+              <svg class="icon-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              <svg class="icon-pause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" />
+                <rect x="14" y="4" width="4" height="16" />
+              </svg>
+            </button>
+            <button class="pomo-ctrl-btn" id="pomo-skip" aria-label="Skip"><svg width="18" height="18"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polygon points="5 4 15 12 5 20 5 4" />
+                <line x1="19" y1="5" x2="19" y2="19" />
+              </svg></button>
+          </div>
+          <div class="pomo-stats-bar">
+            <div class="pomo-stat"><span id="pomo-session-count">0</span><small>sessions</small></div>
+            <div class="pomo-stat"><span id="pomo-streak">0 🔥</span><small>streak</small></div>
+            <div class="pomo-stat"><span id="pomo-total-time">0m</span><small>focus today</small></div>
+          </div>
         </div>
 
-        <!-- ===== Footer ===== -->
-        <footer class="app-footer">
-            <span class="footer-version">Flux v1.01</span>
-            <a class="footer-discord" href="https://discord.gg/XxVmF3HtzE" target="_blank" rel="noopener noreferrer">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" />
-                </svg>
-                Join Discord
-            </a>
-        </footer>
-    </div>
-
-    <!-- ===== Keyboard Shortcuts Overlay ===== -->
-    <div class="shortcuts-overlay" id="shortcutsOverlay">
-        <div class="shortcuts-modal">
-            <div class="shortcuts-header">
-                <h2>Keyboard Shortcuts</h2>
-                <button class="shortcuts-close" id="shortcutsClose">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="shortcuts-grid">
-                <div class="shortcut-item"><kbd>N</kbd><span>New task</span></div>
-                <div class="shortcut-item"><kbd>P</kbd><span>Start / Pause Pomodoro</span></div>
-                <div class="shortcut-item"><kbd>D</kbd><span>Toggle dark / light mode</span></div>
-                <div class="shortcut-item"><kbd>?</kbd><span>Show shortcuts</span></div>
-                <div class="shortcut-item"><kbd>1</kbd><span>Show all tasks</span></div>
-                <div class="shortcut-item"><kbd>2</kbd><span>Show active tasks</span></div>
-                <div class="shortcut-item"><kbd>3</kbd><span>Show completed tasks</span></div>
-                <div class="shortcut-item"><kbd>Esc</kbd><span>Close overlay / Blur input</span></div>
-            </div>
+        <!-- Sound Mixer Panel -->
+        <div class="bento-card sound-panel glass-panel" id="sound-panel">
+          <div class="panel-header">
+            <h2>Ambient Sounds</h2>
+          </div>
+          <div class="sound-buttons" id="sound-buttons">
+            <button class="sound-btn" data-sound="rain" id="sound-rain">🌧<span>Rain</span></button>
+            <button class="sound-btn" data-sound="whitenoise" id="sound-whitenoise">〰<span>Noise</span></button>
+            <button class="sound-btn" data-sound="cafe" id="sound-cafe">☕<span>Café</span></button>
+            <button class="sound-btn" data-sound="forest" id="sound-forest">🌿<span>Forest</span></button>
+          </div>
+          <div class="sound-volume">
+            <label>Volume</label>
+            <input type="range" id="sound-volume-slider" min="0" max="100" value="30" />
+            <span id="sound-volume-value">30%</span>
+          </div>
+          <div class="sound-wave-bars hidden" id="sound-wave-bars">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
         </div>
+
+        <!-- Accent Picker Panel -->
+        <div class="bento-card accent-panel glass-panel" id="accent-panel">
+          <div class="panel-header">
+            <h2>Accent Color</h2>
+          </div>
+          <div class="accent-dots" id="accent-dots">
+            <button class="accent-dot active" data-color="#8b5cf6" style="--dot-color:#8b5cf6"
+              aria-label="Purple"></button>
+            <button class="accent-dot" data-color="#06b6d4" style="--dot-color:#06b6d4" aria-label="Cyan"></button>
+            <button class="accent-dot" data-color="#22d3a0" style="--dot-color:#22d3a0" aria-label="Teal"></button>
+            <button class="accent-dot" data-color="#f59e0b" style="--dot-color:#f59e0b" aria-label="Amber"></button>
+            <button class="accent-dot" data-color="#ec4899" style="--dot-color:#ec4899" aria-label="Pink"></button>
+            <button class="accent-dot" data-color="#ef4444" style="--dot-color:#ef4444" aria-label="Red"></button>
+            <button class="accent-dot" data-color="#f97316" style="--dot-color:#f97316" aria-label="Orange"></button>
+            <button class="accent-dot" data-color="#3b82f6" style="--dot-color:#3b82f6" aria-label="Blue"></button>
+            <input type="color" id="custom-accent-color" class="custom-color-input" value="#8b5cf6"
+              title="Custom color" />
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script src="script.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .catch(err => console.warn('SW registration failed:', err));
-            });
-        }
-    </script>
+    <!-- Stats View -->
+    <div class="view-panel" id="view-stats">
+      <!-- Stats Period Toggle -->
+      <div class="stats-period-toggle">
+        <button class="period-btn active" data-period="week">This Week</button>
+        <button class="period-btn" data-period="month">This Month</button>
+        <button class="period-btn" data-period="all">All Time</button>
+      </div>
+      <div class="stats-grid">
+        <!-- Overview Cards -->
+        <div class="stats-overview-row" id="stats-overview-row">
+          <div class="stat-card glass-panel">
+            <div class="stat-card-icon">⏱</div>
+            <div class="stat-card-value" id="stat-total-time">0h</div>
+            <div class="stat-card-label">Focus Time</div>
+            <div class="stat-card-delta" id="stat-time-delta"></div>
+          </div>
+          <div class="stat-card glass-panel">
+            <div class="stat-card-icon">🍅</div>
+            <div class="stat-card-value" id="stat-total-sessions">0</div>
+            <div class="stat-card-label">Sessions</div>
+            <div class="stat-card-delta" id="stat-sessions-delta"></div>
+          </div>
+          <div class="stat-card glass-panel">
+            <div class="stat-card-icon">🔥</div>
+            <div class="stat-card-value" id="stat-current-streak">0</div>
+            <div class="stat-card-label">Day Streak</div>
+            <div class="stat-card-delta">Best: <span id="stat-longest-streak">0</span></div>
+          </div>
+          <div class="stat-card glass-panel">
+            <div class="stat-card-icon">✅</div>
+            <div class="stat-card-value" id="stat-tasks-done">0</div>
+            <div class="stat-card-label">Tasks Done</div>
+            <div class="stat-card-delta" id="stat-completion-rate"></div>
+          </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="bento-card glass-panel stats-chart-card">
+          <div class="panel-header">
+            <h2 id="bar-chart-title">Daily Focus (Last 7 Days)</h2>
+            <div class="chart-legend">
+              <span class="legend-dot"></span><span>Focus time</span>
+            </div>
+          </div>
+          <div class="bar-chart-wrap">
+            <div class="bar-chart" id="bar-chart"></div>
+          </div>
+        </div>
+
+        <!-- Heatmap -->
+        <div class="bento-card glass-panel stats-heatmap-card">
+          <div class="panel-header">
+            <h2>Activity Heatmap</h2>
+            <div class="heatmap-legend">
+              <span>Less</span>
+              <span class="hm-sq"></span><span class="hm-sq l1"></span>
+              <span class="hm-sq l2"></span><span class="hm-sq l3"></span>
+              <span class="hm-sq l4"></span>
+              <span>More</span>
+            </div>
+          </div>
+          <div class="heatmap-week-labels" id="heatmap-week-labels">
+            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+          </div>
+          <div class="heatmap-grid" id="heatmap-grid"></div>
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="bento-card glass-panel stats-category-card">
+          <div class="panel-header"><h2>By Category</h2></div>
+          <div class="category-bars" id="category-bars"></div>
+        </div>
+
+        <!-- Top Tasks -->
+        <div class="bento-card glass-panel stats-tasks-card">
+          <div class="panel-header"><h2>Top Tasks by Time</h2></div>
+          <div class="top-tasks-list" id="top-tasks-list"></div>
+        </div>
+
+        <!-- Daily Average -->
+        <div class="bento-card glass-panel stats-avg-card">
+          <div class="panel-header"><h2>Daily Averages</h2></div>
+          <div class="avg-grid" id="avg-grid">
+            <div class="avg-item">
+              <div class="avg-value" id="avg-focus">0m</div>
+              <div class="avg-label">Avg Focus/Day</div>
+            </div>
+            <div class="avg-item">
+              <div class="avg-value" id="avg-sessions">0</div>
+              <div class="avg-label">Avg Sessions/Day</div>
+            </div>
+            <div class="avg-item">
+              <div class="avg-value" id="best-day-label">—</div>
+              <div class="avg-label">Most Productive Day</div>
+            </div>
+            <div class="avg-item">
+              <div class="avg-value" id="best-day-time">0h</div>
+              <div class="avg-label">Best Day Focus</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenges View -->
+    <div class="view-panel" id="view-challenges">
+      <div class="challenges-header">
+        <div>
+          <h2 class="challenges-title">Monthly Challenges</h2>
+          <p class="challenges-subtitle" id="challenges-month-label">April 2026</p>
+        </div>
+        <div class="challenges-progress-summary">
+          <div class="challenges-prog-ring-wrap">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" stroke-width="5"/>
+              <circle cx="32" cy="32" r="26" fill="none" stroke="var(--accent)" stroke-width="5"
+                stroke-linecap="round" stroke-dasharray="163"
+                id="challenges-prog-ring" stroke-dashoffset="163"
+                style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 0.8s var(--ease)"/>
+            </svg>
+            <span class="challenges-prog-pct" id="challenges-prog-pct">0%</span>
+          </div>
+          <div>
+            <div class="challenges-prog-label">Completed</div>
+            <div class="challenges-prog-count"><span id="challenges-done-count">0</span> / <span id="challenges-total-count">0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="challenges-tabs">
+        <button class="challenge-tab active" data-ctab="active">Active</button>
+        <button class="challenge-tab" data-ctab="completed">Completed</button>
+        <button class="challenge-tab" data-ctab="custom">My Custom</button>
+      </div>
+
+      <div class="challenges-grid" id="challenges-grid"></div>
+
+      <!-- Add custom challenge -->
+      <div class="add-challenge-bar glass-panel">
+        <input type="text" id="custom-challenge-input" class="custom-challenge-input" placeholder="Add your own challenge..." maxlength="80" />
+        <select id="custom-challenge-cat" class="custom-challenge-cat">
+          <option value="focus">🎯 Focus</option>
+          <option value="consistency">📅 Consistency</option>
+          <option value="tasks">✅ Tasks</option>
+          <option value="wellness">🌿 Wellness</option>
+        </select>
+        <button class="custom-challenge-add-btn" id="custom-challenge-add-btn">+ Add</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Profile Modal -->
+  <div class="profile-modal-overlay hidden" id="profile-modal-overlay">
+    <div class="profile-modal glass-panel" id="profile-modal">
+      <button class="profile-modal-close" id="profile-modal-close" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <!-- Banner -->
+      <div class="profile-banner" id="profile-banner">
+        <div class="profile-banner-colors" id="profile-banner-colors">
+          <span class="banner-color-opt active" data-color="linear-gradient(135deg,#8b5cf6,#06b6d4)" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4)"></span>
+          <span class="banner-color-opt" data-color="linear-gradient(135deg,#ec4899,#f97316)" style="background:linear-gradient(135deg,#ec4899,#f97316)"></span>
+          <span class="banner-color-opt" data-color="linear-gradient(135deg,#22d3a0,#3b82f6)" style="background:linear-gradient(135deg,#22d3a0,#3b82f6)"></span>
+          <span class="banner-color-opt" data-color="linear-gradient(135deg,#f59e0b,#ef4444)" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"></span>
+          <span class="banner-color-opt" data-color="linear-gradient(135deg,#1a1a2e,#16213e)" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"></span>
+        </div>
+      </div>
+
+      <!-- Avatar -->
+      <div class="profile-modal-avatar-wrap">
+        <img class="profile-modal-avatar-img" id="profile-modal-avatar-img" src="" alt="" />
+        <span class="profile-modal-avatar-initials" id="profile-modal-avatar-initials">?</span>
+      </div>
+      <input type="file" id="profile-photo-input" accept="image/*" class="hidden" />
+      <div class="profile-photo-actions">
+        <button class="profile-photo-btn" id="profile-photo-upload-btn" type="button">Upload photo</button>
+        <button class="profile-photo-btn" id="profile-photo-remove-btn" type="button">Remove photo</button>
+      </div>
+
+      <div class="profile-modal-body">
+        <!-- Display Name -->
+        <div class="profile-field">
+          <label class="profile-field-label">Display Name</label>
+          <input type="text" id="profile-display-name" class="profile-field-input" placeholder="Your name" maxlength="40" />
+        </div>
+        <!-- Username -->
+        <div class="profile-field">
+          <label class="profile-field-label">Username</label>
+          <div class="profile-field-prefix-wrap">
+            <span class="profile-field-prefix">@</span>
+            <input type="text" id="profile-username" class="profile-field-input" placeholder="username" maxlength="24" />
+          </div>
+        </div>
+        <!-- Bio -->
+        <div class="profile-field">
+          <label class="profile-field-label">Bio</label>
+          <textarea id="profile-bio" class="profile-field-input profile-bio-input" placeholder="A short bio..." maxlength="120" rows="2"></textarea>
+        </div>
+        <!-- Study Goal -->
+        <div class="profile-field">
+          <label class="profile-field-label">Daily Focus Goal (hours)</label>
+          <div class="profile-goal-row">
+            <input type="range" id="profile-goal-slider" min="1" max="12" value="4" class="profile-goal-slider" />
+            <span class="profile-goal-val" id="profile-goal-val">4h</span>
+          </div>
+        </div>
+        <!-- Study Streak (read-only display) -->
+        <div class="profile-stats-strip" id="profile-stats-strip">
+          <div class="pstrip-item"><span id="pstrip-streak">0</span><small>Streak</small></div>
+          <div class="pstrip-item"><span id="pstrip-sessions">0</span><small>Sessions</small></div>
+          <div class="pstrip-item"><span id="pstrip-tasks">0</span><small>Tasks Done</small></div>
+        </div>
+        <div class="profile-modal-actions">
+          <button class="profile-save-btn" id="profile-save-btn">Save Profile</button>
+          <button class="profile-signout-btn" id="profile-signout-btn">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  </div><!-- end app-shell -->
+
+  <script src="js/auth-shared.js"></script>
+  <script type="module" src="js/firebase-auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/todo.js"></script>
+  <script src="js/pomo.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/challenges.js"></script>
+  <script src="js/app.js"></script>
 </body>
-
 </html>

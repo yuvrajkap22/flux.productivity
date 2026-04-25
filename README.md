@@ -1,106 +1,102 @@
-# Flux: Productivity Companion
+# Flux Productivity — Version 2.0
 
-A modern, premium productivity tracker with a Pomodoro timer (up to 3 hours), task management, focus stats, daily motivational quotes, and real-time progress tracking. Built as a fully installable PWA — works offline and can be added to your home screen.
+![Flux v2 social preview](assets/social-preview.svg)
 
-🌐 **Live app:** [yuvrajkap22.github.io/todo-list-app](https://yuvrajkap22.github.io/todo-list-app/)
+Flux is a premium productivity workspace focused on deep work, planning, and daily consistency.
 
-💬 **Discord:** [Join our community](https://discord.gg/XxVmF3HtzE)
+Version 2.0 delivers a full visual refresh, stronger auth/profile flows, richer interactions, and improved release setup for production deployment.
 
----
+## Release Assets
 
-## ✨ Features
+- Changelog: CHANGELOG.md
+- Social preview (landscape): assets/social-preview.svg
+- Social preview (square): assets/social-preview-square.svg
 
-- **Task Management** — Add, complete, and delete tasks with smooth animations
-- **Progress Tracking** — Live progress bar and completion counter
-- **Pomodoro Timer** — Editable work/break durations (1–180 min), gradient ring, audio notification, and task linking
-- **Focus Stats** — Daily session count, total focus minutes, and consecutive day streak
-- **Daily Quote** — Rotating motivational quotes to keep you inspired
-- **Glassmorphism UI** — Apple OS 26-inspired frosted glass design with iridescent violet-blue accents
-- **Bloom Animations** — Glowing ring, check-circle ripple, ambient orb drift
-- **Dark / Light Mode** — Toggle with a click or press `D`
-- **Filters** — View All / Active / Completed tasks
-- **Keyboard Shortcuts** — Full keyboard control (press `?` for help)
-- **Offline Support** — Works without internet via service worker cache
-- **Installable PWA** — "Add to Home Screen" on iOS and Android
-- **Discord Integration** — Quick link to join the community
+## What's New in 2.0
 
----
+- Complete UI refresh with upgraded visual hierarchy, gradients, glass surfaces, and motion polish.
+- New branded logo system and tab icon (favicon) for stronger product identity.
+- Improved loading experiences for both app pages with smooth transitions and better synchronization.
+- Hardened Firebase authentication flow with shared configuration and better error handling.
+- Profile avatar reliability fixes with robust fallback logic to prevent blank profile images.
+- Better auth-to-app synchronization to avoid race conditions during startup.
+- Cleaner code organization with reduced duplication in Firebase config and avatar utility logic.
 
-## ⌨️ Keyboard Shortcuts
+## Core Features
 
-| Key | Action |
-|-----|--------|
-| `N` | Focus input to add a new task |
-| `P` | Start / Pause Pomodoro timer |
-| `D` | Toggle dark / light mode |
-| `?` | Open shortcuts help |
-| `1` `2` `3` | Filter: All / Active / Completed |
-| `Esc` | Close overlay / Blur input |
+- Google sign-in and email/password auth with friendly error states.
+- Persistent sessions using local auth persistence.
+- Profile management:
+  - Display name, username, bio, banner themes.
+  - Avatar upload, optimization, fallback generation, and removal.
+  - Daily focus goal slider and profile stats strip.
+- Pomodoro focus timer with customizable controls.
+- Daily task management with completion tracking.
+- Ambient sound mixer with volume and master controls.
+- Focus statistics dashboard for streaks, sessions, and progress.
+- Challenge system with active/completed/custom challenge flows.
+- Theme and accent customization.
+- Performance-lite mode detection for lower-end devices.
 
----
+## Tech Stack
 
-## 📱 Install as an App
+- Frontend: Vanilla HTML, CSS, JavaScript
+- Auth: Firebase Authentication (Web SDK)
+- Build pipeline: html-minifier-terser, clean-css, terser
 
-1. Open the live URL in **Safari (iOS)** or **Chrome (Android)**
-2. Tap **Share → Add to Home Screen** (iOS) or the **Install** prompt (Android/Desktop)
-3. Flux launches in fullscreen, just like a native app
+## Project Structure
 
----
+- index.html: Main app shell
+- login.html: Authentication entry page
+- style.css: Shared styling system
+- js/: Feature modules (auth, profile, tasks, timer, stats, sounds, challenges)
+- assets/: Logo and favicon assets
+- scripts/build-dist.mjs: Production build script
 
-## 🛠️ Tech Stack
+## Local Development
 
-- **HTML / CSS / JavaScript** — no frameworks, no build step
-- **Web Audio API** — Pomodoro notification chimes
-- **localStorage** — task, settings, and focus stats persistence
-- **Service Worker** — offline caching
-- **GitHub Actions** — automatic deployment to GitHub Pages
-
----
-
-## 🚀 Local Development
-
-Just open `index.html` in a browser — no server or install needed.
+1. Install dependencies:
 
 ```bash
-git clone https://github.com/yuvrajkap22/todo-list-app.git
-cd todo-list-app
-open index.html
+npm install
 ```
 
----
+2. Run a local static server from project root (example):
 
-## 📁 Project Structure
-
-```
-├── index.html          # App markup
-├── style.css           # Glassmorphism dual-theme styles + animations
-├── script.js           # App logic (tasks, timer, stats, shortcuts)
-├── icon.svg            # Vector app icon
-├── manifest.json       # PWA manifest
-├── sw.js               # Service worker (offline support)
-├── icons/
-│   ├── icon-192.png
-│   └── icon-512.png
-└── .github/
-    └── workflows/
-        └── pages.yml   # Auto-deploy to GitHub Pages
+```bash
+python3 -m http.server 5500
 ```
 
----
+3. Open in browser:
 
-## 📋 Changelog
+- http://localhost:5500/login.html
+- http://localhost:5500/index.html
 
-### v1.01 — March 2026
+## Build for Production
 
-- **Pomodoro Expanded** — Work and break durations now support up to 180 minutes (3 hours)
-- **UI Refresh** — Complete redesign with Apple OS 26-inspired glassmorphism, frosted glass panels, violet-blue gradient accents, and premium shadows
-- **Timer Ring Fix** — Fixed animated ring creating a square shadow artifact; now uses SVG drop-shadow filter for clean circular glow
-- **Focus Stats** — New dashboard showing today's completed sessions, total focus minutes, and consecutive day streak
-- **Daily Quotes** — Rotating motivational quotes displayed in a glass card
-- **Discord Integration** — Header and footer links to join the Flux Discord community
-- **New App Icon** — Premium gradient SVG icon with stylized "F" and lightning bolt accent
-- **Three Ambient Orbs** — Added a third ambient glow orb for richer depth
+```bash
+npm run build
+```
 
-### v1.00 — March 2026
+The optimized output is generated in dist/.
 
-- Initial release with task management, Pomodoro timer, dark/light themes, keyboard shortcuts, and PWA support
+## Firebase Setup
+
+Update configuration in js/firebase-config.js if you are using your own Firebase project.
+
+Required fields:
+
+- apiKey
+- authDomain
+- projectId
+- appId
+
+For local testing, use localhost and ensure your domain is authorized in Firebase Auth settings.
+
+## Release Notes
+
+Version: 2.0.0
+
+This release focuses on visual refinement, startup/auth reliability, profile avatar correctness, and cleaner project organization for easier maintenance and deployment.
+
+Detailed release entries are available in CHANGELOG.md.
