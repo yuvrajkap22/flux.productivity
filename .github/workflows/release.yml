@@ -32,11 +32,35 @@ jobs:
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Create GitHub release with generated notes
+      - name: Build release notes from changelog
+        id: notes
+        run: |
+          TAG="${{ steps.vars.outputs.tag }}"
+          VERSION="${TAG#v}"
+
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { in_section=1; next }
+            in_section && $0 ~ "^## \\[" { exit }
+            in_section { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "No changelog entry found for ${TAG}." > RELEASE_NOTES.md
+            echo "Please add a section in CHANGELOG.md like: ## [${VERSION}] - YYYY-MM-DD" >> RELEASE_NOTES.md
+          fi
+
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.vars.outputs.tag }}
+          body_path: RELEASE_NOTES.md
           generate_release_notes: true
+          append_body: true
+          fail_on_unmatched_files: false
+          draft: false
+          prerelease: false
+          target_commitish: main
           make_latest: true
+          name: ${{ steps.vars.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

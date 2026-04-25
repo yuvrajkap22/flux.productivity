@@ -5,7 +5,8 @@
   "description": "Flux static web app with deployment minification pipeline.",
   "scripts": {
     "build": "npm run build:dist",
-    "build:dist": "node scripts/build-dist.mjs"
+    "build:dist": "node scripts/build-dist.mjs",
+    "release": "bash scripts/release.sh"
   },
   "devDependencies": {
     "clean-css": "^5.3.3",
