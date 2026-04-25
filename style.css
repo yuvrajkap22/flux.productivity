@@ -425,7 +425,7 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
   white-space: nowrap;
 }
 .todo-tag[data-cat="work"] { background: rgba(59,130,246,0.15); color: #60a5fa; }
-.todo-tag[data-cat="study"] { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.todo-tag[data-cat="study"] { background: rgba(245,166,35,0.16); color: #ffcf70; }
 .todo-tag[data-cat="personal"] { background: rgba(236,72,153,0.15); color: #f472b6; }
 .todo-tag[data-cat="health"] { background: rgba(34,211,160,0.15); color: #34d399; }
 .todo-tag[data-cat="creative"] { background: rgba(245,158,11,0.15); color: #fbbf24; }
@@ -584,6 +584,136 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
 .pomo-stat { text-align: center; }
 .pomo-stat span { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; display: block; }
 .pomo-stat small { font-size: 11px; color: var(--text-dim); }
+
+/* ─── Stats + Challenges Refresh ─── */
+.stats-period-toggle,
+.challenges-tabs {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+}
+
+.period-btn,
+.challenge-tab {
+  padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03); color: var(--text-dim); font-size: 12px;
+}
+
+.period-btn.active,
+.challenge-tab.active {
+  color: var(--accent); border-color: var(--accent-border); background: var(--accent-subtle);
+}
+
+.stats-overview-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stat-card {
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent), var(--bg-glass);
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+.stats-chart-card { grid-column: 1 / -1; }
+.stats-heatmap-card,
+.stats-category-card,
+.stats-tasks-card,
+.stats-avg-card {
+  min-height: 100%;
+}
+
+.bar-chart-wrap { overflow: hidden; }
+.bar-chart {
+  display: flex; align-items: flex-end; gap: 10px; height: 180px; padding-top: 12px; overflow-x: auto;
+}
+
+.bar-fill { background: linear-gradient(to top, var(--accent), var(--accent-secondary)); }
+.bar-value { white-space: nowrap; }
+
+.heatmap-cell.level-1 { background: rgba(245,166,35,0.18); }
+.heatmap-cell.level-2 { background: rgba(245,166,35,0.35); }
+.heatmap-cell.level-3 { background: rgba(245,166,35,0.55); }
+
+.top-tasks-list { gap: 10px; }
+.top-task-item {
+  gap: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,0.03);
+}
+
+.category-bars,
+.avg-grid { display: grid; gap: 10px; }
+
+.cat-row {
+  display: grid; grid-template-columns: 92px 1fr 60px; gap: 10px; align-items: center;
+}
+
+.cat-row-label,
+.cat-row-val { font-size: 12px; }
+
+.cat-bar-bg {
+  height: 8px; border-radius: 999px; background: rgba(255,255,255,0.04); overflow: hidden;
+}
+
+.cat-bar-fill { box-shadow: 0 0 12px var(--accent-glow); }
+
+.avg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.avg-item {
+  padding: 12px; border-radius: 14px; border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+}
+
+.avg-value { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: var(--accent); }
+
+.challenges-header {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px;
+}
+
+.challenges-progress-summary {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+}
+
+.challenges-title { font-size: 22px; }
+.challenges-subtitle { color: var(--text-dim); font-size: 13px; margin-top: 2px; }
+
+.challenges-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+}
+
+.challenge-card {
+  padding: 16px; border-radius: 18px; background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent), var(--bg-glass);
+}
+
+.challenge-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.challenge-icon { font-size: 18px; }
+.challenge-card-title { font-size: 18px; margin-bottom: 4px; }
+.challenge-card-desc { color: var(--text-dim); line-height: 1.5; font-size: 13px; }
+.challenge-progress-wrap { margin-top: 12px; }
+.challenge-prog-bar-bg {
+  height: 8px; border-radius: 999px; background: rgba(255,255,255,0.04); overflow: hidden; margin-bottom: 8px;
+}
+
+.challenge-prog-bar-fill { height: 100%; border-radius: inherit; }
+.challenge-cat-badge,
+.challenge-done-badge {
+  font-size: 11px; padding: 5px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+.add-challenge-bar {
+  display: grid; grid-template-columns: 1fr 170px auto; gap: 10px; margin-top: 14px;
+}
+
+.challenges-empty {
+  grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--text-dim);
+  border: 1px dashed var(--border); border-radius: 18px; background: rgba(255,255,255,0.02);
+}
+
+.challenge-complete-btn,
+.challenge-delete-btn,
+.custom-challenge-add-btn {
+  border: 1px solid var(--accent-border); background: var(--accent-subtle); color: var(--text);
+}
 
 /* ═══════════════════════════════════════
    SOUND MIXER
@@ -820,11 +950,11 @@ body.performance-lite * {
   --bg-glass: rgba(17, 17, 24, 0.7);
   --bg-panel: var(--bg-glass);
   --bg-panel-solid: var(--bg-2);
-  --accent: #8b5cf6;
-  --accent-secondary: #a78bfa;
-  --accent-glow: rgba(139, 92, 246, 0.3);
-  --accent-subtle: rgba(139, 92, 246, 0.08);
-  --accent-border: rgba(139, 92, 246, 0.18);
+  --accent: #f5a623;
+  --accent-secondary: #ffcf70;
+  --accent-glow: rgba(245, 166, 35, 0.3);
+  --accent-subtle: rgba(245, 166, 35, 0.08);
+  --accent-border: rgba(245, 166, 35, 0.18);
   --text: #f0f0ff;
   --text-dim: rgba(240, 240, 255, 0.45);
   --text-muted: rgba(240, 240, 255, 0.2);
@@ -1432,7 +1562,7 @@ h1, h2, h3, .logo-text, .sidebar-stat-value, .pomo-time, .sidebar-stat-value,
 }
 
 .profile-save-btn {
-  background: linear-gradient(135deg, var(--accent), #a78bfa);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   color: #fff;
 }
 

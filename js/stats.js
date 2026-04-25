@@ -3,7 +3,7 @@
    ═══════════════════════════════════════ */
 
 const FluxStats = {
-  period: 'week', // 'week' | 'month' | 'all'
+  period: 'week', // 'week' | '30' | 'month' | 'all'
   dayLabels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
   monthLabels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
 
@@ -25,12 +25,34 @@ const FluxStats = {
     const todos  = Flux.load('flux_todos', []);
 
     if (this.period === 'week')  this.renderWeek(stats, todos);
+    else if (this.period === '30') this.render30Days(stats, todos);
     else if (this.period === 'month') this.renderMonth(stats, todos);
     else this.renderAll(stats, todos);
 
     this.renderHeatmap(stats);
     this.renderTopTasks(todos);
     this.renderCategoryBreakdown(todos);
+  },
+
+  render30Days(stats, todos) {
+    const days = [];
+    let totalSessions = 0, totalTime = 0;
+
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      const sessions = (stats.sessions?.[key]) || 0;
+      const time = (stats.totalTime?.[key]) || 0;
+      days.push({ label: String(d.getDate()), sessions, time, key, date: d });
+      totalSessions += sessions;
+      totalTime += time;
+    }
+
+    document.getElementById('bar-chart-title').textContent = 'Focus Trend (Last 30 Days)';
+    this.setOverviewCards(totalTime, totalSessions, stats, todos);
+    this.renderBarChart(days, 'time');
+    this.renderAverages(days, totalTime, totalSessions);
   },
 
   /* ─── Weekly view ─── */
@@ -49,7 +71,7 @@ const FluxStats = {
       totalTime     += time;
     }
 
-    document.getElementById('bar-chart-title').textContent = 'Daily Focus (Last 7 Days)';
+    document.getElementById('bar-chart-title').textContent = 'Focus Trend (Last 7 Days)';
     this.setOverviewCards(totalTime, totalSessions, stats, todos);
     this.renderBarChart(days, 'time');
     this.renderAverages(days, totalTime, totalSessions);
@@ -76,7 +98,7 @@ const FluxStats = {
     }
 
     const monthName = this.monthLabels[month] + ' ' + year;
-    document.getElementById('bar-chart-title').textContent = `Daily Focus (${monthName})`;
+    document.getElementById('bar-chart-title').textContent = `Monthly Focus (${monthName})`;
     this.setOverviewCards(totalTime, totalSessions, stats, todos);
     this.renderBarChart(days, 'time');
     this.renderAverages(days, totalTime, totalSessions);
