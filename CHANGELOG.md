@@ -37,3 +37,4 @@ The format follows Keep a Changelog principles and semantic versioning.
 ### Developer Experience
 - Cleaner project structure for release builds and static asset distribution.
 - Clearer v2 documentation with feature listing and setup/build instructions.
+- Automated GitHub Release workflow for tag-based publishing with generated notes.
