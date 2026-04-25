@@ -67,11 +67,8 @@
 
   /* ─── Theme Toggle ─── */
   const themeToggle = document.getElementById('theme-toggle');
-  function setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    const settings = Flux.load('flux_settings', {});
-    settings.theme = theme;
-    Flux.save('flux_settings', settings);
+  function setTheme(theme, persist = true) {
+    window.FluxTheme?.applyTheme(theme, { persist });
   }
 
   themeToggle.addEventListener('click', () => {
@@ -82,28 +79,19 @@
 
   // Load saved theme
   const savedSettings = Flux.load('flux_settings', {});
-  if (savedSettings.theme) setTheme(savedSettings.theme);
+  if (savedSettings.theme) setTheme(savedSettings.theme, false);
 
   /* ─── Accent Color ─── */
-  function setAccent(color) {
-    const root = document.documentElement.style;
-    root.setProperty('--accent', color);
+  function setAccent(color, persist = true) {
+    const palette = window.FluxTheme?.applyAccent(color, { persist }) || null;
+    const resolvedColor = palette?.primary || color;
 
-    // Parse hex to RGB for glow/subtle
-    const r = parseInt(color.slice(1, 3), 16);
-    const g = parseInt(color.slice(3, 5), 16);
-    const b = parseInt(color.slice(5, 7), 16);
-    root.setProperty('--accent-glow', `rgba(${r},${g},${b},0.35)`);
-    root.setProperty('--accent-subtle', `rgba(${r},${g},${b},0.08)`);
+    document.getElementById('custom-accent-color').value = resolvedColor;
 
     // Update active dot
     document.querySelectorAll('.accent-dot').forEach(d => {
-      d.classList.toggle('active', d.dataset.color === color);
+      d.classList.toggle('active', d.dataset.color === resolvedColor);
     });
-
-    const settings = Flux.load('flux_settings', {});
-    settings.accent = color;
-    Flux.save('flux_settings', settings);
   }
 
   document.getElementById('accent-dots').addEventListener('click', (e) => {
@@ -119,7 +107,24 @@
   });
 
   // Load saved accent
-  if (savedSettings.accent) setAccent(savedSettings.accent);
+  if (savedSettings.accent) setAccent(savedSettings.accent, false);
+
+  window.addEventListener('storage', (event) => {
+    if (event.key !== 'flux_settings' || !event.newValue) return;
+
+    try {
+      const next = JSON.parse(event.newValue);
+      if (next.theme) setTheme(next.theme, false);
+      if (next.accent) setAccent(next.accent, false);
+    } catch {}
+  });
+
+  window.addEventListener('flux-accent-change', () => {
+    document.getElementById('custom-accent-color').value = Flux.load('flux_settings', {}).accent || '#8b5cf6';
+    if (document.getElementById('view-challenges')?.classList.contains('active') && typeof FluxChallenges?.render === 'function') {
+      FluxChallenges.render();
+    }
+  });
 
   /* ─── Sidebar ─── */
   const sidebar = document.getElementById('sidebar');

@@ -14,6 +14,7 @@ const FluxProfile = {
     banner: 'linear-gradient(135deg,#8b5cf6,#06b6d4)',
     photoURL: '',
   },
+  usesDefaultBanner: true,
 
   init(user) {
     this.activeUser = user || null;
@@ -38,7 +39,9 @@ const FluxProfile = {
       this.data.username    = Flux.cleanText(saved.username || '', 24);
       this.data.bio         = Flux.cleanText(saved.bio || '', 120);
       this.data.goalHours   = saved.goalHours || 4;
-      this.data.banner      = saved.banner || 'linear-gradient(135deg,#8b5cf6,#06b6d4)';
+      const palette = window.FluxTheme?.getAccentPalette?.(saved.accent || saved.themeAccent || Flux.load('flux_settings', {})?.accent);
+      this.data.banner      = saved.banner || `linear-gradient(135deg,${palette?.primary || '#8b5cf6'},${palette?.secondary || '#06b6d4'})`;
+      this.usesDefaultBanner = !saved.banner;
       this.data.photoURL    = saved.photoURL || user.photoURL || '';
     }
 
@@ -59,7 +62,8 @@ const FluxProfile = {
 
     const safeName = Flux.cleanText(name || 'Flux User', 40) || 'Flux User';
     const initials = safeName.slice(0, 2).toUpperCase();
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><rect width="200" height="200" rx="100" fill="url(#g)"/><text x="100" y="118" font-size="72" font-family="Arial,sans-serif" text-anchor="middle" fill="#fff">${initials}</text></svg>`;
+    const palette = window.FluxTheme?.getAccentPalette?.(Flux.load('flux_settings', {})?.accent) || { primary: '#8b5cf6', secondary: '#06b6d4' };
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${palette.primary}"/><stop offset="1" stop-color="${palette.secondary}"/></linearGradient></defs><rect width="200" height="200" rx="100" fill="url(#g)"/><text x="100" y="118" font-size="72" font-family="Arial,sans-serif" text-anchor="middle" fill="#fff">${initials}</text></svg>`;
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   },
 
@@ -201,6 +205,22 @@ const FluxProfile = {
 
   bindEvents() {
     this.isBound = true;
+
+    window.addEventListener('flux-accent-change', (event) => {
+      if (!this.activeUser) return;
+
+      const palette = event.detail?.palette || window.FluxTheme?.getAccentPalette?.(Flux.load('flux_settings', {})?.accent);
+      if (this.usesDefaultBanner && palette) {
+        this.data.banner = `linear-gradient(135deg,${palette.primary},${palette.secondary})`;
+        const banner = document.getElementById('profile-banner');
+        if (banner) banner.style.background = this.data.banner;
+      }
+
+      this.renderHeader(this.activeUser);
+      if (!document.getElementById('profile-modal-overlay')?.classList.contains('hidden')) {
+        this.populateModal();
+      }
+    });
 
     document.getElementById('profile-avatar-btn')?.addEventListener('click', () => {
       this.toggleMenu();

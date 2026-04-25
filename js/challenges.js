@@ -188,7 +188,8 @@ const FluxChallenges = {
       return;
     }
 
-    const catColors = { focus: '#8b5cf6', consistency: '#22d3a0', tasks: '#60a5fa', wellness: '#f59e0b' };
+    const accent = window.FluxTheme?.getAccentPalette?.(Flux.load('flux_settings', {})?.accent)?.primary || 'var(--accent)';
+    const catColors = { focus: accent, consistency: '#22d3a0', tasks: '#60a5fa', wellness: '#f59e0b' };
 
     grid.innerHTML = filtered.map(c => {
       const done     = !!(data.completed?.[c.id]);

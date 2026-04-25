@@ -44,6 +44,92 @@ const Flux = {
     try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
   },
 
+  parseHexColor(color) {
+    const hex = String(color || '').trim().replace(/^#/, '');
+    if (!/^[0-9a-f]{6}$/i.test(hex)) return null;
+
+    return {
+      hex: `#${hex.toLowerCase()}`,
+      r: parseInt(hex.slice(0, 2), 16),
+      g: parseInt(hex.slice(2, 4), 16),
+      b: parseInt(hex.slice(4, 6), 16),
+    };
+  },
+
+  mixHexColors(primary, secondary, weight = 0.5) {
+    const a = this.parseHexColor(primary);
+    const b = this.parseHexColor(secondary);
+    if (!a || !b) return primary;
+
+    const ratio = Math.max(0, Math.min(1, weight));
+    const mix = (x, y) => Math.round(x + (y - x) * ratio);
+    return `#${[mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b)]
+      .map((value) => value.toString(16).padStart(2, '0'))
+      .join('')}`;
+  },
+
+  getAccentPalette(color, theme = document.documentElement.getAttribute('data-theme') || 'dark') {
+    const parsed = this.parseHexColor(color) || this.parseHexColor('#8b5cf6');
+    const primary = parsed.hex;
+    const secondary = this.mixHexColors(primary, theme === 'light' ? '#ffffff' : '#111111', theme === 'light' ? 0.28 : 0.16);
+    const tertiary = this.mixHexColors(primary, theme === 'light' ? '#1a1a2e' : '#ffffff', theme === 'light' ? 0.58 : 0.72);
+
+    return {
+      primary,
+      secondary,
+      tertiary,
+      rgb: `${parsed.r}, ${parsed.g}, ${parsed.b}`,
+    };
+  },
+
+  applyTheme(theme, options = {}) {
+    const resolved = theme === 'light' ? 'light' : 'dark';
+    const root = document.documentElement;
+    root.setAttribute('data-theme', resolved);
+    root.style.colorScheme = resolved;
+    document.body?.setAttribute('data-theme', resolved);
+
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', resolved === 'light' ? '#f2f0ff' : '#0a0a0f');
+    }
+
+    if (options.persist !== false) {
+      const settings = Flux.load('flux_settings', {});
+      settings.theme = resolved;
+      Flux.save('flux_settings', settings);
+    }
+
+    window.dispatchEvent(new CustomEvent('flux-theme-change', {
+      detail: { theme: resolved },
+    }));
+
+    return resolved;
+  },
+
+  applyAccent(color, options = {}) {
+    const palette = this.getAccentPalette(color);
+    const root = document.documentElement.style;
+    root.setProperty('--accent', palette.primary);
+    root.setProperty('--accent-secondary', palette.secondary);
+    root.setProperty('--accent-glow', `rgba(${palette.rgb}, 0.35)`);
+    root.setProperty('--accent-subtle', `rgba(${palette.rgb}, 0.08)`);
+    root.setProperty('--accent-border', `rgba(${palette.rgb}, 0.18)`);
+    root.setProperty('--accent-text', palette.tertiary);
+
+    if (options.persist !== false) {
+      const settings = Flux.load('flux_settings', {});
+      settings.accent = palette.primary;
+      Flux.save('flux_settings', settings);
+    }
+
+    window.dispatchEvent(new CustomEvent('flux-accent-change', {
+      detail: { accent: palette.primary, palette },
+    }));
+
+    return palette;
+  },
+
   // Quotes data
   quotes: [
     { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
@@ -140,3 +226,5 @@ const Flux = {
     return text.slice(0, maxLen);
   }
 };
+
+window.FluxTheme = Flux;
