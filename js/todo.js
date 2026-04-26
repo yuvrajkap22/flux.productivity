@@ -6,17 +6,15 @@ const FluxTodo = {
   todos: [],
   filter: 'all',
   trackingId: null,
-  trackingInterval: null,
 
   init() {
     this.todos = Flux.load('flux_todos', []);
     this.bindEvents();
     this.render();
-    // Resume tracking if any task was being tracked
+    // Restore selected task for pomodoro targeting
     const tracking = this.todos.find(t => t.tracking);
     if (tracking) {
       this.trackingId = tracking.id;
-      this.startTrackingTimer();
     }
   },
 
@@ -121,30 +119,19 @@ const FluxTodo = {
     if (!todo || todo.completed) return;
 
     if (this.trackingId === id) {
-      this.stopTracking();
+      todo.tracking = false;
+      this.trackingId = null;
+      this.save();
+      this.render();
+      return;
     } else {
-      // Stop current tracking if any
-      if (this.trackingId) this.stopTracking();
+      // Set selected task for task-specific pomodoro
+      this.todos.forEach(t => { t.tracking = false; });
       todo.tracking = true;
       this.trackingId = id;
-      this.startTrackingTimer();
     }
     this.save();
     this.render();
-  },
-
-  startTrackingTimer() {
-    this.trackingInterval = setInterval(() => {
-      const todo = this.todos.find(t => t.id === this.trackingId);
-      if (todo) {
-        todo.timeTracked++;
-        // Update display without full re-render
-        const badge = document.querySelector(`[data-id="${this.trackingId}"] .todo-time-badge`);
-        if (badge) badge.textContent = Flux.formatTime(todo.timeTracked);
-        // Save periodically (every 10s)
-        if (todo.timeTracked % 10 === 0) this.save();
-      }
-    }, 1000);
   },
 
   stopTracking() {
@@ -206,7 +193,7 @@ const FluxTodo = {
     const text = document.createElement('span');
     text.className = 'todo-text';
     text.textContent = todo.text;
-    text.addEventListener('click', () => this.toggleTracking(todo.id));
+    text.title = 'Select this task for Pomodoro';
 
     const tag = document.createElement('span');
     tag.className = 'todo-tag';
@@ -236,7 +223,28 @@ const FluxTodo = {
 
     actions.append(priorityBtn, deleteBtn);
     item.append(checkbox, trackingDot, text, tag, badge, actions);
+
+    item.addEventListener('click', (event) => {
+      if (event.target.closest('button, .todo-action-btn, .todo-checkbox')) return;
+      this.toggleTracking(todo.id);
+    });
+
     return item;
+  },
+
+  getActiveTaskId() {
+    return this.trackingId;
+  },
+
+  addTrackedTime(seconds = 1) {
+    if (!this.trackingId) return;
+    const todo = this.todos.find(t => t.id === this.trackingId);
+    if (!todo || todo.completed) return;
+
+    todo.timeTracked = (todo.timeTracked || 0) + seconds;
+    const badge = document.querySelector(`[data-id="${this.trackingId}"] .todo-time-badge`);
+    if (badge) badge.textContent = Flux.formatTime(todo.timeTracked);
+    if (todo.timeTracked % 10 === 0) this.save();
   },
 
   catLabel(cat) {

@@ -30,6 +30,16 @@ const authUtils = window.FluxAuthUtils || {
   resolveAvatarSource: (_, label) => label,
 };
 
+function createGuestUser() {
+  return {
+    uid: 'guest-local',
+    displayName: 'Guest User',
+    email: 'guest@local',
+    photoURL: '',
+    isGuest: true,
+  };
+}
+
 function setMessage(text, kind = '') {
   if (!authMessage) return;
   authMessage.textContent = text;
@@ -90,7 +100,8 @@ function setAuthenticated(user) {
   window.FluxApp?.onAuthChange?.(user);
 
   if (user) {
-    setMessage('Signed in successfully.', 'success');
+    if (user.isGuest) setMessage('Running in local guest mode.', 'success');
+    else setMessage('Signed in successfully.', 'success');
   } else {
     setMessage('Continue with Google to enter Flux.');
   }
@@ -124,16 +135,26 @@ if (authUtils.normalizeDevHost()) {
   };
   window.FluxAuthState = { ready: false, user: null };
   emitAuthReady(null);
-} else if (!isFirebaseConfigured(firebaseConfig)) {
-  markSetupRequired();
-  setAuthenticated(null);
+} else if (!isFirebaseConfigured(firebaseConfig) || location.protocol === 'file:') {
+  const guestUser = createGuestUser();
+  if (!isFirebaseConfigured(firebaseConfig)) {
+    setMessage('Firebase not configured. Running in local guest mode.', 'success');
+  } else {
+    setMessage('File mode detected. Running in local guest mode.', 'success');
+  }
+  setAuthenticated(guestUser);
   window.FluxAuth = {
-    ready: false,
-    user: null,
-    signOut: async () => {},
+    ready: true,
+    user: () => guestUser,
+    signOut: async () => {
+      authState.user = null;
+      window.FluxAuthState = { ready: true, user: null };
+      emitAuthReady(null);
+      setAuthenticated(null);
+    },
   };
-  window.FluxAuthState = { ready: false, user: null };
-  emitAuthReady(null);
+  window.FluxAuthState = { ready: true, user: guestUser };
+  emitAuthReady(guestUser);
 } else {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);

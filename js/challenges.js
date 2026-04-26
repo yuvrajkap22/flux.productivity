@@ -198,24 +198,30 @@ const FluxChallenges = {
       const color    = catColors[c.cat] || 'var(--accent)';
 
       return `<div class="challenge-card glass-panel ${done ? 'challenge-done' : ''}">
-        <div class="challenge-card-top">
-          <span class="challenge-icon">${c.icon}</span>
-          <span class="challenge-cat-badge" style="background:${color}22;color:${color}">${c.cat}</span>
+        <div class="challenge-card-head">
+          <div class="challenge-card-top">
+            <span class="challenge-icon">${c.icon}</span>
+            <span class="challenge-cat-badge" style="background:${color}22;color:${color}">${c.cat}</span>
+            ${done ? '<span class="challenge-done-badge">Completed</span>' : ''}
+          </div>
           ${c.isCustom ? `<button class="challenge-delete-btn" data-id="${c.id}" title="Delete" type="button">✕</button>` : ''}
-          ${done ? '<span class="challenge-done-badge">✓ Done</span>' : ''}
         </div>
         <h3 class="challenge-card-title">${Flux.sanitize(c.title)}</h3>
         <p class="challenge-card-desc">${Flux.sanitize(c.desc)}</p>
         ${c.target && !c.isCustom ? `
-        <div class="challenge-progress-wrap">
-          <div class="challenge-prog-bar-bg">
-            <div class="challenge-prog-bar-fill" style="width:${pct}%;background:${color}"></div>
+        <div class="challenge-card-meter">
+          <div class="challenge-progress-wrap">
+            <div class="challenge-prog-bar-bg">
+              <div class="challenge-prog-bar-fill" style="width:${pct}%;background:${color}"></div>
+            </div>
+            <span class="challenge-prog-val" style="color:${color}">${pct}%</span>
           </div>
-          <span class="challenge-prog-val" style="color:${color}">${pct}%</span>
+          <div class="challenge-prog-label">${Math.min(progress, c.target)} / ${this.formatTarget(c.target, c.metric)}</div>
         </div>
-        <div class="challenge-prog-label">${Math.min(progress, c.target)} / ${this.formatTarget(c.target, c.metric)}</div>
         ` : ''}
-        ${!done ? `<button class="challenge-complete-btn" style="--btn-color:${color}" data-id="${c.id}" type="button">Mark Complete</button>` : ''}
+        <div class="challenge-card-footer">
+          ${!done ? `<button class="challenge-complete-btn" style="--btn-color:${color}" data-id="${c.id}" type="button">Mark Complete</button>` : '<span class="challenge-finished-tag">Great job</span>'}
+        </div>
       </div>`;
     }).join('');
   },

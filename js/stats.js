@@ -27,9 +27,9 @@ const FluxStats = {
     if (this.period === 'week')  this.renderWeek(stats, todos);
     else if (this.period === '30') this.render30Days(stats, todos);
     else if (this.period === 'month') this.renderMonth(stats, todos);
-    else this.renderAll(stats, todos);
-
-    this.renderHeatmap(stats);
+    else if (this.period === 'all') this.renderAll(stats, todos);
+    this.render30DayLineGraph(stats);
+    this.renderDayHistogram(stats);
     this.renderTopTasks(todos);
     this.renderCategoryBreakdown(todos);
   },
@@ -156,45 +156,119 @@ const FluxStats = {
     const MAX_BARS = 14; // limit labels for readability in month view
 
     let displayDays = days;
+    const isMobile = window.innerWidth <= 768;
+    const barDelayStep = isMobile ? 12 : 24;
     if (days.length > MAX_BARS) {
       // Sample every N days
       const step = Math.ceil(days.length / MAX_BARS);
       displayDays = days.filter((_, i) => i % step === 0 || i === days.length - 1);
     }
 
-    chart.innerHTML = displayDays.map(d => {
+    chart.innerHTML = displayDays.map((d, idx) => {
       const val  = d[metric] || 0;
       const h    = Math.max((val / maxVal) * 130, val > 0 ? 6 : 2);
       const isToday = d.key === Flux.todayKey();
       return `<div class="bar-col ${isToday ? 'bar-today' : ''}">
         <div class="bar-value">${val > 0 ? Flux.formatTime(val) : ''}</div>
-        <div class="bar-fill" style="height:${h}px"></div>
+        <div class="bar-fill" style="height:${h}px;--bar-delay:${idx * barDelayStep}ms"></div>
         <div class="bar-label">${d.label}</div>
       </div>`;
     }).join('');
   },
 
-  renderHeatmap(stats) {
-    const grid = document.getElementById('heatmap-grid');
-    // Show 10 weeks = 70 cells, aligned to current week
-    const today = new Date();
-    const dow   = today.getDay(); // 0=Sun
-    // go back to start of 10 weeks ago
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - (dow + 7 * 9));
+  render30DayLineGraph(stats) {
+    const svg = document.getElementById('line-chart-30');
+    if (!svg) return;
 
-    let html = '';
-    for (let i = 0; i < 70; i++) {
-      const d   = new Date(startDate);
-      d.setDate(startDate.getDate() + i);
+    const points = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
       const key = d.toISOString().split('T')[0];
-      const sessions = (stats.sessions?.[key]) || 0;
-      const isFuture = d > today;
-      const level = isFuture ? 'future' : sessions === 0 ? '' : sessions <= 1 ? 'level-1' : sessions <= 3 ? 'level-2' : sessions <= 5 ? 'level-3' : 'level-4';
-      const isToday = key === Flux.todayKey();
-      html += `<div class="heatmap-cell ${level} ${isToday ? 'hm-today' : ''}" title="${key}: ${sessions} session${sessions !== 1 ? 's' : ''}"></div>`;
+      const time = (stats.totalTime?.[key]) || 0;
+      points.push({ key, time, day: d.getDate() });
     }
-    grid.innerHTML = html;
+
+    const max = Math.max(...points.map(p => p.time), 1);
+    const width = 620;
+    const height = 180;
+    const padX = 18;
+    const padY = 16;
+    const usableW = width - padX * 2;
+    const usableH = height - padY * 2;
+
+    const linePoints = points.map((p, i) => {
+      const x = padX + (usableW * i) / Math.max(points.length - 1, 1);
+      const y = height - padY - ((p.time / max) * usableH);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(' ');
+
+    const areaPoints = `${padX},${height - padY} ${linePoints} ${width - padX},${height - padY}`;
+
+    const xLabels = [0, 9, 19, 29].map((idx) => {
+      const x = padX + (usableW * idx) / 29;
+      return `<text x="${x.toFixed(2)}" y="${height - 2}" class="line-axis-label">${points[idx].day}</text>`;
+    }).join('');
+
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="lineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.36"></stop>
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"></stop>
+        </linearGradient>
+      </defs>
+      <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" class="line-axis"></line>
+      <polygon points="${areaPoints}" class="line-area" fill="url(#lineAreaGrad)"></polygon>
+      <polyline points="${linePoints}" class="line-path"></polyline>
+      ${xLabels}
+    `;
+  },
+
+  renderDayHistogram(stats) {
+    const hist = document.getElementById('day-histogram');
+    const title = document.getElementById('day-hist-title');
+    if (!hist) return;
+
+    const sourceKey = this.getLatestActivityDay(stats);
+    const sourceDate = sourceKey ? new Date(`${sourceKey}T00:00:00`) : new Date();
+    const events = stats.events?.[sourceKey] || [];
+    const buckets = Array.from({ length: 24 }, () => 0);
+
+    events.forEach((evt) => {
+      const h = Number.isInteger(evt?.hour) ? evt.hour : -1;
+      if (h >= 0 && h <= 23) {
+        buckets[h] += Number(evt.duration) || 1500;
+      }
+    });
+
+    if (events.length === 0) {
+      const sessions = (stats.sessions?.[sourceKey]) || 0;
+      buckets[12] = sessions * 1500;
+    }
+
+    const max = Math.max(...buckets, 1);
+    const isMobile = window.innerWidth <= 768;
+    const histDelayStep = isMobile ? 7 : 14;
+    const dayLabel = sourceDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    if (title) title.textContent = `1-Day Hourly Histogram (${dayLabel})`;
+
+    hist.innerHTML = buckets.map((val, hour) => {
+      const barH = Math.max((val / max) * 96, val > 0 ? 4 : 2);
+      const showLabel = hour % 4 === 0;
+      return `<div class="day-hist-col" title="${hour}:00 - ${Flux.formatTime(val)}">
+        <div class="day-hist-bar" style="height:${barH.toFixed(1)}px;--hist-delay:${hour * histDelayStep}ms"></div>
+        <div class="day-hist-label">${showLabel ? hour : ''}</div>
+      </div>`;
+    }).join('');
+  },
+
+  getLatestActivityDay(stats) {
+    const keys = Object.keys(stats.sessions || {}).sort();
+    for (let i = keys.length - 1; i >= 0; i--) {
+      const k = keys[i];
+      if ((stats.sessions?.[k] || 0) > 0 || (stats.totalTime?.[k] || 0) > 0) return k;
+    }
+    return Flux.todayKey();
   },
 
   renderTopTasks(todos) {
@@ -277,7 +351,6 @@ const FluxStats = {
   },
 
   renderAverages(days, totalTime, totalSessions) {
-    const activeDays = days.filter(d => (d.time || 0) > 0).length || 1;
     const avgFocus   = Math.round(totalTime / Math.max(days.length, 1));
     const avgSess    = (totalSessions / Math.max(days.length, 1)).toFixed(1);
 

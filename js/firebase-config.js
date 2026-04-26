@@ -11,6 +11,7 @@ export function isFirebaseConfigured(config = firebaseConfig) {
   const required = [config?.apiKey, config?.authDomain, config?.projectId, config?.appId];
   if (required.some((value) => !value || String(value).trim() === '')) return false;
 
-  // Treat template placeholders as non-configured values.
+  // Treat template placeholders and dummy keys as non-configured values.
+  if (required.some((value) => String(value).includes('AIzaSyDu9AMuAlTk'))) return false;
   return required.every((value) => !String(value).startsWith('YOUR_'));
 }

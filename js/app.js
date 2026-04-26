@@ -71,7 +71,7 @@
     window.FluxTheme?.applyTheme(theme, { persist });
   }
 
-  themeToggle.addEventListener('click', () => {
+  themeToggle?.addEventListener('click', () => {
     const current = document.documentElement.getAttribute('data-theme');
     setTheme(current === 'dark' ? 'light' : 'dark');
     FluxAudio.buttonClick();
@@ -86,7 +86,8 @@
     const palette = window.FluxTheme?.applyAccent(color, { persist }) || null;
     const resolvedColor = palette?.primary || color;
 
-    document.getElementById('custom-accent-color').value = resolvedColor;
+    const accentInput = document.getElementById('custom-accent-color');
+    if (accentInput) accentInput.value = resolvedColor;
 
     // Update active dot
     document.querySelectorAll('.accent-dot').forEach(d => {
@@ -94,7 +95,7 @@
     });
   }
 
-  document.getElementById('accent-dots').addEventListener('click', (e) => {
+  document.getElementById('accent-dots')?.addEventListener('click', (e) => {
     const dot = e.target.closest('.accent-dot');
     if (dot) {
       setAccent(dot.dataset.color);
@@ -102,7 +103,7 @@
     }
   });
 
-  document.getElementById('custom-accent-color').addEventListener('input', (e) => {
+  document.getElementById('custom-accent-color')?.addEventListener('input', (e) => {
     setAccent(e.target.value);
   });
 
@@ -120,9 +121,26 @@
   });
 
   window.addEventListener('flux-accent-change', () => {
-    document.getElementById('custom-accent-color').value = Flux.load('flux_settings', {}).accent || '#8b5cf6';
+    const accentInput = document.getElementById('custom-accent-color');
+    if (accentInput) accentInput.value = Flux.load('flux_settings', {}).accent || '#8b5cf6';
     if (document.getElementById('view-challenges')?.classList.contains('active') && typeof FluxChallenges?.render === 'function') {
       FluxChallenges.render();
+    }
+  });
+
+  const accentMenuToggle = document.getElementById('accent-menu-toggle');
+  const accentMenu = document.getElementById('accent-menu');
+
+  accentMenuToggle?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    accentMenu?.classList.toggle('hidden');
+    FluxAudio.buttonClick();
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!accentMenu || !accentMenuToggle) return;
+    if (!accentMenu.contains(event.target) && !accentMenuToggle.contains(event.target)) {
+      accentMenu.classList.add('hidden');
     }
   });
 
@@ -131,7 +149,7 @@
   const sidebarToggle = document.getElementById('sidebar-toggle');
   let sidebarCollapsed = false;
 
-  sidebarToggle.addEventListener('click', () => {
+  sidebarToggle?.addEventListener('click', () => {
     const isMobile = window.innerWidth <= 768;
     if (isMobile) {
       sidebar.classList.toggle('open');
@@ -144,12 +162,11 @@
   });
 
   /* ─── Navigation ─── */
-  document.querySelectorAll('.nav-item[data-view]').forEach(item => {
-    item.addEventListener('click', () => {
+  function showView(view) {
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      item.classList.add('active');
+      const currentNav = document.querySelector(`.nav-item[data-view="${view}"]`);
+      if (currentNav) currentNav.classList.add('active');
 
-      const view = item.dataset.view;
       document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
 
       if (view === 'dashboard') {
@@ -166,14 +183,44 @@
       } else if (view === 'challenges') {
         document.getElementById('view-challenges').classList.add('active');
         FluxChallenges.render();
-      } else if (view === 'sounds') {
-        document.getElementById('view-dashboard').classList.add('active');
-        document.getElementById('sound-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (view === 'settings') {
+        document.getElementById('view-settings')?.classList.add('active');
       }
 
       if (window.innerWidth <= 768) sidebar.classList.remove('open');
-      FluxAudio.buttonClick();
+      if (typeof FluxAudio?.buttonClick === 'function') FluxAudio.buttonClick();
+  }
+
+  document.querySelectorAll('.nav-item[data-view]').forEach(item => {
+    item.addEventListener('click', () => {
+      showView(item.dataset.view);
     });
+  });
+
+  document.getElementById('settings-open-profile')?.addEventListener('click', () => {
+    const profileApi = window.FluxProfile || (typeof FluxProfile !== 'undefined' ? FluxProfile : null);
+    profileApi?.openModal?.();
+    FluxAudio.buttonClick();
+  });
+
+  document.getElementById('settings-theme-dark')?.addEventListener('click', () => {
+    setTheme('dark');
+    FluxAudio.buttonClick();
+  });
+
+  document.getElementById('settings-theme-light')?.addEventListener('click', () => {
+    setTheme('light');
+    FluxAudio.buttonClick();
+  });
+
+  document.getElementById('settings-open-accent')?.addEventListener('click', () => {
+    accentMenu?.classList.remove('hidden');
+    FluxAudio.buttonClick();
+  });
+
+  document.getElementById('settings-toggle-sound')?.addEventListener('click', () => {
+    FluxAudio.toggleMute();
+    FluxAudio.buttonClick();
   });
 
   /* ─── Quotes ─── */
@@ -218,7 +265,7 @@
 
   showQuote(false);
   setInterval(nextQuote, isLowPerformance ? 12000 : 8000);
-  document.getElementById('quote-next-btn').addEventListener('click', () => {
+  document.getElementById('quote-next-btn')?.addEventListener('click', () => {
     nextQuote();
     FluxAudio.buttonClick();
   });
@@ -239,22 +286,22 @@
     });
   });
 
-  volumeSlider.addEventListener('input', (e) => {
+  volumeSlider?.addEventListener('input', (e) => {
     const v = parseInt(e.target.value);
     FluxAudio.setVolume(v);
-    volumeValue.textContent = v + '%';
+    if (volumeValue) volumeValue.textContent = v + '%';
   });
 
   // Sound master toggle
-  document.getElementById('sound-master-toggle').addEventListener('click', () => {
+  document.getElementById('sound-master-toggle')?.addEventListener('click', () => {
     FluxAudio.toggleMute();
   });
 
   // Restore saved sound state
   const savedSounds = Flux.load('flux_sounds', {});
   if (savedSounds.volume !== undefined) {
-    volumeSlider.value = savedSounds.volume;
-    volumeValue.textContent = savedSounds.volume + '%';
+    if (volumeSlider) volumeSlider.value = savedSounds.volume;
+    if (volumeValue) volumeValue.textContent = savedSounds.volume + '%';
   }
 
   function bootstrapModules(user) {
@@ -277,6 +324,7 @@
   }
 
   window.FluxApp = window.FluxApp || {};
+  window.FluxApp.showView = showView;
   window.FluxApp.onAuthChange = (user) => {
     const appShell = document.getElementById('app-shell');
     const isLoginPage = location.pathname.endsWith('login.html');

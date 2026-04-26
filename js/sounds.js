@@ -127,7 +127,7 @@ const FluxAudio = {
   },
 
   // Ambient sound generators
-  createNoiseBuffer(type) {
+  createNoiseBuffer() {
     this.ensureCtx();
     const sr = this.ctx.sampleRate;
     const len = sr * 2;

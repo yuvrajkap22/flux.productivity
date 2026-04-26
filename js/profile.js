@@ -21,15 +21,23 @@ const FluxProfile = {
     this.storageKey = this.getStorageKey(user);
 
     if (!user) {
-      const btn = document.getElementById('profile-avatar-btn');
-      if (btn) btn.classList.add('hidden');
+      this.data.displayName = 'Guest';
+      this.data.username = '';
+      this.data.bio = '';
+      this.data.goalHours = 4;
+      this.data.banner = 'linear-gradient(135deg,#8b5cf6,#06b6d4)';
+      this.data.photoURL = '';
+      this.usesDefaultBanner = true;
+      this.renderHeader(null);
+      if (!this.isBound) this.bindEvents();
       return;
     }
 
     // Migrate legacy profile key to user-scoped key once.
     const legacy = Flux.load('flux_profile', null);
-    const saved = Flux.load(this.storageKey, legacy || {});
-    if (legacy && !Flux.load(this.storageKey, null)) {
+    const current = Flux.load(this.storageKey, null);
+    const saved = current || legacy || {};
+    if (legacy && !current) {
       Flux.saveNow(this.storageKey, legacy);
     }
 
@@ -119,9 +127,11 @@ const FluxProfile = {
     const btn = document.getElementById('profile-avatar-btn');
     const img = document.getElementById('profile-avatar-img');
     const initials = document.getElementById('profile-avatar-initials');
+    const signOutBtn = document.getElementById('profile-menu-signout');
 
-    if (!btn) return;
+    if (!btn || !img) return;
     btn.classList.remove('hidden');
+    if (signOutBtn) signOutBtn.classList.toggle('hidden', !this.activeUser);
 
     const fallbackName = this.data.displayName || user?.displayName || user?.email || 'Flux User';
     img.src = this.getAvatarSource(user);
@@ -230,6 +240,12 @@ const FluxProfile = {
     document.getElementById('profile-menu-open')?.addEventListener('click', () => {
       this.closeMenu();
       this.openModal();
+      FluxAudio.buttonClick();
+    });
+
+    document.getElementById('profile-menu-settings')?.addEventListener('click', () => {
+      this.closeMenu();
+      window.FluxApp?.showView?.('settings');
       FluxAudio.buttonClick();
     });
 
@@ -350,9 +366,7 @@ const FluxProfile = {
   }
 };
 
-if (window.FluxAuthState?.user) {
-  FluxProfile.init(window.FluxAuthState.user);
-}
+FluxProfile.init(window.FluxAuthState?.user || null);
 
 window.addEventListener('flux-auth-ready', (event) => {
   FluxProfile.init(event.detail?.user || null);

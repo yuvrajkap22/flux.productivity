@@ -253,13 +253,40 @@
           <line x1="17" y1="9" x2="23" y2="15" />
         </svg>
       </button>
-      <button class="profile-avatar-btn hidden" id="profile-avatar-btn" aria-label="Open profile">
-        <img class="profile-avatar-img" id="profile-avatar-img" src="" alt="" />
+      <button class="header-icon-btn" id="accent-menu-toggle" aria-label="Open accent colors">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v3" />
+          <path d="M12 19v3" />
+          <path d="M2 12h3" />
+          <path d="M19 12h3" />
+          <path d="m4.93 4.93 2.12 2.12" />
+          <path d="m16.95 16.95 2.12 2.12" />
+          <path d="m19.07 4.93-2.12 2.12" />
+          <path d="m7.05 16.95-2.12 2.12" />
+        </svg>
+      </button>
+      <div class="accent-menu hidden" id="accent-menu" aria-label="Accent color picker">
+        <div class="accent-dots" id="accent-dots">
+          <button class="accent-dot active" data-color="#8b5cf6" style="--dot-color:#8b5cf6" aria-label="Purple"></button>
+          <button class="accent-dot" data-color="#06b6d4" style="--dot-color:#06b6d4" aria-label="Cyan"></button>
+          <button class="accent-dot" data-color="#22d3a0" style="--dot-color:#22d3a0" aria-label="Teal"></button>
+          <button class="accent-dot" data-color="#f59e0b" style="--dot-color:#f59e0b" aria-label="Amber"></button>
+          <button class="accent-dot" data-color="#ec4899" style="--dot-color:#ec4899" aria-label="Pink"></button>
+          <button class="accent-dot" data-color="#ef4444" style="--dot-color:#ef4444" aria-label="Red"></button>
+          <button class="accent-dot" data-color="#f97316" style="--dot-color:#f97316" aria-label="Orange"></button>
+          <button class="accent-dot" data-color="#3b82f6" style="--dot-color:#3b82f6" aria-label="Blue"></button>
+          <input type="color" id="custom-accent-color" class="custom-color-input" value="#8b5cf6" title="Custom color" />
+        </div>
+      </div>
+      <button class="profile-avatar-btn" id="profile-avatar-btn" aria-label="Open profile">
+        <img class="profile-avatar-img" id="profile-avatar-img" src="assets/flux-logo.svg" alt="" />
         <span class="profile-avatar-initials" id="profile-avatar-initials">?</span>
         <span class="profile-avatar-ring"></span>
       </button>
       <div class="profile-avatar-menu hidden" id="profile-avatar-menu" role="menu" aria-label="Profile actions">
         <button class="profile-menu-btn" id="profile-menu-open" type="button" role="menuitem">Edit profile</button>
+        <button class="profile-menu-btn" id="profile-menu-settings" type="button" role="menuitem">Settings</button>
         <button class="profile-menu-btn signout" id="profile-menu-signout" type="button" role="menuitem">Sign out</button>
       </div>
     </div>
@@ -310,16 +337,6 @@
           <path d="M5 8H2M22 8h-3"/>
         </svg>
         <span class="nav-label">Challenges</span>
-      </button>
-      <div class="nav-divider"></div>
-      <button class="nav-item" data-view="sounds" id="nav-sounds">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round">
-          <path d="M9 18V5l12-2v13" />
-          <circle cx="6" cy="18" r="3" />
-          <circle cx="18" cy="16" r="3" />
-        </svg>
-        <span class="nav-label">Sounds</span>
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -487,25 +504,6 @@
           </div>
         </div>
 
-        <!-- Accent Picker Panel -->
-        <div class="bento-card accent-panel glass-panel" id="accent-panel">
-          <div class="panel-header">
-            <h2>Accent Color</h2>
-          </div>
-          <div class="accent-dots" id="accent-dots">
-            <button class="accent-dot active" data-color="#8b5cf6" style="--dot-color:#8b5cf6"
-              aria-label="Purple"></button>
-            <button class="accent-dot" data-color="#06b6d4" style="--dot-color:#06b6d4" aria-label="Cyan"></button>
-            <button class="accent-dot" data-color="#22d3a0" style="--dot-color:#22d3a0" aria-label="Teal"></button>
-            <button class="accent-dot" data-color="#f59e0b" style="--dot-color:#f59e0b" aria-label="Amber"></button>
-            <button class="accent-dot" data-color="#ec4899" style="--dot-color:#ec4899" aria-label="Pink"></button>
-            <button class="accent-dot" data-color="#ef4444" style="--dot-color:#ef4444" aria-label="Red"></button>
-            <button class="accent-dot" data-color="#f97316" style="--dot-color:#f97316" aria-label="Orange"></button>
-            <button class="accent-dot" data-color="#3b82f6" style="--dot-color:#3b82f6" aria-label="Blue"></button>
-            <input type="color" id="custom-accent-color" class="custom-color-input" value="#8b5cf6"
-              title="Custom color" />
-          </div>
-        </div>
       </div>
     </div>
 
@@ -550,7 +548,7 @@
         <!-- Bar Chart -->
         <div class="bento-card glass-panel stats-chart-card">
           <div class="panel-header">
-            <h2 id="bar-chart-title">Daily Focus (Last 7 Days)</h2>
+            <h2 id="bar-chart-title">Daily Focus Histogram</h2>
             <div class="chart-legend">
               <span class="legend-dot"></span><span>Focus time</span>
             </div>
@@ -560,22 +558,27 @@
           </div>
         </div>
 
-        <!-- Heatmap -->
-        <div class="bento-card glass-panel stats-heatmap-card">
+        <!-- 30-day Line Graph -->
+        <div class="bento-card glass-panel stats-line-card">
           <div class="panel-header">
-            <h2>Activity Heatmap</h2>
-            <div class="heatmap-legend">
-              <span>Less</span>
-              <span class="hm-sq"></span><span class="hm-sq l1"></span>
-              <span class="hm-sq l2"></span><span class="hm-sq l3"></span>
-              <span class="hm-sq l4"></span>
-              <span>More</span>
+            <h2>30-Day Focus Line</h2>
+            <div class="chart-legend">
+              <span class="legend-dot"></span><span>Total focus per day</span>
             </div>
           </div>
-          <div class="heatmap-week-labels" id="heatmap-week-labels">
-            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+          <div class="line-chart-wrap">
+            <svg id="line-chart-30" class="line-chart-30" viewBox="0 0 620 180" preserveAspectRatio="none" aria-label="30 day line chart"></svg>
           </div>
-          <div class="heatmap-grid" id="heatmap-grid"></div>
+        </div>
+
+        <!-- 1-day Histogram -->
+        <div class="bento-card glass-panel stats-day-card">
+          <div class="panel-header">
+            <h2 id="day-hist-title">1-Day Hourly Histogram</h2>
+          </div>
+          <div class="day-hist-wrap">
+            <div class="day-histogram" id="day-histogram"></div>
+          </div>
         </div>
 
         <!-- Category Breakdown -->
@@ -658,6 +661,41 @@
           <option value="wellness">🌿 Wellness</option>
         </select>
         <button class="custom-challenge-add-btn" id="custom-challenge-add-btn">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div class="view-panel" id="view-settings">
+      <div class="settings-head glass-panel">
+        <h2>Settings & Preferences</h2>
+        <p>Personalize your experience, manage your profile, and configure appearance.</p>
+      </div>
+
+      <div class="settings-grid">
+        <div class="settings-card glass-panel">
+          <h3>👤 Account Profile</h3>
+          <p>Customize your display name, handle, bio, and visual identity.</p>
+          <button class="settings-btn" id="settings-open-profile" type="button">Edit Profile</button>
+        </div>
+
+        <div class="settings-card glass-panel">
+          <h3>✨ Appearance</h3>
+          <p>Switch between light and dark modes, or tweak your accent color.</p>
+          <div class="settings-inline-actions">
+            <button class="settings-btn" id="settings-theme-dark" type="button">Dark Theme</button>
+            <button class="settings-btn" id="settings-theme-light" type="button">Light Theme</button>
+            <button class="settings-btn" id="settings-open-accent" type="button">Accent Color</button>
+          </div>
+        </div>
+
+        <div class="settings-card glass-panel">
+          <h3>⚙️ Accessibility</h3>
+          <p>Manage audio and visual feedback to suit your focus style.</p>
+          <div class="settings-inline-actions">
+            <button class="settings-btn" id="settings-toggle-sound" type="button">Toggle Mute</button>
+            <button class="settings-btn" id="settings-toggle-motion" type="button">Reduced Motion</button>
+          </div>
+        </div>
       </div>
     </div>
 
