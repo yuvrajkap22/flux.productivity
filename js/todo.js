@@ -16,6 +16,7 @@ const FluxTodo = {
     if (tracking) {
       this.trackingId = tracking.id;
     }
+    this.emitTrackingChange();
   },
 
   bindEvents() {
@@ -132,6 +133,33 @@ const FluxTodo = {
     }
     this.save();
     this.render();
+    this.emitTrackingChange();
+  },
+
+  startTimerForTask(id) {
+    const todo = this.todos.find(t => t.id === id);
+    if (!todo || todo.completed) return;
+
+    if (this.trackingId !== id) {
+      this.todos.forEach(t => { t.tracking = false; });
+      todo.tracking = true;
+      this.trackingId = id;
+      this.save();
+      this.render();
+      this.emitTrackingChange();
+    }
+
+    const pomo = window.FluxPomo || (typeof FluxPomo !== 'undefined' ? FluxPomo : null);
+    if (!pomo) return;
+
+    if (pomo.mode !== 'focus') {
+      pomo.setMode('focus');
+    }
+    if (!pomo.running) {
+      pomo.start();
+    }
+
+    FluxAudio.buttonClick();
   },
 
   stopTracking() {
@@ -142,6 +170,7 @@ const FluxTodo = {
     clearInterval(this.trackingInterval);
     this.trackingId = null;
     this.save();
+    this.emitTrackingChange();
   },
 
   getFiltered() {
@@ -208,11 +237,21 @@ const FluxTodo = {
     actions.className = 'todo-actions';
 
     const priorityBtn = document.createElement('button');
-    priorityBtn.className = 'todo-action-btn';
+    priorityBtn.className = `todo-action-btn priority-btn ${todo.priority ? 'is-active' : ''}`.trim();
     priorityBtn.type = 'button';
-    priorityBtn.title = 'Priority';
-    priorityBtn.textContent = '🚩';
+    priorityBtn.title = todo.priority ? 'Remove priority' : 'Mark as priority';
+    priorityBtn.setAttribute('aria-label', todo.priority ? 'Remove priority' : 'Mark as priority');
+    priorityBtn.setAttribute('aria-pressed', todo.priority ? 'true' : 'false');
+    priorityBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h11l-2 4 2 4H5"/></svg>';
     priorityBtn.addEventListener('click', () => this.togglePriority(todo.id));
+
+    const timerBtn = document.createElement('button');
+    timerBtn.className = 'todo-action-btn timer-btn';
+    timerBtn.type = 'button';
+    timerBtn.title = 'Start timer for this task';
+    timerBtn.setAttribute('aria-label', 'Start timer for this task');
+    timerBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>';
+    timerBtn.addEventListener('click', () => this.startTimerForTask(todo.id));
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'todo-action-btn delete-btn';
@@ -221,7 +260,7 @@ const FluxTodo = {
     deleteBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     deleteBtn.addEventListener('click', () => this.deleteTodo(todo.id));
 
-    actions.append(priorityBtn, deleteBtn);
+    actions.append(priorityBtn, timerBtn, deleteBtn);
     item.append(checkbox, trackingDot, text, tag, badge, actions);
 
     item.addEventListener('click', (event) => {
@@ -234,6 +273,18 @@ const FluxTodo = {
 
   getActiveTaskId() {
     return this.trackingId;
+  },
+
+  getActiveTask() {
+    if (!this.trackingId) return null;
+    const todo = this.todos.find(t => t.id === this.trackingId && !t.completed);
+    if (!todo) return null;
+    return { id: todo.id, text: todo.text, timeTracked: todo.timeTracked || 0 };
+  },
+
+  emitTrackingChange() {
+    const detail = this.getActiveTask();
+    window.dispatchEvent(new CustomEvent('flux-task-tracking-change', { detail }));
   },
 
   addTrackedTime(seconds = 1) {

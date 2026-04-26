@@ -22,6 +22,8 @@ const FluxPomo = {
   longestStreak: 0,
   totalFocusToday: 0,
   consecutiveFocus: 0,
+  activeTaskId: null,
+  activeTaskText: '',
 
   // Ring
   circumference: 2 * Math.PI * 88, // r=88
@@ -49,6 +51,7 @@ const FluxPomo = {
     this.remaining = this.duration;
 
     this.bindEvents();
+    this.syncActiveTask();
     this.updateDisplay();
     this.updateStatsBar();
     this.syncSettingsUI();
@@ -96,6 +99,29 @@ const FluxPomo = {
       this.settings.autoFocus = e.target.checked;
       this.saveSettings();
     });
+
+    window.addEventListener('flux-task-tracking-change', (event) => {
+      this.setActiveTask(event.detail || null);
+    });
+  },
+
+  syncActiveTask() {
+    const task = window.FluxTodo?.getActiveTask?.() || null;
+    this.setActiveTask(task);
+  },
+
+  setActiveTask(task) {
+    this.activeTaskId = task?.id || null;
+    this.activeTaskText = task?.text || '';
+    const label = document.getElementById('pomo-task-label');
+    if (!label) return;
+    if (this.activeTaskText) {
+      label.textContent = `Task: ${this.activeTaskText}`;
+      label.title = this.activeTaskText;
+    } else {
+      label.textContent = 'No task selected';
+      label.removeAttribute('title');
+    }
   },
 
   syncSettingsUI() {
@@ -152,7 +178,10 @@ const FluxPomo = {
 
     this.interval = setInterval(() => {
       this.remaining--;
-      if (this.mode === 'focus') this.totalFocusToday++;
+      if (this.mode === 'focus') {
+        this.totalFocusToday++;
+        window.FluxTodo?.addTrackedTime?.(1);
+      }
       this.updateDisplay();
 
       if (this.remaining <= 0) {
