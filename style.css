@@ -307,13 +307,14 @@ body.sounds-muted .icon-speaker-off { display: block; }
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--text-dim);
+  border: 1px solid var(--accent-border);
+  background: var(--accent-subtle);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15), 0 8px 20px -14px var(--accent-glow);
   transition: all 0.2s var(--ease);
 }
 
