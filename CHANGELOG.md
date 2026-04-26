@@ -16,9 +16,14 @@ The format follows Keep a Changelog principles and semantic versioning.
   - assets/social-preview-square.svg
 - Shared Firebase configuration module:
   - js/firebase-config.js
+- Reduced Motion toggle in Settings to improve accessibility and performance.
+- Native Guest Mode fallback gracefully bypasses placeholder Firebase credentials.
 
 ### Changed
 - Refreshed UI and branding application across core pages.
+- Settings view completely redesigned with a modern Bento-grid layout and icons.
+- Improved the custom glassmorphic cursor to include a dynamic soft glow based on the theme accent.
+- Profile modal UI enhanced with a glowing avatar wrapper and refined focus states.
 - Header and login hero now use the new logo asset for visual consistency.
 - Build pipeline now includes the assets directory in dist output.
 - Package version bumped to 2.0.0.

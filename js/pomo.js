@@ -13,7 +13,7 @@ const FluxPomo = {
   // Settings
   settings: {
     focus: 25, short: 5, long: 15,
-    interval: 4, autoBreak: false, autoFocus: false,
+    interval: 4, autoBreak: true, autoFocus: true,
   },
 
   // Stats
@@ -145,14 +145,6 @@ const FluxPomo = {
 
   start() {
     if (this.remaining <= 0) return;
-
-    // Task-specific Pomodoro: require a selected todo for focus mode.
-    if (this.mode === 'focus' && !FluxTodo.getActiveTaskId()) {
-      Flux.showToast('Select a task first, then start Pomodoro.');
-      FluxAudio.buttonClick();
-      return;
-    }
-
     this.running = true;
     document.getElementById('pomo-play').classList.add('playing');
 
@@ -160,10 +152,7 @@ const FluxPomo = {
 
     this.interval = setInterval(() => {
       this.remaining--;
-      if (this.mode === 'focus') {
-        this.totalFocusToday++;
-        FluxTodo.addTrackedTime(1);
-      }
+      if (this.mode === 'focus') this.totalFocusToday++;
       this.updateDisplay();
 
       if (this.remaining <= 0) {

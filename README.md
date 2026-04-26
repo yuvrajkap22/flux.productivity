@@ -18,6 +18,8 @@ Version 2.0 delivers a full visual refresh, stronger auth/profile flows, richer 
 - New branded logo system and tab icon (favicon) for stronger product identity.
 - Improved loading experiences for both app pages with smooth transitions and better synchronization.
 - Hardened Firebase authentication flow with shared configuration and better error handling.
+- **Guest Mode Fallback:** Automatically bypasses Firebase initialization if dummy credentials are provided.
+- **Redesigned Settings & Profile UI:** Added a Bento-grid settings layout and a premium glowing profile modal.
 - Profile avatar reliability fixes with robust fallback logic to prevent blank profile images.
 - Better auth-to-app synchronization to avoid race conditions during startup.
 - Cleaner code organization with reduced duplication in Firebase config and avatar utility logic.
@@ -36,6 +38,7 @@ Version 2.0 delivers a full visual refresh, stronger auth/profile flows, richer 
 - Focus statistics dashboard for streaks, sessions, and progress.
 - Challenge system with active/completed/custom challenge flows.
 - Theme and accent customization.
+- Accessibility controls including Mute and a new **Reduced Motion** toggle.
 - Performance-lite mode detection for lower-end devices.
 
 ## Tech Stack

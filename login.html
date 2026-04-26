@@ -98,9 +98,9 @@
       top: 0;
       pointer-events: none;
       z-index: 999999;
-      transform: translate(-50%, -50%);
+      transform: translate3d(calc(var(--x, -50vw) - 50%), calc(var(--y, -50vh) - 50%), 0);
       opacity: 0;
-      transition: opacity 0.2s ease, transform 0.12s ease;
+      transition: opacity 0.2s ease, width 0.15s ease, height 0.15s ease;
       will-change: transform, opacity;
     }
     .cursor-dot {
@@ -117,10 +117,10 @@
       border-radius: 50%;
       opacity: 0.75;
     }
-    body.cursor-hover .cursor-dot { transform: translate(-50%, -50%) scale(1.75); }
-    body.cursor-click .cursor-dot { transform: translate(-50%, -50%) scale(0.65); }
+    body.cursor-hover .cursor-dot { width: 16px; height: 16px; }
+    body.cursor-click .cursor-dot { transform: translate3d(calc(var(--x, -50vw) - 50%), calc(var(--y, -50vh) - 50%), 0) scale(0.65); }
     body.cursor-hover .cursor-ring { opacity: 0.3; }
-    body.cursor-hover .cursor-ring, body.cursor-input .cursor-ring { transform: translate(-50%, -50%) scale(1.53); }
+    body.cursor-hover .cursor-ring, body.cursor-input .cursor-ring { width: 46px; height: 46px; }
     body.cursor-input .cursor-ring { opacity: 0; }
     body.cursor-input .cursor-dot { width: 2px; height: 20px; border-radius: 999px; }
     html.touch .cursor-dot, html.touch .cursor-ring { display: none; }
@@ -1049,10 +1049,10 @@
       const tick = () => {
         state.ringX += (state.mouseX - state.ringX) * 0.11;
         state.ringY += (state.mouseY - state.ringY) * 0.11;
-        dot.style.left = `${state.mouseX}px`;
-        dot.style.top = `${state.mouseY}px`;
-        ring.style.left = `${state.ringX}px`;
-        ring.style.top = `${state.ringY}px`;
+        dot.style.setProperty('--x', `${state.mouseX}px`);
+        dot.style.setProperty('--y', `${state.mouseY}px`);
+        ring.style.setProperty('--x', `${state.ringX}px`);
+        ring.style.setProperty('--y', `${state.ringY}px`);
         requestAnimationFrame(tick);
       };
       state.ringX = state.mouseX;

@@ -72,24 +72,23 @@ h1, h2, h3 { font-family: 'DM Sans', sans-serif; font-weight: 700; }
   position: fixed; top: 0; left: 0; width: 8px; height: 8px;
   background: var(--accent); border-radius: 50%;
   pointer-events: none; z-index: 100000;
-  mix-blend-mode: screen;
-  transform: translate(-50%, -50%);
+  transform: translate3d(calc(var(--x, -50vw) - 50%), calc(var(--y, -50vh) - 50%), 0);
   box-shadow: 0 0 14px 4px var(--accent-glow);
-  transition: width 0.2s var(--ease), height 0.2s var(--ease), background 0.4s var(--ease), box-shadow 0.2s var(--ease);
+  will-change: transform, width, height, box-shadow;
+  transition: width 0.15s var(--ease), height 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
 .cursor-ring {
   position: fixed; top: 0; left: 0; width: 34px; height: 34px;
   background: var(--accent-subtle);
   border: 1px solid var(--accent-glow); border-radius: 50%;
   pointer-events: none; z-index: 100000; opacity: 0.8;
-  transform: translate(-50%, -50%);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  transition: width 0.25s var(--ease), height 0.25s var(--ease), border-color 0.4s var(--ease), opacity 0.2s, background 0.2s var(--ease);
+  transform: translate3d(calc(var(--x, -50vw) - 50%), calc(var(--y, -50vh) - 50%), 0);
+  will-change: transform, width, height, opacity;
+  transition: width 0.2s var(--ease), height 0.2s var(--ease), border-color 0.2s var(--ease), opacity 0.2s;
 }
 body.cursor-hover .cursor-dot { width: 16px; height: 16px; box-shadow: 0 0 24px 6px var(--accent-glow); }
 body.cursor-hover .cursor-ring { width: 48px; height: 48px; opacity: 0.4; background: transparent; }
-body.cursor-click .cursor-dot { transform: translate(-50%, -50%) scale(0.6); box-shadow: 0 0 32px 10px var(--accent); }
+body.cursor-click .cursor-dot { transform: translate3d(calc(var(--x, -50vw) - 50%), calc(var(--y, -50vh) - 50%), 0) scale(0.6); box-shadow: 0 0 32px 10px var(--accent); }
 
 @media (pointer: coarse) {
   .cursor-dot, .cursor-ring { display: none !important; }
@@ -104,23 +103,27 @@ body.cursor-click .cursor-dot { transform: translate(-50%, -50%) scale(0.6); box
   transition: background 0.5s var(--ease);
 }
 .orb-1 {
-  width: 450px; height: 450px; top: -10%; left: -5%;
-  background: var(--accent-subtle); filter: blur(110px); opacity: 0.95;
+  width: 500px; height: 500px; top: -10%; left: -5%;
+  background: radial-gradient(circle, var(--accent-subtle) 0%, transparent 60%);
+  opacity: 0.95;
   animation: float1 10s ease-in-out infinite;
 }
 .orb-2 {
-  width: 350px; height: 350px; bottom: -8%; right: -3%;
-  background: var(--accent-subtle); filter: blur(100px); opacity: 0.85;
+  width: 400px; height: 400px; bottom: -8%; right: -3%;
+  background: radial-gradient(circle, var(--accent-subtle) 0%, transparent 60%);
+  opacity: 0.85;
   animation: float2 12s ease-in-out infinite 2s;
 }
 .orb-3 {
-  width: 280px; height: 280px; top: 40%; left: 50%;
-  background: var(--accent-subtle); filter: blur(90px); opacity: 0.7;
+  width: 320px; height: 320px; top: 40%; left: 50%;
+  background: radial-gradient(circle, var(--accent-subtle) 0%, transparent 60%);
+  opacity: 0.7;
   animation: float3 9s ease-in-out infinite 4s;
 }
 .orb-4 {
-  width: 200px; height: 200px; top: 20%; right: 20%;
-  background: rgba(255, 184, 56, 0.05); filter: blur(80px); opacity: 0.8;
+  width: 250px; height: 250px; top: 20%; right: 20%;
+  background: radial-gradient(circle, rgba(255, 184, 56, 0.05) 0%, transparent 60%);
+  opacity: 0.8;
   animation: float1 11s ease-in-out infinite 1s;
 }
 

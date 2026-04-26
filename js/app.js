@@ -17,16 +17,16 @@
   if (!disableCursorEffects) {
     document.addEventListener('mousemove', (e) => {
       mouseX = e.clientX; mouseY = e.clientY;
-      cursorDot.style.left  = mouseX + 'px';
-      cursorDot.style.top   = mouseY + 'px';
+      cursorDot.style.setProperty('--x', mouseX + 'px');
+      cursorDot.style.setProperty('--y', mouseY + 'px');
     });
 
     function animateCursor() {
       const ease = 0.12;
       ringX += (mouseX - ringX) * ease;
       ringY += (mouseY - ringY) * ease;
-      cursorRing.style.left = ringX + 'px';
-      cursorRing.style.top  = ringY + 'px';
+      cursorRing.style.setProperty('--x', ringX + 'px');
+      cursorRing.style.setProperty('--y', ringY + 'px');
       requestAnimationFrame(animateCursor);
     }
     animateCursor();
