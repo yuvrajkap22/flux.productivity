@@ -363,6 +363,9 @@ const FluxProfile = {
 
   persist() {
     Flux.saveNow(this.storageKey, this.data);
+    window.dispatchEvent(new CustomEvent('flux-profile-change', {
+      detail: { profile: this.data, user: this.activeUser },
+    }));
   }
 };
 

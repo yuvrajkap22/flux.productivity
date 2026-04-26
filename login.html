@@ -6,6 +6,9 @@
   <title>Flux — Your Productivity Companion</title>
   <meta name="description" content="Flux is a premium productivity companion for focused work, task tracking, and ambient sound." />
   <meta name="theme-color" content="#0a0905" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <link rel="icon" type="image/svg+xml" sizes="any" href="assets/flux-favicon.svg" />
   <link rel="shortcut icon" href="assets/flux-favicon.svg" />
   <link rel="mask-icon" href="assets/flux-mask-icon.svg" color="#f59e0b" />
@@ -647,9 +650,9 @@
 
   <div class="toast-stack" id="toast-stack" aria-live="polite" aria-relevant="additions"></div>
 
-  <script src="js/auth-shared.js"></script>
+  <script src="js/auth-shared.js?v=2.0.0"></script>
   <script type="module">
-    import { firebaseConfig, isFirebaseConfigured } from './js/firebase-config.js';
+    import { firebaseConfig, isFirebaseConfigured } from './js/firebase-config.js?v=2.0.0';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
     import {
       browserLocalPersistence,

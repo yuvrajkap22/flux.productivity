@@ -37,6 +37,9 @@ const FluxAudio = {
     this.volume = v;
     if (this.masterGain) this.masterGain.gain.value = this.muted ? 0 : v / 100;
     this.saveState();
+    window.dispatchEvent(new CustomEvent('flux-sound-change', {
+      detail: { volume: this.volume, muted: this.muted },
+    }));
   },
 
   toggleMute() {
@@ -44,6 +47,9 @@ const FluxAudio = {
     document.body.classList.toggle('sounds-muted', this.muted);
     if (this.masterGain) this.masterGain.gain.value = this.muted ? 0 : this.volume / 100;
     this.saveState();
+    window.dispatchEvent(new CustomEvent('flux-sound-change', {
+      detail: { volume: this.volume, muted: this.muted },
+    }));
   },
 
   saveState() {

@@ -54,6 +54,21 @@ const Flux = {
     try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
   },
 
+  getSettings() {
+    return Flux.load('flux_settings', {});
+  },
+
+  updateSettings(patch, options = {}) {
+    const current = Flux.load('flux_settings', {});
+    const next = { ...current, ...patch };
+
+    if (options.persist !== false) {
+      Flux.saveNow('flux_settings', next);
+    }
+
+    return next;
+  },
+
   parseHexColor(color) {
     const hex = String(color || '').trim().replace(/^#/, '');
     if (!/^[0-9a-f]{6}$/i.test(hex)) return null;
@@ -105,9 +120,7 @@ const Flux = {
     }
 
     if (options.persist !== false) {
-      const settings = Flux.load('flux_settings', {});
-      settings.theme = resolved;
-      Flux.save('flux_settings', settings);
+      Flux.updateSettings({ theme: resolved });
     }
 
     window.dispatchEvent(new CustomEvent('flux-theme-change', {
@@ -128,9 +141,7 @@ const Flux = {
     root.setProperty('--accent-text', palette.tertiary);
 
     if (options.persist !== false) {
-      const settings = Flux.load('flux_settings', {});
-      settings.accent = palette.primary;
-      Flux.save('flux_settings', settings);
+      Flux.updateSettings({ accent: palette.primary });
     }
 
     window.dispatchEvent(new CustomEvent('flux-accent-change', {

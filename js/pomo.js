@@ -245,7 +245,7 @@ const FluxPomo = {
   },
 
   saveSettings() {
-    Flux.save('flux_settings', {
+    Flux.updateSettings({
       pomoDuration: this.settings.focus,
       shortBreak: this.settings.short,
       longBreak: this.settings.long,

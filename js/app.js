@@ -79,6 +79,7 @@
 
   // Load saved theme
   const savedSettings = Flux.load('flux_settings', {});
+  const savedSounds = Flux.load('flux_sounds', { volume: 30, muted: false, active: {} });
   if (savedSettings.theme) setTheme(savedSettings.theme, false);
 
   /* ─── Accent Color ─── */
@@ -144,25 +145,306 @@
     }
   });
 
+  /* ─── Settings Panel ─── */
+  const settingsThemeSelect = document.getElementById('settings-theme-select');
+  const settingsAccentPicker = document.getElementById('settings-accent-picker');
+  const settingsAccentPresets = document.getElementById('settings-accent-presets');
+  const settingsStartView = document.getElementById('settings-start-view');
+  const settingsSidebarMode = document.getElementById('settings-sidebar-mode');
+  const settingsQuoteToggle = document.getElementById('settings-quote-toggle');
+  const settingsCompactToggle = document.getElementById('settings-compact-toggle');
+  const settingsVolumeRange = document.getElementById('settings-volume-range');
+  const settingsVolumeValue = document.getElementById('settings-volume-value');
+  const settingsMuteToggle = document.getElementById('settings-mute-toggle');
+  const settingsMotionToggle = document.getElementById('settings-motion-toggle');
+  const settingsThemeChip = document.getElementById('settings-theme-chip');
+  const settingsAccentChip = document.getElementById('settings-accent-chip');
+  const settingsViewChip = document.getElementById('settings-view-chip');
+  const settingsSoundChip = document.getElementById('settings-sound-chip');
+  const settingsProfileAvatar = document.getElementById('settings-profile-avatar');
+  const settingsProfileSummary = document.getElementById('settings-profile-summary');
+  const settingsProfileNote = document.getElementById('settings-profile-note');
+  const settingsResetBtn = document.getElementById('settings-reset-preferences');
+
+  const settingsViewOptions = new Set(['dashboard', 'tasks', 'pomodoro', 'stats', 'challenges', 'settings']);
+
+  function getCurrentSettings() {
+    return Flux.load('flux_settings', {});
+  }
+
+  function getCurrentSoundSettings() {
+    return Flux.load('flux_sounds', { volume: 30, muted: false, active: {} });
+  }
+
+  function getThemeLabel(value) {
+    return value === 'light' ? 'Light' : 'Dark';
+  }
+
+  function getAccentLabel(color) {
+    const palette = FluxTheme.getAccentPalette(color || '#8b5cf6');
+    return palette.primary.toUpperCase();
+  }
+
+  function getStartViewLabel(view) {
+    const labels = {
+      dashboard: 'Dashboard',
+      tasks: 'Tasks',
+      pomodoro: 'Pomodoro',
+      stats: 'Stats',
+      challenges: 'Challenges',
+      settings: 'Settings',
+    };
+    return labels[view] || 'Dashboard';
+  }
+
+  function getProfileShortcutData() {
+    const profileApi = window.FluxProfile || null;
+    const profile = profileApi?.data || {};
+    const user = profileApi?.activeUser || window.FluxAuthState?.user || null;
+    const name = profile.displayName || user?.displayName || user?.email || 'Flux User';
+    const username = profile.username ? `@${profile.username}` : '';
+    const bio = profile.bio || 'Open your Flux profile editor to update your name, bio, photo, and banner.';
+    const photoURL = profile.photoURL || user?.photoURL || '';
+
+    return { name, username, bio, photoURL };
+  }
+
+  function applyWorkspacePreferences(settings = getCurrentSettings()) {
+    document.body.classList.toggle('hide-quote-bar', Boolean(settings.hideQuotes));
+    document.body.classList.toggle('compact-mode', Boolean(settings.compactMode));
+    document.body.classList.toggle('performance-lite', Boolean(settings.reducedMotion));
+  }
+
+  function syncSettingsPanel() {
+    const settings = getCurrentSettings();
+    const sounds = getCurrentSoundSettings();
+    const accent = settings.accent || '#8b5cf6';
+    const volume = Number.isFinite(Number(sounds.volume)) ? Number(sounds.volume) : 30;
+    const muted = Boolean(sounds.muted);
+    const theme = settings.theme || document.documentElement.getAttribute('data-theme') || 'dark';
+
+    if (settingsThemeSelect) settingsThemeSelect.value = theme;
+    if (settingsAccentPicker) settingsAccentPicker.value = accent;
+    if (settingsStartView) settingsStartView.value = settings.startView && settingsViewOptions.has(settings.startView) ? settings.startView : 'dashboard';
+    if (settingsSidebarMode) settingsSidebarMode.value = settings.sidebarCollapsed ? 'collapsed' : 'expanded';
+    if (settingsQuoteToggle) settingsQuoteToggle.checked = Boolean(settings.hideQuotes);
+    if (settingsCompactToggle) settingsCompactToggle.checked = Boolean(settings.compactMode);
+    if (settingsVolumeRange) settingsVolumeRange.value = String(volume);
+    if (settingsVolumeValue) settingsVolumeValue.textContent = `${volume}%`;
+    if (settingsMuteToggle) settingsMuteToggle.checked = muted;
+    if (settingsMotionToggle) settingsMotionToggle.checked = Boolean(settings.reducedMotion);
+
+    if (settingsThemeChip) settingsThemeChip.textContent = `Theme: ${getThemeLabel(theme)}`;
+    if (settingsAccentChip) settingsAccentChip.textContent = `Accent: ${getAccentLabel(accent)}`;
+    if (settingsViewChip) settingsViewChip.textContent = `Start: ${getStartViewLabel(settings.startView || 'dashboard')}`;
+    if (settingsSoundChip) settingsSoundChip.textContent = muted ? 'Sound: Muted' : `Sound: ${volume}%`;
+
+    const profile = getProfileShortcutData();
+    if (settingsProfileAvatar) {
+      settingsProfileAvatar.alt = profile.name;
+      settingsProfileAvatar.src = profile.photoURL || window.FluxProfile?.getFallbackAvatar?.(profile.name) || 'assets/flux-logo.svg';
+    }
+    if (settingsProfileSummary) settingsProfileSummary.textContent = profile.bio;
+    if (settingsProfileNote) settingsProfileNote.textContent = profile.username || 'Quick access';
+
+    document.querySelectorAll('.settings-accent-dot').forEach((dot) => {
+      dot.classList.toggle('active', dot.dataset.accent === accent);
+    });
+
+    applyWorkspacePreferences(settings);
+  }
+
+  function saveSettingsPatch(patch) {
+    const next = Flux.updateSettings(patch);
+    syncSettingsPanel();
+    return next;
+  }
+
+  settingsThemeSelect?.addEventListener('change', (event) => {
+    const theme = event.target.value === 'light' ? 'light' : 'dark';
+    setTheme(theme);
+    syncSettingsPanel();
+    FluxAudio.buttonClick();
+  });
+
+  settingsAccentPicker?.addEventListener('input', (event) => {
+    setAccent(event.target.value);
+    syncSettingsPanel();
+  });
+
+  settingsAccentPresets?.addEventListener('click', (event) => {
+    const preset = event.target.closest('.settings-accent-dot');
+    if (!preset) return;
+    setAccent(preset.dataset.accent);
+    syncSettingsPanel();
+    FluxAudio.buttonClick();
+  });
+
+  settingsStartView?.addEventListener('change', (event) => {
+    const nextView = settingsViewOptions.has(event.target.value) ? event.target.value : 'dashboard';
+    saveSettingsPatch({ startView: nextView });
+    Flux.showToast(`Start page set to ${getStartViewLabel(nextView)}`);
+  });
+
+  settingsSidebarMode?.addEventListener('change', (event) => {
+    const collapsed = event.target.value === 'collapsed';
+    sidebarCollapsed = collapsed;
+    saveSettingsPatch({ sidebarCollapsed: collapsed });
+    updateSidebarState();
+    FluxAudio.buttonClick();
+  });
+
+  settingsQuoteToggle?.addEventListener('change', (event) => {
+    saveSettingsPatch({ hideQuotes: event.target.checked });
+  });
+
+  settingsCompactToggle?.addEventListener('change', (event) => {
+    saveSettingsPatch({ compactMode: event.target.checked });
+  });
+
+  settingsVolumeRange?.addEventListener('input', (event) => {
+    const volume = parseInt(event.target.value, 10);
+    FluxAudio.setVolume(volume);
+    if (settingsVolumeValue) settingsVolumeValue.textContent = `${volume}%`;
+    syncSettingsPanel();
+  });
+
+  settingsMuteToggle?.addEventListener('change', (event) => {
+    const shouldMute = Boolean(event.target.checked);
+    if (FluxAudio.muted !== shouldMute) {
+      FluxAudio.toggleMute();
+    }
+    syncSettingsPanel();
+  });
+
+  settingsMotionToggle?.addEventListener('change', (event) => {
+    saveSettingsPatch({ reducedMotion: event.target.checked });
+    document.body.classList.toggle('performance-lite', event.target.checked);
+    Flux.showToast(event.target.checked ? 'Reduced motion enabled' : 'Motion effects restored');
+    FluxAudio.buttonClick();
+  });
+
+  document.getElementById('settings-open-profile')?.addEventListener('click', () => {
+    const profileApi = window.FluxProfile || (typeof FluxProfile !== 'undefined' ? FluxProfile : null);
+    profileApi?.openModal?.();
+    FluxAudio.buttonClick();
+  });
+
+  document.getElementById('settings-open-accent')?.addEventListener('click', () => {
+    accentMenu?.classList.remove('hidden');
+    settingsAccentPicker?.focus();
+    FluxAudio.buttonClick();
+  });
+
+  settingsResetBtn?.addEventListener('click', () => {
+    const confirmed = window.confirm('Reset Flux preferences back to defaults? This keeps your tasks and profile data.');
+    if (!confirmed) return;
+
+    try {
+      localStorage.removeItem('flux_settings');
+      localStorage.removeItem('flux_sounds');
+    } catch {}
+
+    Flux.showToast('Preferences reset');
+    window.location.reload();
+  });
+
+  window.addEventListener('flux-theme-change', syncSettingsPanel);
+  window.addEventListener('flux-accent-change', syncSettingsPanel);
+  window.addEventListener('flux-sound-change', syncSettingsPanel);
+  window.addEventListener('flux-profile-change', syncSettingsPanel);
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'flux_settings' || event.key === 'flux_sounds' || event.key === 'flux_profile') {
+      syncSettingsPanel();
+    }
+  });
+
+  syncSettingsPanel();
+
   /* ─── Sidebar ─── */
   const sidebar = document.getElementById('sidebar');
   const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+  const sidebarClose = document.getElementById('sidebar-close');
   let sidebarCollapsed = false;
+  let sidebarOpen = false;
+
+  const mobileSidebarQuery = window.matchMedia('(max-width: 768px)');
+
+  function isMobileSidebar() {
+    return mobileSidebarQuery.matches;
+  }
+
+  function updateSidebarState() {
+    if (!sidebar) return;
+
+    const mobile = isMobileSidebar();
+
+    if (mobile) {
+      sidebar.classList.remove('collapsed');
+      document.body.classList.remove('sidebar-collapsed');
+      sidebar.classList.toggle('open', sidebarOpen);
+      document.body.classList.toggle('sidebar-open', sidebarOpen);
+      sidebarBackdrop?.classList.toggle('visible', sidebarOpen);
+      sidebar.setAttribute('aria-hidden', sidebarOpen ? 'false' : 'true');
+      sidebarToggle?.setAttribute('aria-expanded', sidebarOpen ? 'true' : 'false');
+      return;
+    }
+
+    sidebarOpen = false;
+    sidebar.classList.remove('open');
+    document.body.classList.remove('sidebar-open');
+    sidebarBackdrop?.classList.remove('visible');
+    sidebar.setAttribute('aria-hidden', 'false');
+    sidebarToggle?.setAttribute('aria-expanded', sidebarCollapsed ? 'true' : 'false');
+    sidebar.classList.toggle('collapsed', sidebarCollapsed);
+    document.body.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+  }
+
+  function openMobileSidebar() {
+    if (!isMobileSidebar()) return;
+    sidebarOpen = true;
+    updateSidebarState();
+  }
+
+  function closeMobileSidebar() {
+    if (!isMobileSidebar()) return;
+    sidebarOpen = false;
+    updateSidebarState();
+  }
 
   sidebarToggle?.addEventListener('click', () => {
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      sidebar.classList.toggle('open');
+    if (isMobileSidebar()) {
+      sidebarOpen ? closeMobileSidebar() : openMobileSidebar();
     } else {
       sidebarCollapsed = !sidebarCollapsed;
-      sidebar.classList.toggle('collapsed', sidebarCollapsed);
-      document.body.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+      saveSettingsPatch({ sidebarCollapsed });
+      updateSidebarState();
     }
     FluxAudio.buttonClick();
   });
 
+  sidebarBackdrop?.addEventListener('click', () => {
+    closeMobileSidebar();
+  });
+
+  sidebarClose?.addEventListener('click', () => {
+    closeMobileSidebar();
+  });
+
+  window.addEventListener('resize', updateSidebarState);
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isMobileSidebar() && sidebarOpen) {
+      closeMobileSidebar();
+    }
+  });
+
+  sidebarCollapsed = Boolean(getCurrentSettings().sidebarCollapsed);
+  updateSidebarState();
+
   /* ─── Navigation ─── */
-  function showView(view) {
+  function showView(view, options = {}) {
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       const currentNav = document.querySelector(`.nav-item[data-view="${view}"]`);
       if (currentNav) currentNav.classList.add('active');
@@ -187,8 +469,8 @@
         document.getElementById('view-settings')?.classList.add('active');
       }
 
-      if (window.innerWidth <= 768) sidebar.classList.remove('open');
-      if (typeof FluxAudio?.buttonClick === 'function') FluxAudio.buttonClick();
+      if (isMobileSidebar()) closeMobileSidebar();
+      if (options.playSound !== false && typeof FluxAudio?.buttonClick === 'function') FluxAudio.buttonClick();
   }
 
   document.querySelectorAll('.nav-item[data-view]').forEach(item => {
@@ -196,47 +478,6 @@
       showView(item.dataset.view);
     });
   });
-
-  document.getElementById('settings-open-profile')?.addEventListener('click', () => {
-    const profileApi = window.FluxProfile || (typeof FluxProfile !== 'undefined' ? FluxProfile : null);
-    profileApi?.openModal?.();
-    FluxAudio.buttonClick();
-  });
-
-  document.getElementById('settings-theme-dark')?.addEventListener('click', () => {
-    setTheme('dark');
-    FluxAudio.buttonClick();
-  });
-
-  document.getElementById('settings-theme-light')?.addEventListener('click', () => {
-    setTheme('light');
-    FluxAudio.buttonClick();
-  });
-
-  document.getElementById('settings-open-accent')?.addEventListener('click', () => {
-    accentMenu?.classList.remove('hidden');
-    FluxAudio.buttonClick();
-  });
-
-  document.getElementById('settings-toggle-sound')?.addEventListener('click', () => {
-    FluxAudio.toggleMute();
-    FluxAudio.buttonClick();
-  });
-
-  const btnMotion = document.getElementById('settings-toggle-motion');
-  if (btnMotion) {
-    const isReduced = Flux.load('flux_settings', {}).reducedMotion;
-    if (isReduced) btnMotion.classList.add('active');
-    btnMotion.addEventListener('click', () => {
-      const settings = Flux.load('flux_settings', {});
-      settings.reducedMotion = !settings.reducedMotion;
-      Flux.save('flux_settings', settings);
-      btnMotion.classList.toggle('active', settings.reducedMotion);
-      document.body.classList.toggle('performance-lite', settings.reducedMotion);
-      Flux.showToast(settings.reducedMotion ? 'Reduced motion enabled' : 'Motion effects restored');
-      FluxAudio.buttonClick();
-    });
-  }
 
   /* ─── Quotes ─── */
   let quoteIndex = Flux.load('flux_quoteIndex', 0);
@@ -313,7 +554,6 @@
   });
 
   // Restore saved sound state
-  const savedSounds = Flux.load('flux_sounds', {});
   if (savedSounds.volume !== undefined) {
     if (volumeSlider) volumeSlider.value = savedSounds.volume;
     if (volumeValue) volumeValue.textContent = savedSounds.volume + '%';
@@ -336,6 +576,14 @@
     });
     waveBars.classList.toggle('hidden', !FluxAudio.hasAnySoundActive());
     if (user && typeof FluxProfile !== 'undefined') FluxProfile.init(user);
+
+    if (!window.__fluxInitialViewApplied) {
+      window.__fluxInitialViewApplied = true;
+      const startView = getCurrentSettings().startView;
+      if (startView && settingsViewOptions.has(startView)) {
+        showView(startView, { playSound: false });
+      }
+    }
   }
 
   window.FluxApp = window.FluxApp || {};

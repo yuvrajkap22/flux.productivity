@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdir, readFile, rm, writeFile, copyFile, readdir } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import { minify as minifyHtml } from 'html-minifier-terser';
 import CleanCSS from 'clean-css';
 import { minify as minifyJs } from 'terser';
@@ -35,12 +36,35 @@ async function copySourceFiles() {
   }
 }
 
-async function minifyHtmlFiles() {
+async function getBuildVersion() {
+  const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+  let gitSha = 'local';
+
+  try {
+    gitSha = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
+  } catch {
+    gitSha = 'local';
+  }
+
+  return `${packageJson.version}+${gitSha}`;
+}
+
+function versionAssetUrls(source, buildVersion) {
+  return source
+    .replace(/(href|src)="((?:style\.css|js\/[^"]+\.js|assets\/[^"]+\.(?:svg|png|jpe?g|webp|ico))(?:\?v=[^"]*)?)"/g, (_, attr, assetPath) => {
+      const cleanAssetPath = assetPath.replace(/\?v=[^"]*$/, '');
+      return `${attr}="${cleanAssetPath}?v=${buildVersion}"`;
+    })
+    .replace(/\.\/js\/firebase-config\.js(?:\?v=[^"]*)?/g, `./js/firebase-config.js?v=${buildVersion}`);
+}
+
+async function minifyHtmlFiles(buildVersion) {
   const htmlFiles = ['index.html', 'login.html'];
   for (const file of htmlFiles) {
     const inputPath = path.join(dist, file);
     const source = await readFile(inputPath, 'utf8');
-    const minified = await minifyHtml(source, {
+    const versionedSource = versionAssetUrls(source, buildVersion);
+    const minified = await minifyHtml(versionedSource, {
       collapseWhitespace: true,
       removeComments: true,
       minifyCSS: true,
@@ -87,9 +111,10 @@ async function minifyJsFiles() {
 }
 
 async function main() {
+  const buildVersion = await getBuildVersion();
   await ensureCleanDist();
   await copySourceFiles();
-  await minifyHtmlFiles();
+  await minifyHtmlFiles(buildVersion);
   await minifyCssFile();
   await minifyJsFiles();
   console.log('Built minified deployment in dist/');
