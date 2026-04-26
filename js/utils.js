@@ -7,6 +7,16 @@ const Flux = {
   _saveTimers: {},
 
   isLowPerformanceDevice() {
+    let manualOverride = false;
+    try {
+      const settings = JSON.parse(localStorage.getItem('flux_settings'));
+      if (settings && typeof settings.reducedMotion !== 'undefined') {
+        manualOverride = settings.reducedMotion;
+      }
+    } catch (e) {}
+
+    if (manualOverride) return true;
+
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     const lowCpu = Number(navigator.hardwareConcurrency || 8) <= 4;
     const lowMemory = Number(navigator.deviceMemory || 8) <= 4;

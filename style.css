@@ -1921,14 +1921,16 @@ h1, h2, h3, .logo-text, .sidebar-stat-value, .pomo-time, .sidebar-stat-value,
 }
 
 .profile-modal-avatar-wrap {
-  width: 88px;
-  height: 88px;
-  margin: -44px auto 12px;
+  width: 96px;
+  height: 96px;
+  margin: -48px auto 16px;
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.9);
+  border: 4px solid var(--bg-panel);
   background: var(--bg-2);
   overflow: hidden;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+  box-shadow: 0 0 0 2px var(--accent-subtle), 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 30px var(--accent-glow);
+  position: relative;
+  z-index: 2;
 }
 
 .profile-modal-avatar-img {

@@ -223,6 +223,21 @@
     FluxAudio.buttonClick();
   });
 
+  const btnMotion = document.getElementById('settings-toggle-motion');
+  if (btnMotion) {
+    const isReduced = Flux.load('flux_settings', {}).reducedMotion;
+    if (isReduced) btnMotion.classList.add('active');
+    btnMotion.addEventListener('click', () => {
+      const settings = Flux.load('flux_settings', {});
+      settings.reducedMotion = !settings.reducedMotion;
+      Flux.save('flux_settings', settings);
+      btnMotion.classList.toggle('active', settings.reducedMotion);
+      document.body.classList.toggle('performance-lite', settings.reducedMotion);
+      Flux.showToast(settings.reducedMotion ? 'Reduced motion enabled' : 'Motion effects restored');
+      FluxAudio.buttonClick();
+    });
+  }
+
   /* ─── Quotes ─── */
   let quoteIndex = Flux.load('flux_quoteIndex', 0);
   let quoteOrder = [];
