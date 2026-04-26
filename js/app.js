@@ -429,7 +429,16 @@
   });
 
   sidebarClose?.addEventListener('click', () => {
-    closeMobileSidebar();
+    if (isMobileSidebar()) {
+      closeMobileSidebar();
+    } else {
+      if (!sidebarCollapsed) {
+        sidebarCollapsed = true;
+        saveSettingsPatch({ sidebarCollapsed });
+      }
+      updateSidebarState();
+    }
+    FluxAudio.buttonClick();
   });
 
   window.addEventListener('resize', updateSidebarState);
