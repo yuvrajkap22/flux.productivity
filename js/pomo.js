@@ -181,6 +181,7 @@ const FluxPomo = {
       if (this.mode === 'focus') {
         this.totalFocusToday++;
         window.FluxTodo?.addTrackedTime?.(1);
+        this.updateStatsBar();
       }
       this.updateDisplay();
 

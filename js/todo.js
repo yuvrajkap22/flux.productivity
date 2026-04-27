@@ -124,6 +124,7 @@ const FluxTodo = {
       this.trackingId = null;
       this.save();
       this.render();
+      this.emitTrackingChange();
       return;
     } else {
       // Set selected task for task-specific pomodoro
@@ -231,7 +232,7 @@ const FluxTodo = {
 
     const badge = document.createElement('span');
     badge.className = 'todo-time-badge';
-    badge.textContent = Flux.formatTime(todo.timeTracked);
+    badge.textContent = Flux.formatTrackedTime(todo.timeTracked);
 
     const actions = document.createElement('div');
     actions.className = 'todo-actions';
@@ -294,7 +295,7 @@ const FluxTodo = {
 
     todo.timeTracked = (todo.timeTracked || 0) + seconds;
     const badge = document.querySelector(`[data-id="${this.trackingId}"] .todo-time-badge`);
-    if (badge) badge.textContent = Flux.formatTime(todo.timeTracked);
+    if (badge) badge.textContent = Flux.formatTrackedTime(todo.timeTracked);
     if (todo.timeTracked % 10 === 0) this.save();
   },
 

@@ -215,6 +215,7 @@ const Flux = {
 
   // Format seconds to display string
   formatTime(seconds) {
+    if (seconds > 0 && seconds < 60) return `${seconds}s`;
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     if (h > 0) return `${h}h ${m}m`;
@@ -225,6 +226,16 @@ const Flux = {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  },
+
+  formatTrackedTime(seconds) {
+    const total = Math.max(0, Number(seconds) || 0);
+    if (total < 3600) {
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+    return this.formatTime(total);
   },
 
   // Get today's date key
