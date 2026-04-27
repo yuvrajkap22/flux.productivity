@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 The format follows Keep a Changelog principles and semantic versioning.
 
+## [2.0.1] - 2026-04-27
+
+### Fixed
+- Task-specific Pomodoro tracking now continues reliably during focus ticks by resolving the Todo API from both global access patterns.
+- Task label synchronization in Pomodoro now correctly reads the selected active task across script loading contexts.
+
+### Changed
+- Cache-busting query versions were bumped from `v=2.0.1` to `v=2.0.2` in main and login HTML entry points to ensure users receive the hotfix immediately.
+
 ## [2.0.0] - 2026-04-25
 
 ### Added

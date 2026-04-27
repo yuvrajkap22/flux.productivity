@@ -28,6 +28,12 @@ const FluxPomo = {
   // Ring
   circumference: 2 * Math.PI * 88, // r=88
 
+  getTodoApi() {
+    if (window.FluxTodo) return window.FluxTodo;
+    if (typeof FluxTodo !== 'undefined') return FluxTodo;
+    return null;
+  },
+
   init() {
     // Load settings
     const saved = Flux.load('flux_settings', {});
@@ -106,7 +112,7 @@ const FluxPomo = {
   },
 
   syncActiveTask() {
-    const task = window.FluxTodo?.getActiveTask?.() || null;
+    const task = this.getTodoApi()?.getActiveTask?.() || null;
     this.setActiveTask(task);
   },
 
@@ -180,7 +186,7 @@ const FluxPomo = {
       this.remaining--;
       if (this.mode === 'focus') {
         this.totalFocusToday++;
-        window.FluxTodo?.addTrackedTime?.(1);
+        this.getTodoApi()?.addTrackedTime?.(1);
         this.updateStatsBar();
       }
       this.updateDisplay();
