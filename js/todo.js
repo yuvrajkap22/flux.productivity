@@ -115,6 +115,62 @@ const FluxTodo = {
     }
   },
 
+  startEditTodo(id) {
+    const todo = this.todos.find(t => t.id === id);
+    if (!todo) return;
+
+    const item = document.querySelector(`[data-id="${id}"]`);
+    const textEl = item ? item.querySelector('.todo-text') : null;
+    if (!item || !textEl) return;
+
+    if (item.classList.contains('is-editing')) return;
+
+    item.classList.add('is-editing');
+    item.draggable = false;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'todo-edit-input';
+    input.maxLength = 200;
+    input.value = todo.text;
+    input.setAttribute('aria-label', 'Edit task text');
+
+    textEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const commit = () => this.commitEditTodo(id, input.value);
+    const cancel = () => this.render();
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        commit();
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        cancel();
+      }
+    });
+
+    input.addEventListener('blur', commit, { once: true });
+  },
+
+  commitEditTodo(id, rawText) {
+    const todo = this.todos.find(t => t.id === id);
+    if (!todo) return;
+
+    const nextText = Flux.cleanText(rawText, 200);
+    if (!nextText || nextText === todo.text) {
+      this.render();
+      return;
+    }
+
+    todo.text = nextText;
+    this.save();
+    this.render();
+  },
+
   toggleTracking(id) {
     const todo = this.todos.find(t => t.id === id);
     if (!todo || todo.completed) return;
@@ -254,6 +310,14 @@ const FluxTodo = {
     timerBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>';
     timerBtn.addEventListener('click', () => this.startTimerForTask(todo.id));
 
+    const editBtn = document.createElement('button');
+    editBtn.className = 'todo-action-btn edit-btn';
+    editBtn.type = 'button';
+    editBtn.title = 'Edit task';
+    editBtn.setAttribute('aria-label', 'Edit task');
+    editBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+    editBtn.addEventListener('click', () => this.startEditTodo(todo.id));
+
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'todo-action-btn delete-btn';
     deleteBtn.type = 'button';
@@ -261,10 +325,16 @@ const FluxTodo = {
     deleteBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     deleteBtn.addEventListener('click', () => this.deleteTodo(todo.id));
 
-    actions.append(priorityBtn, timerBtn, deleteBtn);
+    actions.append(priorityBtn, timerBtn, editBtn, deleteBtn);
     item.append(checkbox, trackingDot, text, tag, badge, actions);
 
+    text.addEventListener('dblclick', (event) => {
+      event.stopPropagation();
+      this.startEditTodo(todo.id);
+    });
+
     item.addEventListener('click', (event) => {
+      if (item.classList.contains('is-editing')) return;
       if (event.target.closest('button, .todo-action-btn, .todo-checkbox')) return;
       this.toggleTracking(todo.id);
     });
@@ -308,6 +378,10 @@ const FluxTodo = {
     const items = document.querySelectorAll('.todo-item[draggable]');
     items.forEach(item => {
       item.addEventListener('dragstart', (e) => {
+        if (item.classList.contains('is-editing')) {
+          e.preventDefault();
+          return;
+        }
         e.dataTransfer.setData('text/plain', item.dataset.id);
         item.style.opacity = '0.4';
       });
