@@ -43,15 +43,23 @@
     body {
       font-family: Inter, sans-serif;
       overflow-x: hidden;
-      cursor: none;
+      cursor: auto;
       opacity: 1;
     }
     html.touch body { cursor: auto; }
     body.ready { opacity: 1; }
     button, input, a { font: inherit; }
     button, a, input { -webkit-tap-highlight-color: transparent; }
-    button { cursor: none; }
+    button { cursor: pointer; }
+    input { cursor: text; }
     html.touch button { cursor: auto; }
+
+    body.custom-cursor-enabled,
+    body.custom-cursor-enabled button,
+    body.custom-cursor-enabled a,
+    body.custom-cursor-enabled input {
+      cursor: none;
+    }
     a { color: inherit; text-decoration: none; }
     svg { display: block; }
 
@@ -998,6 +1006,7 @@
 
     function setupInteractionStates() {
       if (state.lowPerf) {
+        document.body.classList.remove('custom-cursor-enabled');
         document.documentElement.classList.add('touch');
         return;
       }
@@ -1037,8 +1046,10 @@
         state.mouseY = event.clientY;
       }, { passive: true });
       if (window.matchMedia('(pointer: coarse)').matches) {
+        document.body.classList.remove('custom-cursor-enabled');
         document.documentElement.classList.add('touch');
       } else {
+        document.body.classList.add('custom-cursor-enabled');
         el.cursorDot.style.opacity = '1';
         el.cursorRing.style.opacity = '1';
       }
@@ -1096,6 +1107,11 @@
       }
 
       function draw() {
+        if (document.hidden) {
+          state.particleRaf = 0;
+          return;
+        }
+
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
         const particles = state.particles;
         for (const p of particles) {
@@ -1137,6 +1153,17 @@
       }
 
       window.addEventListener('resize', () => { resize(); seed(); });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (state.particleRaf) {
+            cancelAnimationFrame(state.particleRaf);
+            state.particleRaf = 0;
+          }
+          return;
+        }
+
+        if (!state.particleRaf) draw();
+      });
       resize();
       seed();
       draw();

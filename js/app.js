@@ -11,25 +11,57 @@
   const cursorDot  = document.getElementById('cursor-dot');
   const cursorRing = document.getElementById('cursor-ring');
   let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+  let cursorRaf = 0;
 
-  const disableCursorEffects = isLowPerformance || 'ontouchstart' in window;
+  const hasFinePointer = window.matchMedia?.('(pointer: fine)')?.matches;
+  const hasCursorElements = Boolean(cursorDot && cursorRing);
+  const disableCursorEffects = isLowPerformance || !hasFinePointer || !hasCursorElements;
 
   if (!disableCursorEffects) {
-    document.addEventListener('mousemove', (e) => {
+    document.body.classList.add('custom-cursor-enabled');
+
+    document.addEventListener('pointermove', (e) => {
       mouseX = e.clientX; mouseY = e.clientY;
       cursorDot.style.setProperty('--x', mouseX + 'px');
       cursorDot.style.setProperty('--y', mouseY + 'px');
-    });
+      if (cursorDot.style.opacity !== '1') cursorDot.style.opacity = '1';
+      if (cursorRing.style.opacity !== '1') cursorRing.style.opacity = '1';
+    }, { passive: true });
 
     function animateCursor() {
+      if (document.hidden) {
+        cursorRaf = 0;
+        return;
+      }
+
       const ease = 0.12;
       ringX += (mouseX - ringX) * ease;
       ringY += (mouseY - ringY) * ease;
       cursorRing.style.setProperty('--x', ringX + 'px');
       cursorRing.style.setProperty('--y', ringY + 'px');
-      requestAnimationFrame(animateCursor);
+      cursorRaf = requestAnimationFrame(animateCursor);
     }
-    animateCursor();
+
+    const startCursorLoop = () => {
+      if (cursorRaf || document.hidden) return;
+      cursorRaf = requestAnimationFrame(animateCursor);
+    };
+
+    const stopCursorLoop = () => {
+      if (!cursorRaf) return;
+      cancelAnimationFrame(cursorRaf);
+      cursorRaf = 0;
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopCursorLoop();
+      } else {
+        startCursorLoop();
+      }
+    });
+
+    startCursorLoop();
   }
 
   // Hover on interactive elements
@@ -60,8 +92,9 @@
 
   // Hide cursor on touch devices
   if (disableCursorEffects) {
-    cursorDot.style.display  = 'none';
-    cursorRing.style.display = 'none';
+    document.body.classList.remove('custom-cursor-enabled');
+    if (cursorDot) cursorDot.style.display = 'none';
+    if (cursorRing) cursorRing.style.display = 'none';
     document.body.style.cursor = 'auto';
   }
 
@@ -529,9 +562,30 @@
   }
 
   showQuote(false);
-  setInterval(nextQuote, isLowPerformance ? 12000 : 8000);
+
+  let quoteTimer = null;
+  const quoteIntervalMs = isLowPerformance ? 12000 : 8000;
+
+  function scheduleQuoteCycle() {
+    if (quoteTimer) {
+      clearTimeout(quoteTimer);
+      quoteTimer = null;
+    }
+
+    if (document.hidden) return;
+
+    quoteTimer = window.setTimeout(() => {
+      nextQuote();
+      scheduleQuoteCycle();
+    }, quoteIntervalMs);
+  }
+
+  document.addEventListener('visibilitychange', scheduleQuoteCycle);
+  scheduleQuoteCycle();
+
   document.getElementById('quote-next-btn')?.addEventListener('click', () => {
     nextQuote();
+    scheduleQuoteCycle();
     FluxAudio.buttonClick();
   });
 
