@@ -15,7 +15,8 @@
 
   const hasFinePointer = window.matchMedia?.('(pointer: fine)')?.matches;
   const hasCursorElements = Boolean(cursorDot && cursorRing);
-  const disableCursorEffects = isLowPerformance || !hasFinePointer || !hasCursorElements;
+  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  const disableCursorEffects = !hasFinePointer || !hasCursorElements || prefersReducedMotion;
 
   if (!disableCursorEffects) {
     document.body.classList.add('custom-cursor-enabled');

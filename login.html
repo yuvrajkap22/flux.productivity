@@ -115,23 +115,23 @@
       will-change: transform, opacity;
     }
     .cursor-dot {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: var(--gold);
-      box-shadow: 0 0 10px var(--gold-glow);
+      box-shadow: 0 0 16px var(--gold-glow), 0 0 0 1px rgba(255, 255, 255, 0.45);
     }
     .cursor-ring {
-      width: 30px;
-      height: 30px;
-      border: 1.5px solid var(--gold);
+      width: 36px;
+      height: 36px;
+      border: 1.8px solid rgba(255, 255, 255, 0.48);
       border-radius: 50%;
       opacity: 0.75;
     }
-    body.cursor-hover .cursor-dot { width: 16px; height: 16px; }
+    body.cursor-hover .cursor-dot { width: 18px; height: 18px; }
     body.cursor-click .cursor-dot { transform: translate3d(calc(var(--x, -50vw) - 50%), calc(var(--y, -50vh) - 50%), 0) scale(0.65); }
     body.cursor-hover .cursor-ring { opacity: 0.3; }
-    body.cursor-hover .cursor-ring, body.cursor-input .cursor-ring { width: 46px; height: 46px; }
+    body.cursor-hover .cursor-ring, body.cursor-input .cursor-ring { width: 52px; height: 52px; }
     body.cursor-input .cursor-ring { opacity: 0; }
     body.cursor-input .cursor-dot { width: 2px; height: 20px; border-radius: 999px; }
     html.touch .cursor-dot, html.touch .cursor-ring { display: none; }
@@ -658,9 +658,9 @@
 
   <div class="toast-stack" id="toast-stack" aria-live="polite" aria-relevant="additions"></div>
 
-  <script src="js/auth-shared.js?v=2.0.0"></script>
+  <script src="js/auth-shared.js?v=2.0.1"></script>
   <script type="module">
-    import { firebaseConfig, isFirebaseConfigured } from './js/firebase-config.js?v=2.0.0';
+    import { firebaseConfig, isFirebaseConfigured } from './js/firebase-config.js?v=2.0.1';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
     import {
       browserLocalPersistence,
@@ -733,6 +733,7 @@
       particles: [],
       raf: 0,
       particleRaf: 0,
+      disableCursor: false,
     };
 
     const friendlyErrors = {
@@ -1005,7 +1006,7 @@
     }
 
     function setupInteractionStates() {
-      if (state.lowPerf) {
+      if (state.disableCursor) {
         document.body.classList.remove('custom-cursor-enabled');
         document.documentElement.classList.add('touch');
         return;
@@ -1045,18 +1046,14 @@
         state.mouseX = event.clientX;
         state.mouseY = event.clientY;
       }, { passive: true });
-      if (window.matchMedia('(pointer: coarse)').matches) {
-        document.body.classList.remove('custom-cursor-enabled');
-        document.documentElement.classList.add('touch');
-      } else {
-        document.body.classList.add('custom-cursor-enabled');
-        el.cursorDot.style.opacity = '1';
-        el.cursorRing.style.opacity = '1';
-      }
+      document.body.classList.add('custom-cursor-enabled');
+      document.documentElement.classList.remove('touch');
+      el.cursorDot.style.opacity = '1';
+      el.cursorRing.style.opacity = '1';
     }
 
     function setupCursorLoop() {
-      if (state.lowPerf) return;
+      if (state.disableCursor) return;
 
       const dot = el.cursorDot;
       const ring = el.cursorRing;
@@ -1243,6 +1240,13 @@
       const slowNetwork = /(^2g$|^slow-2g$|^3g$)/i.test(String(connection?.effectiveType || ''));
 
       state.lowPerf = Boolean(reducedMotion || lowCpu || lowMemory || smallScreen || saveData || slowNetwork);
+      state.disableCursor = Boolean(window.matchMedia?.('(pointer: coarse)')?.matches || reducedMotion);
+
+      if (state.disableCursor) {
+        document.body.classList.remove('custom-cursor-enabled');
+        document.documentElement.classList.add('touch');
+      }
+
       if (state.lowPerf) {
         document.body.classList.add('performance-lite');
       }
