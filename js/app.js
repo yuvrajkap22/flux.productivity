@@ -517,6 +517,23 @@
       } else if (view === 'challenges') {
         document.getElementById('view-challenges').classList.add('active');
         FluxChallenges.render();
+      } else if (view === 'leaderboard') {
+        document.getElementById('view-leaderboard').classList.add('active');
+        const root = document.getElementById('leaderboard-root');
+        if (root && window.LeaderboardUI) {
+          window.LeaderboardUI.attach(root);
+        }
+        try {
+          if (window._fluxLeaderboardUnsub) {
+            window._fluxLeaderboardUnsub();
+            window._fluxLeaderboardUnsub = null;
+          }
+          const metric = window._fluxLeaderboardMetric || 'focusMinutesTotal';
+          window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, (users) => {
+            const r = document.getElementById('leaderboard-root');
+            if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
+          });
+        } catch (e) { console.warn('leaderboard subscribe failed', e); }
       } else if (view === 'settings') {
         document.getElementById('view-settings')?.classList.add('active');
       }
