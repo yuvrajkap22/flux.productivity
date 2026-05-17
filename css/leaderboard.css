@@ -4,6 +4,8 @@
 .leader-podium{display:flex;gap:12px;padding:12px}
 .podium-slot{flex:1;background:linear-gradient(180deg, #fff, #f7f7f7);padding:12px;border-radius:10px;text-align:center}
 .podium-slot .avatar img{width:56px;height:56px;border-radius:50%}
+.leader-podium{flex-wrap:wrap}
+.podium-slot .meta .val{font-weight:600;color:var(--text)}
 .leader-list{padding:8px}
 .leader-row{display:flex;align-items:center;padding:8px;border-bottom:1px solid rgba(0,0,0,0.04)}
 .leader-row.me{background:rgba(0,0,0,0.03)}

@@ -6,9 +6,14 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 
 let app;
-if (!getApps().length) app = initializeApp(firebaseConfig);
-else app = getApp();
-const db = getFirestore(app);
+try {
+  if (!getApps().length) app = initializeApp(firebaseConfig);
+  else app = getApp();
+} catch (e) {
+  console.warn('Firebase init skipped or failed', e);
+  app = null;
+}
+const db = app ? getFirestore(app) : null;
 
 function _getVisibilitySetting() {
   try {
@@ -19,6 +24,12 @@ function _getVisibilitySetting() {
 }
 
 async function syncLeaderboard() {
+  // debounced wrapper defined below delegates to _syncImmediate
+  return _syncLeaderboardDebounced();
+}
+
+async function _syncLeaderboardImmediate() {
+  if (!db) return;
   try {
     const user = window.FluxAuth?.user?.();
     if (!user || !user.uid) return;
@@ -55,6 +66,26 @@ async function syncLeaderboard() {
   } catch (err) {
     console.warn('Leaderboard sync failed', err);
   }
+}
+
+// Simple debounce/throttle: ensure at most one write every 30s; coalesce calls
+let _lastSyncAt = 0;
+let _syncTimer = null;
+function _syncLeaderboardDebounced() {
+  const now = Date.now();
+  const minGap = 30 * 1000;
+  if (now - _lastSyncAt >= minGap) {
+    _lastSyncAt = now;
+    return _syncLeaderboardImmediate();
+  }
+  if (_syncTimer) clearTimeout(_syncTimer);
+  return new Promise((resolve) => {
+    _syncTimer = setTimeout(() => {
+      _lastSyncAt = Date.now();
+      _syncLeaderboardImmediate().then(resolve).catch(resolve);
+      _syncTimer = null;
+    }, minGap - (now - _lastSyncAt));
+  });
 }
 
 async function setLeaderboardVisibility(visible) {
