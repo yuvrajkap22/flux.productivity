@@ -37,6 +37,99 @@ const FluxTodo = {
       this.filter = btn.dataset.filter;
       this.render();
     });
+
+    // Event delegation for todo item actions (reduces per-item listeners)
+    const list = document.getElementById('todo-list');
+    if (list) {
+      // Drag & drop handled at container level to avoid per-item listeners
+      list._draggingId = null;
+      list.addEventListener('dragstart', (e) => {
+        const item = e.target.closest('.todo-item');
+        if (!item) return;
+        if (item.classList.contains('is-editing')) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.setData('text/plain', item.dataset.id);
+        item.style.opacity = '0.4';
+        list._draggingId = item.dataset.id;
+      });
+
+      list.addEventListener('dragend', (e) => {
+        const item = e.target.closest('.todo-item');
+        if (item) item.style.opacity = '1';
+        list.querySelectorAll('.todo-item').forEach(it => it.style.borderTop = '');
+        list._draggingId = null;
+      });
+
+      list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const over = e.target.closest('.todo-item');
+        list.querySelectorAll('.todo-item').forEach(it => it.style.borderTop = '');
+        if (!over || over.dataset.id === list._draggingId) return;
+        over.style.borderTop = '2px solid var(--accent)';
+      });
+
+      list.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const dropItem = e.target.closest('.todo-item');
+        if (!dropItem) return;
+        dropItem.style.borderTop = '';
+        const dragId = e.dataTransfer.getData('text/plain') || list._draggingId;
+        const dropId = dropItem.dataset.id;
+        if (!dragId || dragId === dropId) return;
+        const dragIdx = this.todos.findIndex(t => t.id === dragId);
+        const dropIdx = this.todos.findIndex(t => t.id === dropId);
+        if (dragIdx < 0 || dropIdx < 0) return;
+        const [moved] = this.todos.splice(dragIdx, 1);
+        this.todos.splice(dropIdx, 0, moved);
+        this.save();
+        this.render();
+      });
+      list.addEventListener('click', (e) => {
+        const item = e.target.closest('.todo-item');
+        if (!item) return;
+        const id = item.dataset.id;
+
+        if (e.target.closest('.todo-checkbox')) {
+          this.toggleComplete(id);
+          return;
+        }
+
+        if (e.target.closest('.priority-btn')) {
+          this.togglePriority(id);
+          return;
+        }
+
+        if (e.target.closest('.timer-btn')) {
+          this.startTimerForTask(id);
+          return;
+        }
+
+        if (e.target.closest('.edit-btn')) {
+          this.startEditTodo(id);
+          return;
+        }
+
+        if (e.target.closest('.delete-btn')) {
+          this.deleteTodo(id);
+          return;
+        }
+
+        // Click on the item area toggles tracking (ignore clicks on buttons)
+        if (e.target.closest('button, .todo-action-btn, .todo-checkbox')) return;
+        if (item.classList.contains('is-editing')) return;
+        this.toggleTracking(id);
+      });
+
+      list.addEventListener('dblclick', (e) => {
+        const text = e.target.closest('.todo-text');
+        if (!text) return;
+        const item = text.closest('.todo-item');
+        if (!item) return;
+        this.startEditTodo(item.dataset.id);
+      });
+    }
   },
 
   addTodo() {
@@ -256,8 +349,7 @@ const FluxTodo = {
     filtered.forEach((todo) => frag.appendChild(this.createTodoElement(todo)));
     container.replaceChildren(frag);
 
-    // Setup drag and drop
-    this.setupDragDrop();
+    // Drag/drop handled on container via delegated handlers
   },
 
   createTodoElement(todo) {
@@ -300,7 +392,7 @@ const FluxTodo = {
     priorityBtn.setAttribute('aria-label', todo.priority ? 'Remove priority' : 'Mark as priority');
     priorityBtn.setAttribute('aria-pressed', todo.priority ? 'true' : 'false');
     priorityBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h11l-2 4 2 4H5"/></svg>';
-    priorityBtn.addEventListener('click', () => this.togglePriority(todo.id));
+    // Handled via event delegation on the list container
 
     const timerBtn = document.createElement('button');
     timerBtn.className = 'todo-action-btn timer-btn';
@@ -308,7 +400,7 @@ const FluxTodo = {
     timerBtn.title = 'Start timer for this task';
     timerBtn.setAttribute('aria-label', 'Start timer for this task');
     timerBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>';
-    timerBtn.addEventListener('click', () => this.startTimerForTask(todo.id));
+    // Handled via event delegation on the list container
 
     const editBtn = document.createElement('button');
     editBtn.className = 'todo-action-btn edit-btn';
@@ -316,28 +408,19 @@ const FluxTodo = {
     editBtn.title = 'Edit task';
     editBtn.setAttribute('aria-label', 'Edit task');
     editBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
-    editBtn.addEventListener('click', () => this.startEditTodo(todo.id));
+    // Handled via event delegation on the list container
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'todo-action-btn delete-btn';
     deleteBtn.type = 'button';
     deleteBtn.title = 'Delete';
     deleteBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-    deleteBtn.addEventListener('click', () => this.deleteTodo(todo.id));
+    // Handled via event delegation on the list container
 
     actions.append(priorityBtn, timerBtn, editBtn, deleteBtn);
     item.append(checkbox, trackingDot, text, tag, badge, actions);
 
-    text.addEventListener('dblclick', (event) => {
-      event.stopPropagation();
-      this.startEditTodo(todo.id);
-    });
-
-    item.addEventListener('click', (event) => {
-      if (item.classList.contains('is-editing')) return;
-      if (event.target.closest('button, .todo-action-btn, .todo-checkbox')) return;
-      this.toggleTracking(todo.id);
-    });
+    // dblclick and item clicks handled via event delegation
 
     return item;
   },
@@ -374,39 +457,7 @@ const FluxTodo = {
     return labels[cat] || cat;
   },
 
-  setupDragDrop() {
-    const items = document.querySelectorAll('.todo-item[draggable]');
-    items.forEach(item => {
-      item.addEventListener('dragstart', (e) => {
-        if (item.classList.contains('is-editing')) {
-          e.preventDefault();
-          return;
-        }
-        e.dataTransfer.setData('text/plain', item.dataset.id);
-        item.style.opacity = '0.4';
-      });
-      item.addEventListener('dragend', () => { item.style.opacity = '1'; });
-      item.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        item.style.borderTop = '2px solid var(--accent)';
-      });
-      item.addEventListener('dragleave', () => { item.style.borderTop = ''; });
-      item.addEventListener('drop', (e) => {
-        e.preventDefault();
-        item.style.borderTop = '';
-        const dragId = e.dataTransfer.getData('text/plain');
-        const dropId = item.dataset.id;
-        if (dragId === dropId) return;
-        const dragIdx = this.todos.findIndex(t => t.id === dragId);
-        const dropIdx = this.todos.findIndex(t => t.id === dropId);
-        if (dragIdx < 0 || dropIdx < 0) return;
-        const [moved] = this.todos.splice(dragIdx, 1);
-        this.todos.splice(dropIdx, 0, moved);
-        this.save();
-        this.render();
-      });
-    });
-  },
+  // setupDragDrop removed in favor of container-level handlers
 
   updateStats() {
     // Update sidebar stats from live todo data

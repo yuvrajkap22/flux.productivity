@@ -21,12 +21,21 @@
   if (!disableCursorEffects) {
     document.body.classList.add('custom-cursor-enabled');
 
+    let pendingCursorDotUpdate = false;
     document.addEventListener('pointermove', (e) => {
       mouseX = e.clientX; mouseY = e.clientY;
-      cursorDot.style.setProperty('--x', mouseX + 'px');
-      cursorDot.style.setProperty('--y', mouseY + 'px');
-      if (cursorDot.style.opacity !== '1') cursorDot.style.opacity = '1';
-      if (cursorRing.style.opacity !== '1') cursorRing.style.opacity = '1';
+      if (!pendingCursorDotUpdate) {
+        pendingCursorDotUpdate = true;
+        requestAnimationFrame(() => {
+          if (cursorDot) {
+            cursorDot.style.setProperty('--x', mouseX + 'px');
+            cursorDot.style.setProperty('--y', mouseY + 'px');
+            if (cursorDot.style.opacity !== '1') cursorDot.style.opacity = '1';
+          }
+          if (cursorRing && cursorRing.style.opacity !== '1') cursorRing.style.opacity = '1';
+          pendingCursorDotUpdate = false;
+        });
+      }
     }, { passive: true });
 
     function animateCursor() {

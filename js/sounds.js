@@ -136,10 +136,13 @@ const FluxAudio = {
   createNoiseBuffer() {
     this.ensureCtx();
     const sr = this.ctx.sampleRate;
+    // Cache noise buffers per sample rate to avoid regenerating large arrays
+    if (this.noiseBuffers[sr]) return this.noiseBuffers[sr];
     const len = sr * 2;
     const buffer = this.ctx.createBuffer(1, len, sr);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    this.noiseBuffers[sr] = buffer;
     return buffer;
   },
 

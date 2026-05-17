@@ -27,6 +27,7 @@ const FluxPomo = {
 
   // Ring
   circumference: 2 * Math.PI * 88, // r=88
+  _wasRunningOnHide: false,
 
   getTodoApi() {
     if (window.FluxTodo) return window.FluxTodo;
@@ -57,6 +58,20 @@ const FluxPomo = {
     this.remaining = this.duration;
 
     this.bindEvents();
+    // Pause/resume when page visibility changes to reduce background work
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (this.running) {
+          this._wasRunningOnHide = true;
+          this.pause();
+        }
+      } else {
+        if (this._wasRunningOnHide) {
+          this._wasRunningOnHide = false;
+          this.start();
+        }
+      }
+    });
     this.syncActiveTask();
     this.updateDisplay();
     this.updateStatsBar();

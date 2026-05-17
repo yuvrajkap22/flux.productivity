@@ -18,6 +18,27 @@ const FluxStats = {
         FluxAudio.buttonClick();
       });
     });
+
+    // Cache frequently used DOM references to avoid repeated lookups
+    this.refs = {
+      barChartTitle: document.getElementById('bar-chart-title'),
+      barChart: document.getElementById('bar-chart'),
+      lineChart30: document.getElementById('line-chart-30'),
+      dayHistogram: document.getElementById('day-histogram'),
+      dayHistTitle: document.getElementById('day-hist-title'),
+      topTasksList: document.getElementById('top-tasks-list'),
+      categoryBars: document.getElementById('category-bars'),
+      statTotalTime: document.getElementById('stat-total-time'),
+      statTotalSessions: document.getElementById('stat-total-sessions'),
+      statCurrentStreak: document.getElementById('stat-current-streak'),
+      statLongestStreak: document.getElementById('stat-longest-streak'),
+      statTasksDone: document.getElementById('stat-tasks-done'),
+      statCompletionRate: document.getElementById('stat-completion-rate'),
+      avgFocus: document.getElementById('avg-focus'),
+      avgSessions: document.getElementById('avg-sessions'),
+      bestDayLabel: document.getElementById('best-day-label'),
+      bestDayTime: document.getElementById('best-day-time'),
+    };
   },
 
   render() {
@@ -49,7 +70,7 @@ const FluxStats = {
       totalTime += time;
     }
 
-    document.getElementById('bar-chart-title').textContent = 'Focus Trend (Last 30 Days)';
+    if (this.refs?.barChartTitle) this.refs.barChartTitle.textContent = 'Focus Trend (Last 30 Days)';
     this.setOverviewCards(totalTime, totalSessions, stats, todos);
     this.renderBarChart(days, 'time');
     this.renderAverages(days, totalTime, totalSessions);
@@ -71,7 +92,7 @@ const FluxStats = {
       totalTime     += time;
     }
 
-    document.getElementById('bar-chart-title').textContent = 'Focus Trend (Last 7 Days)';
+    if (this.refs?.barChartTitle) this.refs.barChartTitle.textContent = 'Focus Trend (Last 7 Days)';
     this.setOverviewCards(totalTime, totalSessions, stats, todos);
     this.renderBarChart(days, 'time');
     this.renderAverages(days, totalTime, totalSessions);
@@ -98,7 +119,7 @@ const FluxStats = {
     }
 
     const monthName = this.monthLabels[month] + ' ' + year;
-    document.getElementById('bar-chart-title').textContent = `Monthly Focus (${monthName})`;
+    if (this.refs?.barChartTitle) this.refs.barChartTitle.textContent = `Monthly Focus (${monthName})`;
     this.setOverviewCards(totalTime, totalSessions, stats, todos);
     this.renderBarChart(days, 'time');
     this.renderAverages(days, totalTime, totalSessions);
@@ -131,28 +152,28 @@ const FluxStats = {
       totalTime     += mTime;
     }
 
-    document.getElementById('bar-chart-title').textContent = 'Monthly Focus (Last 12 Months)';
+    if (this.refs?.barChartTitle) this.refs.barChartTitle.textContent = 'Monthly Focus (Last 12 Months)';
     this.setOverviewCards(totalTime, totalSessions, stats, todos);
     this.renderBarChart(months, 'time');
     this.renderAverages(months, totalTime, totalSessions);
   },
 
   setOverviewCards(totalTime, totalSessions, stats, todos) {
-    document.getElementById('stat-total-time').textContent = Flux.formatTime(totalTime);
-    document.getElementById('stat-total-sessions').textContent = totalSessions;
-    document.getElementById('stat-current-streak').textContent = (stats.streak || 0) + ' 🔥';
-    document.getElementById('stat-longest-streak').textContent = stats.longestStreak || 0;
+    if (this.refs?.statTotalTime) this.refs.statTotalTime.textContent = Flux.formatTime(totalTime);
+    if (this.refs?.statTotalSessions) this.refs.statTotalSessions.textContent = totalSessions;
+    if (this.refs?.statCurrentStreak) this.refs.statCurrentStreak.textContent = (stats.streak || 0) + ' 🔥';
+    if (this.refs?.statLongestStreak) this.refs.statLongestStreak.textContent = stats.longestStreak || 0;
 
     const done  = todos.filter(t => t.completed).length;
     const total = todos.length;
-    document.getElementById('stat-tasks-done').textContent = done;
-    document.getElementById('stat-completion-rate').textContent =
+    if (this.refs?.statTasksDone) this.refs.statTasksDone.textContent = done;
+    if (this.refs?.statCompletionRate) this.refs.statCompletionRate.textContent =
       total > 0 ? Math.round(done / total * 100) + '% completion' : '—';
   },
 
   renderBarChart(days, metric) {
     const maxVal = Math.max(...days.map(d => d[metric] || 0), 1);
-    const chart  = document.getElementById('bar-chart');
+    const chart  = this.refs?.barChart || document.getElementById('bar-chart');
     const MAX_BARS = 14; // limit labels for readability in month view
 
     let displayDays = days;
@@ -177,7 +198,7 @@ const FluxStats = {
   },
 
   render30DayLineGraph(stats) {
-    const svg = document.getElementById('line-chart-30');
+    const svg = this.refs?.lineChart30 || document.getElementById('line-chart-30');
     if (!svg) return;
 
     const points = [];
@@ -225,8 +246,8 @@ const FluxStats = {
   },
 
   renderDayHistogram(stats) {
-    const hist = document.getElementById('day-histogram');
-    const title = document.getElementById('day-hist-title');
+    const hist = this.refs?.dayHistogram || document.getElementById('day-histogram');
+    const title = this.refs?.dayHistTitle || document.getElementById('day-hist-title');
     if (!hist) return;
 
     const sourceKey = this.getLatestActivityDay(stats);
@@ -272,7 +293,7 @@ const FluxStats = {
   },
 
   renderTopTasks(todos) {
-    const list = document.getElementById('top-tasks-list');
+    const list = this.refs?.topTasksList || document.getElementById('top-tasks-list');
     const top  = [...todos].filter(t => t.timeTracked > 0)
                            .sort((a, b) => b.timeTracked - a.timeTracked)
                            .slice(0, 6);
@@ -334,7 +355,7 @@ const FluxStats = {
     const total   = Object.values(cats).reduce((a, b) => a + b, 0) || 1;
     const colors  = { work: '#60a5fa', study: '#a78bfa', personal: '#f472b6', health: '#34d399', creative: '#fbbf24' };
     const labels  = { work: '💼 Work', study: '📚 Study', personal: '🏠 Personal', health: '💪 Health', creative: '🎨 Creative' };
-    const container = document.getElementById('category-bars');
+    const container = this.refs?.categoryBars || document.getElementById('category-bars');
 
     container.innerHTML = Object.entries(cats)
       .sort(([, a], [, b]) => b - a)
@@ -356,9 +377,9 @@ const FluxStats = {
 
     const best = [...days].sort((a, b) => (b.time || 0) - (a.time || 0))[0];
 
-    document.getElementById('avg-focus').textContent    = Flux.formatTime(avgFocus);
-    document.getElementById('avg-sessions').textContent = avgSess;
-    document.getElementById('best-day-label').textContent = best?.label || '—';
-    document.getElementById('best-day-time').textContent  = best ? Flux.formatTime(best.time || 0) : '—';
+    if (this.refs?.avgFocus) this.refs.avgFocus.textContent = Flux.formatTime(avgFocus);
+    if (this.refs?.avgSessions) this.refs.avgSessions.textContent = avgSess;
+    if (this.refs?.bestDayLabel) this.refs.bestDayLabel.textContent = best?.label || '—';
+    if (this.refs?.bestDayTime) this.refs.bestDayTime.textContent = best ? Flux.formatTime(best.time || 0) : '—';
   }
 };
