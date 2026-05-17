@@ -176,6 +176,7 @@ const FluxTodo = {
     Flux.saveNow('flux_todos', this.todos);
     this.render();
     this.updateStats();
+    try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
   },
 
   togglePriority(id) {

@@ -250,6 +250,8 @@ const FluxPomo = {
       setTimeout(() => document.getElementById('bloom-container').classList.remove('bloom-burst'), 600);
 
       this.saveStats(true);
+        // sync leaderboard after completed focus session
+        try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
 
       // Auto-switch to break
       if (this.consecutiveFocus >= this.settings.interval) {

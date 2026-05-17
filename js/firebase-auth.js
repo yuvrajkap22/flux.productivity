@@ -192,6 +192,8 @@ if (authUtils.normalizeDevHost()) {
       setMessage('Continue with Google to enter Flux.');
     }
     if (user && typeof FluxProfile !== 'undefined') FluxProfile.init(user);
+    // ensure leaderboard is synced after sign-in
+    try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
   });
 
   window.FluxAuth = {
