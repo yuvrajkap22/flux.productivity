@@ -90,6 +90,28 @@
       wrap.appendChild(row);
     });
     container.appendChild(wrap);
+
+  async function renderPinnedRow(container, metric) {
+    try {
+      const info = await window.Leaderboard.getUserEntryAndRank(metric);
+      if (!info || !info.entry) return;
+      const users = window._fluxLeaderboardLast || [];
+      const present = users.some(u => u.id === info.entry.id);
+      if (present) return;
+
+      const row = document.createElement('div');
+      row.className = 'leader-row pinned me';
+      const rankCol = document.createElement('div'); rankCol.className = 'rank-col'; rankCol.textContent = info.rank ? String(info.rank) : '—';
+      const avatarCol = createAvatarEl(info.entry);
+      const nameCol = document.createElement('div'); nameCol.className = 'name-col'; nameCol.textContent = safeText(info.entry.displayName || 'You');
+      const statCol = document.createElement('div'); statCol.className = 'stat-col'; statCol.textContent = fmtNum(info.entry[metric] || 0);
+      row.appendChild(rankCol); row.appendChild(avatarCol); row.appendChild(nameCol); row.appendChild(statCol);
+      // add separator
+      const sep = document.createElement('div'); sep.className = 'leader-list-sep';
+      container.appendChild(sep);
+      container.appendChild(row);
+    } catch (e) { /* ignore */ }
+  }
   }
 
   function attach(container) {
@@ -130,6 +152,8 @@
 
     renderPodium(container, users, currentUid);
     renderList(container, users.slice(3), currentUid);
+    // pinned current-user row when not in top list
+    renderPinnedRow(container, window._fluxLeaderboardMetric || 'focusMinutesTotal');
   }
 
   window.LeaderboardUI = {

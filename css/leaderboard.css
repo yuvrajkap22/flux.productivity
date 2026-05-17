@@ -9,6 +9,8 @@
 .leader-list{padding:8px}
 .leader-row{display:flex;align-items:center;padding:8px;border-bottom:1px solid rgba(0,0,0,0.04)}
 .leader-row.me{background:rgba(0,0,0,0.03)}
+.leader-list-sep{height:8px}
+.leader-row.pinned{border-top:2px dashed rgba(0,0,0,0.06);font-weight:600}
 .leader-row .rank-col{width:36px;text-align:center}
 .leader-row .avatar-col img{width:36px;height:36px;border-radius:50%}
 .leader-row .name-col{flex:1;padding:0 12px}

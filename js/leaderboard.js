@@ -1,8 +1,8 @@
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
 import { firebaseConfig } from './firebase-config.js';
 import {
-  getFirestore, doc, setDoc, deleteDoc, serverTimestamp,
-  collection, query, where, orderBy, limit, onSnapshot
+  getFirestore, doc, setDoc, deleteDoc, serverTimestamp, getDoc, collection,
+  query, where, orderBy, limit, onSnapshot, getCountFromServer
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 
 let app;
@@ -121,5 +121,30 @@ window.Leaderboard = window.Leaderboard || {};
 window.Leaderboard.syncLeaderboard = syncLeaderboard;
 window.Leaderboard.setLeaderboardVisibility = setLeaderboardVisibility;
 window.Leaderboard.subscribeLeaderboard = subscribeLeaderboard;
+async function getUserEntryAndRank(metric = 'focusMinutesTotal') {
+  if (!db) return { entry: null, rank: null };
+  try {
+    const user = window.FluxAuth?.user?.();
+    if (!user || !user.uid) return { entry: null, rank: null };
+    const ref = doc(db, 'leaderboard', user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return { entry: null, rank: null };
+    const entry = { id: snap.id, ...snap.data() };
+    let rank = null;
+    try {
+      const q = query(collection(db, 'leaderboard'), where('showOnLeaderboard', '==', true), where(metric, '>', entry[metric] || 0));
+      const cnt = await getCountFromServer(q);
+      rank = (cnt.data()?.count || 0) + 1;
+    } catch (e) {
+      // count API or index may not be available; leave rank null
+      rank = null;
+    }
+    return { entry, rank };
+  } catch (err) {
+    console.warn('getUserEntryAndRank failed', err);
+    return { entry: null, rank: null };
+  }
+}
+window.Leaderboard.getUserEntryAndRank = getUserEntryAndRank;
 
 export { syncLeaderboard, setLeaderboardVisibility, subscribeLeaderboard };
