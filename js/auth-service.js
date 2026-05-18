@@ -15,15 +15,21 @@
 
   function onAuthChange(handler) {
     if (!handler) return;
-    // Subscribe to legacy window events and new FluxBus
+    // Prefer FluxBus when available to avoid duplicate callbacks from bridged window events.
+    if (window.FluxBus) {
+      window.FluxBus.on('flux-auth-change', handler);
+      return;
+    }
     window.addEventListener('flux-auth-change', () => handler(getUser()));
-    if (window.FluxBus) window.FluxBus.on('flux-auth-change', handler);
   }
 
   function onAuthReady(handler) {
     if (!handler) return;
+    if (window.FluxBus) {
+      window.FluxBus.on('flux-auth-ready', handler);
+      return;
+    }
     window.addEventListener('flux-auth-ready', () => handler(getUser()));
-    if (window.FluxBus) window.FluxBus.on('flux-auth-ready', handler);
   }
 
   window.FluxAuthService = window.FluxAuthService || { getUser, isGuest, onAuthChange, onAuthReady };

@@ -13,8 +13,11 @@
 
   function onProfileChange(handler) {
     if (!handler) return;
+    if (window.FluxBus) {
+      window.FluxBus.on('flux-profile-change', handler);
+      return;
+    }
     window.addEventListener('flux-profile-change', (e) => handler(e.detail || {}));
-    if (window.FluxBus) window.FluxBus.on('flux-profile-change', handler);
   }
 
   function init(profile) {

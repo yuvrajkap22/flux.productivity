@@ -257,54 +257,6 @@ const FluxStats = {
     if (this.refs?.heatmapTitle) this.refs.heatmapTitle.textContent = `30-Day Heatmap · ${totalSessions} sessions`;
   },
 
-  render30DayLineGraph(stats) {
-    const svg = this.refs?.lineChart30 || document.getElementById('line-chart-30');
-    if (!svg) return;
-
-    const points = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      const time = (stats.totalTime?.[key]) || 0;
-      points.push({ key, time, day: d.getDate() });
-    }
-
-    const max = Math.max(...points.map(p => p.time), 1);
-    const width = 620;
-    const height = 180;
-    const padX = 18;
-    const padY = 16;
-    const usableW = width - padX * 2;
-    const usableH = height - padY * 2;
-
-    const linePoints = points.map((p, i) => {
-      const x = padX + (usableW * i) / Math.max(points.length - 1, 1);
-      const y = height - padY - ((p.time / max) * usableH);
-      return `${x.toFixed(2)},${y.toFixed(2)}`;
-    }).join(' ');
-
-    const areaPoints = `${padX},${height - padY} ${linePoints} ${width - padX},${height - padY}`;
-
-    const xLabels = [0, 9, 19, 29].map((idx) => {
-      const x = padX + (usableW * idx) / 29;
-      return `<text x="${x.toFixed(2)}" y="${height - 2}" class="line-axis-label">${points[idx].day}</text>`;
-    }).join('');
-
-    svg.innerHTML = `
-      <defs>
-        <linearGradient id="lineAreaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.36"></stop>
-          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"></stop>
-        </linearGradient>
-      </defs>
-      <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" class="line-axis"></line>
-      <polygon points="${areaPoints}" class="line-area" fill="url(#lineAreaGrad)"></polygon>
-      <polyline points="${linePoints}" class="line-path"></polyline>
-      ${xLabels}
-    `;
-  },
-
   renderDayHistogram(stats) {
     const hist = this.refs?.dayHistogram || document.getElementById('day-histogram');
     const title = this.refs?.dayHistTitle || document.getElementById('day-hist-title');
@@ -354,6 +306,7 @@ const FluxStats = {
 
   renderTopTasks(todos) {
     const list = this.refs?.topTasksList || document.getElementById('top-tasks-list');
+    if (!list) return;
     const top  = [...todos].filter(t => t.timeTracked > 0)
                            .sort((a, b) => b.timeTracked - a.timeTracked)
                            .slice(0, 6);
@@ -416,6 +369,7 @@ const FluxStats = {
     const colors  = { work: '#60a5fa', study: '#a78bfa', personal: '#f472b6', health: '#34d399', creative: '#fbbf24' };
     const labels  = { work: '💼 Work', study: '📚 Study', personal: '🏠 Personal', health: '💪 Health', creative: '🎨 Creative' };
     const container = this.refs?.categoryBars || document.getElementById('category-bars');
+    if (!container) return;
 
     container.innerHTML = Object.entries(cats)
       .sort(([, a], [, b]) => b - a)
