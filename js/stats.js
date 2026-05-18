@@ -23,7 +23,6 @@ const FluxStats = {
     this.refs = {
       barChartTitle: document.getElementById('bar-chart-title'),
       barChart: document.getElementById('bar-chart'),
-      lineChart30: document.getElementById('line-chart-30'),
       dayHistogram: document.getElementById('day-histogram'),
       dayHistTitle: document.getElementById('day-hist-title'),
       topTasksList: document.getElementById('top-tasks-list'),
@@ -38,6 +37,11 @@ const FluxStats = {
       avgSessions: document.getElementById('avg-sessions'),
       bestDayLabel: document.getElementById('best-day-label'),
       bestDayTime: document.getElementById('best-day-time'),
+      heatmapTitle: document.getElementById('heatmap-title'),
+      heatmapGrid: document.getElementById('focus-heatmap'),
+      heatmapBestDay: document.getElementById('heatmap-best-day'),
+      heatmapBestDayTime: document.getElementById('heatmap-best-day-time'),
+      heatmapTotalTime: document.getElementById('heatmap-total-time'),
     };
   },
 
@@ -56,7 +60,7 @@ const FluxStats = {
     else if (this.period === '30') this.render30Days(stats, todos);
     else if (this.period === 'month') this.renderMonth(stats, todos);
     else if (this.period === 'all') this.renderAll(stats, todos);
-    this.render30DayLineGraph(stats);
+    this.render30DayHeatmap(stats);
     this.renderDayHistogram(stats);
     this.renderTopTasks(todos);
     this.renderCategoryBreakdown(todos);
@@ -77,7 +81,7 @@ const FluxStats = {
       totalTime += time;
     }
 
-    if (this.refs?.barChartTitle) this.refs.barChartTitle.textContent = 'Focus Trend (Last 30 Days)';
+    if (this.refs?.barChartTitle) this.refs.barChartTitle.textContent = '30-Day Focus Distribution';
     this.setOverviewCards(totalTime, totalSessions, stats, todos);
     this.renderBarChart(days, 'time');
     this.renderAverages(days, totalTime, totalSessions);
@@ -179,8 +183,10 @@ const FluxStats = {
   },
 
   renderBarChart(days, metric) {
+    if (!Array.isArray(days) || days.length === 0) return;
     const maxVal = Math.max(...days.map(d => d[metric] || 0), 1);
     const chart  = this.refs?.barChart || document.getElementById('bar-chart');
+    if (!chart) return;
     const MAX_BARS = 14; // limit labels for readability in month view
 
     let displayDays = days;
@@ -202,6 +208,53 @@ const FluxStats = {
         <div class="bar-label">${d.label}</div>
       </div>`;
     }).join('');
+  },
+
+  render30DayHeatmap(stats) {
+    const grid = this.refs?.heatmapGrid || document.getElementById('focus-heatmap');
+    if (!grid) return;
+
+    const days = [];
+    let totalTime = 0;
+    let bestDay = null;
+
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const key = date.toISOString().split('T')[0];
+      const time = Number(stats.totalTime?.[key]) || 0;
+      const sessions = Number(stats.sessions?.[key]) || 0;
+      const label = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      const day = { key, date, label, time, sessions };
+      days.push(day);
+      totalTime += time;
+      if (!bestDay || time > bestDay.time) bestDay = day;
+    }
+
+    const maxTime = Math.max(...days.map((day) => day.time), 1);
+    const totalSessions = days.reduce((sum, day) => sum + day.sessions, 0);
+    const intensityFor = (time) => {
+      if (time <= 0) return 0;
+      const ratio = time / maxTime;
+      if (ratio > 0.75) return 4;
+      if (ratio > 0.5) return 3;
+      if (ratio > 0.25) return 2;
+      return 1;
+    };
+
+    grid.innerHTML = days.map((day) => {
+      const level = intensityFor(day.time);
+      const title = `${day.label}: ${Flux.formatTime(day.time)} · ${day.sessions} session${day.sessions === 1 ? '' : 's'}`;
+      return `<button class="heatmap-cell ${level ? `level-${level}` : 'is-empty'}" type="button" title="${title}" aria-label="${title}">
+        <strong>${day.time > 0 ? Flux.formatTime(day.time) : '—'}</strong>
+        <span>${day.sessions > 0 ? `${day.sessions}x` : day.label}</span>
+      </button>`;
+    }).join('');
+
+    if (this.refs?.heatmapBestDay) this.refs.heatmapBestDay.textContent = bestDay ? bestDay.label : '—';
+    if (this.refs?.heatmapBestDayTime) this.refs.heatmapBestDayTime.textContent = bestDay ? Flux.formatTime(bestDay.time || 0) : '0m';
+    if (this.refs?.heatmapTotalTime) this.refs.heatmapTotalTime.textContent = Flux.formatTime(totalTime);
+    if (this.refs?.heatmapTitle) this.refs.heatmapTitle.textContent = `30-Day Heatmap · ${totalSessions} sessions`;
   },
 
   render30DayLineGraph(stats) {
@@ -388,8 +441,7 @@ const FluxStats = {
     if (this.refs?.avgSessions) this.refs.avgSessions.textContent = avgSess;
     if (this.refs?.bestDayLabel) this.refs.bestDayLabel.textContent = best?.label || '—';
     if (this.refs?.bestDayTime) this.refs.bestDayTime.textContent = best ? Flux.formatTime(best.time || 0) : '—';
-  }
- ,
+  },
   updateOverview() {
     const stats = Flux.load('flux_stats', { sessions: {}, totalTime: {}, streak: 0, longestStreak: 0 });
     const todos = Flux.load('flux_todos', []);

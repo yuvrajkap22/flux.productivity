@@ -1445,6 +1445,214 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
 .heatmap-cell.level-3 { background: rgba(245,166,35,0.6); }
 .heatmap-cell.level-4 { background: var(--accent); }
 
+.stats-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.stats-hero {
+  padding: 22px;
+  border-radius: 28px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 24%, transparent), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(255,255,255,0.06), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  box-shadow: 0 24px 60px rgba(0,0,0,0.16);
+  display: grid;
+  grid-template-columns: 1.3fr auto;
+  gap: 18px;
+  align-items: end;
+}
+
+.stats-hero h1 {
+  margin: 4px 0 10px;
+  font-size: clamp(28px, 4vw, 46px);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.stats-kicker,
+.panel-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.stats-hero-text {
+  margin: 0;
+  max-width: 64ch;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.stats-period-toggle-compact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.stats-period-toggle-compact .period-btn {
+  min-width: 84px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+}
+
+.stats-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stat-card-primary {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 20%, transparent), transparent 40%),
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+    var(--bg-glass);
+}
+
+.stats-main-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stats-panel {
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+    var(--bg-glass);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.12);
+  overflow: hidden;
+}
+
+.stats-heatmap-card { grid-column: span 12; }
+.stats-bar-card { grid-column: span 7; }
+.stats-day-card { grid-column: span 5; }
+.stats-category-card { grid-column: span 5; }
+.stats-tasks-card { grid-column: span 7; }
+.stats-avg-card { grid-column: span 12; }
+
+.heatmap-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.heatmap-summary > div {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+}
+
+.heatmap-summary-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.heatmap-summary strong {
+  display: block;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+.heatmap-wrap {
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+  padding: 16px;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.heatmap-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 8px;
+  transition: transform 180ms var(--ease), border-color 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+
+.heatmap-cell:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.18);
+}
+
+.heatmap-cell strong {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.heatmap-cell span {
+  font-size: 9px;
+  color: rgba(255,255,255,0.7);
+}
+
+.heatmap-cell.is-empty { background: rgba(255,255,255,0.025); }
+.heatmap-cell.level-0 { background: rgba(255,255,255,0.03); }
+.heatmap-cell.level-1 { background: color-mix(in srgb, var(--accent) 18%, rgba(255,255,255,0.04)); }
+.heatmap-cell.level-2 { background: color-mix(in srgb, var(--accent) 30%, rgba(255,255,255,0.05)); }
+.heatmap-cell.level-3 { background: color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,0.06)); }
+.heatmap-cell.level-4 { background: color-mix(in srgb, var(--accent) 64%, rgba(255,255,255,0.08)); }
+
+.heatmap-legend { gap: 6px; align-items: center; }
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.heatmap-low { background: rgba(255,255,255,0.04); }
+.heatmap-mid { background: color-mix(in srgb, var(--accent) 28%, rgba(255,255,255,0.04)); }
+.heatmap-high { background: color-mix(in srgb, var(--accent) 58%, rgba(255,255,255,0.04)); }
+
+.line-chart-wrap,
+.stats-line-card {
+  display: none;
+}
+
+.bar-chart:empty::before {
+  content: 'No focus data for this range yet.';
+  color: var(--text-dim);
+  font-size: 13px;
+  display: block;
+  padding: 24px 6px;
+}
+
+.avg-item {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+}
+
 /* ═══════════════════════════════════════
    TOAST
    ═══════════════════════════════════════ */
@@ -1516,6 +1724,17 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
   body.sidebar-collapsed .main-content { margin-left: 0; }
   body.sidebar-open { overflow: hidden; }
   .header-btn span { display: none; }
+  .stats-hero { grid-template-columns: 1fr; }
+  .stats-metrics-grid { grid-template-columns: 1fr 1fr; }
+  .stats-main-grid { grid-template-columns: 1fr; }
+  .stats-heatmap-card,
+  .stats-bar-card,
+  .stats-day-card,
+  .stats-category-card,
+  .stats-tasks-card,
+  .stats-avg-card { grid-column: 1 / -1; }
+  .heatmap-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .heatmap-summary { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr; }
   .challenges-grid { grid-template-columns: 1fr; }
   .stats-overview-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1569,6 +1788,7 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
     right: 8px;
     width: min(220px, calc(100vw - 16px));
   }
+  .stats-metrics-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {

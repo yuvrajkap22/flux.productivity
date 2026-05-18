@@ -479,113 +479,155 @@
 
     <!-- Stats View -->
     <div class="view-panel" id="view-stats">
-      <!-- Stats Period Toggle -->
-      <div class="stats-period-toggle">
-        <button class="period-btn active" data-period="week">This Week</button>
-        <button class="period-btn" data-period="30">30 Days</button>
-        <button class="period-btn" data-period="month">This Month</button>
-        <button class="period-btn" data-period="all">All Time</button>
-      </div>
-      <div class="stats-grid">
-        <!-- Overview Cards -->
-        <div class="stats-overview-row" id="stats-overview-row">
-          <div class="stat-card glass-panel">
+      <section class="stats-shell">
+        <header class="stats-hero glass-panel">
+          <div class="stats-hero-copy">
+            <p class="stats-kicker">Performance atlas</p>
+            <h1>Everything you did, remixed into a sharper story.</h1>
+            <p class="stats-hero-text">Focus time, streaks, task momentum, and recent activity are reorganized into a cleaner, denser dashboard with a 30-day heatmap instead of the old line chart.</p>
+          </div>
+          <div class="stats-period-toggle stats-period-toggle-compact">
+            <button class="period-btn active" data-period="week">Week</button>
+            <button class="period-btn" data-period="30">30 Days</button>
+            <button class="period-btn" data-period="month">Month</button>
+            <button class="period-btn" data-period="all">All Time</button>
+          </div>
+        </header>
+
+        <section class="stats-metrics-grid" id="stats-overview-row">
+          <article class="stat-card glass-panel stat-card-primary">
             <div class="stat-card-icon">⏱</div>
             <div class="stat-card-value" id="stat-total-time">0h</div>
             <div class="stat-card-label">Focus Time</div>
             <div class="stat-card-delta" id="stat-time-delta"></div>
-          </div>
-          <div class="stat-card glass-panel">
+          </article>
+          <article class="stat-card glass-panel">
             <div class="stat-card-icon">🍅</div>
             <div class="stat-card-value" id="stat-total-sessions">0</div>
             <div class="stat-card-label">Sessions</div>
             <div class="stat-card-delta" id="stat-sessions-delta"></div>
-          </div>
-          <div class="stat-card glass-panel">
+          </article>
+          <article class="stat-card glass-panel">
             <div class="stat-card-icon">🔥</div>
             <div class="stat-card-value" id="stat-current-streak">0</div>
             <div class="stat-card-label">Day Streak</div>
             <div class="stat-card-delta">Best: <span id="stat-longest-streak">0</span></div>
-          </div>
-          <div class="stat-card glass-panel">
+          </article>
+          <article class="stat-card glass-panel">
             <div class="stat-card-icon">✅</div>
             <div class="stat-card-value" id="stat-tasks-done">0</div>
             <div class="stat-card-label">Tasks Done</div>
             <div class="stat-card-delta" id="stat-completion-rate"></div>
-          </div>
-        </div>
+          </article>
+        </section>
 
-        <!-- Bar Chart -->
-        <div class="bento-card glass-panel stats-chart-card">
-          <div class="panel-header">
-            <h2 id="bar-chart-title">Daily Focus Histogram</h2>
-            <div class="chart-legend">
-              <span class="legend-dot"></span><span>Focus time</span>
+        <section class="stats-main-grid">
+          <article class="stats-panel glass-panel stats-heatmap-card">
+            <div class="panel-header">
+              <div>
+                <p class="panel-eyebrow">30-day activity</p>
+                <h2 id="heatmap-title">30-Day Heatmap</h2>
+              </div>
+              <div class="chart-legend heatmap-legend">
+                <span class="legend-swatch heatmap-low"></span><span>Low</span>
+                <span class="legend-swatch heatmap-mid"></span><span>Med</span>
+                <span class="legend-swatch heatmap-high"></span><span>High</span>
+              </div>
             </div>
-          </div>
-          <div class="bar-chart-wrap">
-            <div class="bar-chart" id="bar-chart"></div>
-          </div>
-        </div>
+            <div class="heatmap-summary">
+              <div>
+                <span class="heatmap-summary-label">Most active day</span>
+                <strong id="heatmap-best-day">—</strong>
+              </div>
+              <div>
+                <span class="heatmap-summary-label">Best day focus</span>
+                <strong id="heatmap-best-day-time">0m</strong>
+              </div>
+              <div>
+                <span class="heatmap-summary-label">30-day total</span>
+                <strong id="heatmap-total-time">0m</strong>
+              </div>
+            </div>
+            <div class="heatmap-wrap">
+              <div class="heatmap-grid" id="focus-heatmap" aria-label="30 day focus heatmap"></div>
+            </div>
+          </article>
 
-        <!-- 30-day Line Graph -->
-        <div class="bento-card glass-panel stats-line-card">
-          <div class="panel-header">
-            <h2>30-Day Focus Line</h2>
-            <div class="chart-legend">
-              <span class="legend-dot"></span><span>Total focus per day</span>
+          <article class="stats-panel glass-panel stats-bar-card">
+            <div class="panel-header">
+              <div>
+                <p class="panel-eyebrow">Current period</p>
+                <h2 id="bar-chart-title">Focus histogram</h2>
+              </div>
+              <div class="chart-legend">
+                <span class="legend-dot"></span><span>Focus time</span>
+              </div>
             </div>
-          </div>
-          <div class="line-chart-wrap">
-            <svg id="line-chart-30" class="line-chart-30" viewBox="0 0 620 180" preserveAspectRatio="none" aria-label="30 day line chart"></svg>
-          </div>
-        </div>
+            <div class="bar-chart-wrap">
+              <div class="bar-chart" id="bar-chart"></div>
+            </div>
+          </article>
 
-        <!-- 1-day Histogram -->
-        <div class="bento-card glass-panel stats-day-card">
-          <div class="panel-header">
-            <h2 id="day-hist-title">1-Day Hourly Histogram</h2>
-          </div>
-          <div class="day-hist-wrap">
-            <div class="day-histogram" id="day-histogram"></div>
-          </div>
-        </div>
+          <article class="stats-panel glass-panel stats-day-card">
+            <div class="panel-header">
+              <div>
+                <p class="panel-eyebrow">Daily rhythm</p>
+                <h2 id="day-hist-title">1-Day Hourly Histogram</h2>
+              </div>
+            </div>
+            <div class="day-hist-wrap">
+              <div class="day-histogram" id="day-histogram"></div>
+            </div>
+          </article>
 
-        <!-- Category Breakdown -->
-        <div class="bento-card glass-panel stats-category-card">
-          <div class="panel-header"><h2>By Category</h2></div>
-          <div class="category-bars" id="category-bars"></div>
-        </div>
+          <article class="stats-panel glass-panel stats-category-card">
+            <div class="panel-header">
+              <div>
+                <p class="panel-eyebrow">Distribution</p>
+                <h2>By Category</h2>
+              </div>
+            </div>
+            <div class="category-bars" id="category-bars"></div>
+          </article>
 
-        <!-- Top Tasks -->
-        <div class="bento-card glass-panel stats-tasks-card">
-          <div class="panel-header"><h2>Top Tasks by Time</h2></div>
-          <div class="top-tasks-list" id="top-tasks-list"></div>
-        </div>
+          <article class="stats-panel glass-panel stats-tasks-card">
+            <div class="panel-header">
+              <div>
+                <p class="panel-eyebrow">Momentum</p>
+                <h2>Top Tasks by Time</h2>
+              </div>
+            </div>
+            <div class="top-tasks-list" id="top-tasks-list"></div>
+          </article>
 
-        <!-- Daily Average -->
-        <div class="bento-card glass-panel stats-avg-card">
-          <div class="panel-header"><h2>Daily Averages</h2></div>
-          <div class="avg-grid" id="avg-grid">
-            <div class="avg-item">
-              <div class="avg-value" id="avg-focus">0m</div>
-              <div class="avg-label">Avg Focus/Day</div>
+          <article class="stats-panel glass-panel stats-avg-card">
+            <div class="panel-header">
+              <div>
+                <p class="panel-eyebrow">Benchmarks</p>
+                <h2>Daily Averages</h2>
+              </div>
             </div>
-            <div class="avg-item">
-              <div class="avg-value" id="avg-sessions">0</div>
-              <div class="avg-label">Avg Sessions/Day</div>
+            <div class="avg-grid" id="avg-grid">
+              <div class="avg-item">
+                <div class="avg-value" id="avg-focus">0m</div>
+                <div class="avg-label">Avg Focus/Day</div>
+              </div>
+              <div class="avg-item">
+                <div class="avg-value" id="avg-sessions">0</div>
+                <div class="avg-label">Avg Sessions/Day</div>
+              </div>
+              <div class="avg-item">
+                <div class="avg-value" id="best-day-label">—</div>
+                <div class="avg-label">Most Productive Day</div>
+              </div>
+              <div class="avg-item">
+                <div class="avg-value" id="best-day-time">0h</div>
+                <div class="avg-label">Best Day Focus</div>
+              </div>
             </div>
-            <div class="avg-item">
-              <div class="avg-value" id="best-day-label">—</div>
-              <div class="avg-label">Most Productive Day</div>
-            </div>
-            <div class="avg-item">
-              <div class="avg-value" id="best-day-time">0h</div>
-              <div class="avg-label">Best Day Focus</div>
-            </div>
-          </div>
-        </div>
-      </div>
+          </article>
+        </section>
+      </section>
     </div>
 
     <!-- Challenges View -->
