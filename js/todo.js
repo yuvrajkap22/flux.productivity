@@ -439,11 +439,14 @@ const FluxTodo = {
     // Handled via event delegation on the list container
 
     const timerBtn = document.createElement('button');
-    timerBtn.className = 'todo-action-btn timer-btn';
+    timerBtn.className = `todo-action-btn timer-btn ${todo.tracking ? 'is-active' : ''}`.trim();
     timerBtn.type = 'button';
-    timerBtn.title = 'Start timer for this task';
-    timerBtn.setAttribute('aria-label', 'Start timer for this task');
-    timerBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>';
+    timerBtn.title = todo.tracking ? 'Stop timer for this task' : 'Start timer for this task';
+    timerBtn.setAttribute('aria-label', timerBtn.title);
+    // Use distinct icons for play vs pause for clearer affordance
+    timerBtn.innerHTML = todo.tracking
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
     // Handled via event delegation on the list container
 
     const editBtn = document.createElement('button');
@@ -493,10 +496,12 @@ const FluxTodo = {
     todo.timeTracked = (todo.timeTracked || 0) + seconds;
     const badge = document.querySelector(`[data-id="${this.trackingId}"] .todo-time-badge`);
     if (badge) badge.textContent = Flux.formatTrackedTime(todo.timeTracked);
-    if (todo.timeTracked % 10 === 0) {
+    // Persist and update views more responsively: save frequently but avoid per-second writes
+    if (todo.timeTracked % 5 === 0) {
       this.save();
       this.refreshStatsViews();
-      this.scheduleLeaderboardSync();
+      // Ask leaderboard to sync immediately for near-instant leaderboard updates
+      try { window.Leaderboard?.syncLeaderboardImmediate?.(); } catch (e) { /* ignore */ }
     }
   },
 

@@ -15,6 +15,16 @@ try {
 }
 const db = app ? getFirestore(app) : null;
 
+// Safe service bridges (prefer new services, fall back to legacy globals)
+const authSvc = window.FluxAuthService || {
+  getUser: () => (window.FluxAuth?.user?.() || window.FluxAuthState?.user || null),
+  isGuest: () => { const u = (window.FluxAuth?.user?.() || window.FluxAuthState?.user); return !u || Boolean(u.isGuest); },
+};
+const profileSvc = window.FluxProfileService || {
+  getProfile: () => (window.FluxProfile?.data || {}),
+  getActiveUser: () => (window.FluxProfile?.activeUser || window.FluxAuthState?.user || window.FluxAuth?.user?.() || null),
+};
+
 function _getVisibilitySetting() {
   try {
     const raw = localStorage.getItem('flux_leaderboard_visible');
@@ -31,8 +41,8 @@ async function syncLeaderboard() {
 async function _syncLeaderboardImmediate() {
   if (!db) return;
   try {
-    const user = window.FluxAuth?.user?.();
-    if (!user || !user.uid || user.isGuest) return;
+    const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.() || window.FluxAuthState?.user);
+    if (!user || !user.uid || (authSvc && typeof authSvc.isGuest === 'function' ? authSvc.isGuest() : user.isGuest)) return;
     if (!_getVisibilitySetting()) return;
 
     const uid = user.uid;
@@ -45,10 +55,10 @@ async function _syncLeaderboardImmediate() {
     const tasksDoneTotal = (todos.filter(t => t.completed).length) || 0;
     const currentStreak = stats.streak || 0;
 
-    const profileApi = window.FluxProfile || null;
-    const displayName = user.displayName || profileApi?.data?.displayName || 'Flux User';
-    const username = profileApi?.data?.username || '';
-    const photoURL = user.photoURL || profileApi?.data?.photoURL || null;
+    const profile = (profileSvc && typeof profileSvc.getProfile === 'function') ? profileSvc.getProfile() : (window.FluxProfile?.data || {});
+    const displayName = user.displayName || profile?.displayName || 'Flux User';
+    const username = profile?.username || '';
+    const photoURL = user.photoURL || profile?.photoURL || null;
 
     const payload = {
       displayName,
@@ -90,7 +100,7 @@ function _syncLeaderboardDebounced() {
 
 async function setLeaderboardVisibility(visible) {
   try {
-    const user = window.FluxAuth?.user?.();
+    const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.());
     localStorage.setItem('flux_leaderboard_visible', visible ? 'true' : 'false');
     if (!user || !user.uid) return;
     const ref = doc(db, 'leaderboard', user.uid);
@@ -161,8 +171,8 @@ function subscribeLeaderboard(metric, range, callback) {
   if (!metric || typeof callback !== 'function') return () => {};
   
   // Check if user is guest (no Firebase auth)
-  const user = window.FluxAuth?.user?.() || window.FluxAuthState?.user;
-  const isGuest = !user || user.isGuest;
+  const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.() || window.FluxAuthState?.user);
+  const isGuest = (authSvc && typeof authSvc.isGuest === 'function') ? authSvc.isGuest() : (!user || user.isGuest);
   
   // Guest mode: do not show fake/demo users
   if (isGuest || !db) {
@@ -222,12 +232,16 @@ function subscribeLeaderboard(metric, range, callback) {
 
 window.Leaderboard = window.Leaderboard || {};
 window.Leaderboard.syncLeaderboard = syncLeaderboard;
+// Expose an immediate sync method for callers that need near-instant updates.
+window.Leaderboard.syncLeaderboardImmediate = function () {
+  try { return _syncLeaderboardImmediate(); } catch (e) { return Promise.resolve(); }
+};
 window.Leaderboard.setLeaderboardVisibility = setLeaderboardVisibility;
 window.Leaderboard.subscribeLeaderboard = subscribeLeaderboard;
 async function getUserEntryAndRank(metric = 'focusMinutesTotal', range = 'week') {
   if (!db) return { entry: null, rank: null };
   try {
-    const user = window.FluxAuth?.user?.();
+    const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.());
     if (!user || !user.uid) return { entry: null, rank: null };
     const ref = doc(db, 'leaderboard', user.uid);
     const snap = await getDoc(ref);
