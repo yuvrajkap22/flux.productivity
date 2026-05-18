@@ -14,7 +14,7 @@ const FluxStats = {
         document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.period = btn.dataset.period;
-        this.render();
+        this.scheduleRender();
         FluxAudio.buttonClick();
       });
     });
@@ -39,6 +39,13 @@ const FluxStats = {
       bestDayLabel: document.getElementById('best-day-label'),
       bestDayTime: document.getElementById('best-day-time'),
     };
+  },
+
+  scheduleRender(delay = 250) {
+    clearTimeout(this._renderTimer);
+    this._renderTimer = setTimeout(() => {
+      try { this.render(); } catch (e) { /* ignore */ }
+    }, Number(delay) || 250);
   },
 
   render() {
@@ -381,5 +388,17 @@ const FluxStats = {
     if (this.refs?.avgSessions) this.refs.avgSessions.textContent = avgSess;
     if (this.refs?.bestDayLabel) this.refs.bestDayLabel.textContent = best?.label || '—';
     if (this.refs?.bestDayTime) this.refs.bestDayTime.textContent = best ? Flux.formatTime(best.time || 0) : '—';
+  }
+ ,
+  updateOverview() {
+    const stats = Flux.load('flux_stats', { sessions: {}, totalTime: {}, streak: 0, longestStreak: 0 });
+    const todos = Flux.load('flux_todos', []);
+    // Update small, frequently-changing widgets without redrawing charts
+    const totalTime = Object.values(stats.totalTime || {}).reduce((a, b) => a + (b || 0), 0);
+    const totalSessions = Object.values(stats.sessions || {}).reduce((a, b) => a + (b || 0), 0);
+    this.setOverviewCards(totalTime, totalSessions, stats, todos);
+    // Update top tasks and category breakdown (DOM fragments)
+    try { this.renderTopTasks(todos); } catch (e) { /* ignore */ }
+    try { this.renderCategoryBreakdown(todos); } catch (e) { /* ignore */ }
   }
 };

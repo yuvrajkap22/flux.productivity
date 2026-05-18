@@ -10,6 +10,7 @@ const FluxTodo = {
 
   init() {
     this.todos = Flux.load('flux_todos', []);
+    this.migrateTodos();
     this.bindEvents();
     this.render();
     // Restore selected task for pomodoro targeting
@@ -20,15 +21,35 @@ const FluxTodo = {
     this.emitTrackingChange();
   },
 
+  migrateTodos() {
+    if (!Array.isArray(this.todos) || this.todos.length === 0) return;
+    let changed = false;
+    this.todos.forEach((todo) => {
+      if (!todo || typeof todo !== 'object') return;
+      if (todo.completed) {
+        if (!todo.completedAt) {
+          todo.completedAt = todo.createdAt || new Date().toISOString();
+          changed = true;
+        }
+      } else if (todo.completedAt) {
+        todo.completedAt = null;
+        changed = true;
+      }
+    });
+    if (changed) Flux.saveNow('flux_todos', this.todos);
+  },
+
   bindEvents() {
     const input = document.getElementById('todo-input');
     const addBtn = document.getElementById('todo-add-btn');
     const filters = document.getElementById('todo-filters');
+    const clearCompletedBtn = document.getElementById('todo-clear-completed-btn');
 
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this.addTodo();
     });
     addBtn.addEventListener('click', () => this.addTodo());
+    clearCompletedBtn?.addEventListener('click', () => this.clearCompleted());
 
     filters.addEventListener('click', (e) => {
       const btn = e.target.closest('.filter-btn');
@@ -161,6 +182,7 @@ const FluxTodo = {
     const todo = this.todos.find(t => t.id === id);
     if (!todo) return;
     todo.completed = !todo.completed;
+    todo.completedAt = todo.completed ? new Date().toISOString() : null;
 
     if (todo.completed) {
       // Stop tracking if this task was being tracked
@@ -208,6 +230,24 @@ const FluxTodo = {
       this.save();
       this.render();
     }
+  },
+
+  clearCompleted() {
+    const hadCompleted = this.todos.some(t => t.completed);
+    if (!hadCompleted) return;
+
+    if (this.trackingId) {
+      const trackingTodo = this.todos.find(t => t.id === this.trackingId);
+      if (trackingTodo?.completed) this.stopTracking();
+    }
+
+    this.todos = this.todos.filter(t => !t.completed);
+    this.save();
+    this.render();
+    this.refreshStatsViews();
+    this.scheduleLeaderboardSync();
+    FluxAudio.buttonClick();
+    Flux.showToast('Cleared completed tasks');
   },
 
   startEditTodo(id) {
@@ -334,6 +374,9 @@ const FluxTodo = {
 
   render() {
     const container = document.getElementById('todo-list');
+    const clearCompletedBtn = document.getElementById('todo-clear-completed-btn');
+    const hasCompleted = this.todos.some(t => t.completed);
+    if (clearCompletedBtn) clearCompletedBtn.disabled = !hasCompleted;
     const filtered = this.getFiltered();
 
     if (filtered.length === 0) {
@@ -473,7 +516,10 @@ const FluxTodo = {
 
   refreshStatsViews() {
     this.updateStats();
-    try { window.FluxStats?.render?.(); } catch (e) { /* ignore */ }
+    try {
+      if (window.FluxStats?.updateOverview) window.FluxStats.updateOverview();
+      else if (window.FluxStats?.render) window.FluxStats.render();
+    } catch (e) { /* ignore */ }
   },
 
   scheduleLeaderboardSync() {

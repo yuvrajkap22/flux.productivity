@@ -15,6 +15,7 @@ async function ensureCleanDist() {
   await rm(dist, { recursive: true, force: true });
   await mkdir(path.join(dist, 'js'), { recursive: true });
   await mkdir(path.join(dist, 'assets'), { recursive: true });
+  await mkdir(path.join(dist, 'css'), { recursive: true });
 }
 
 async function copySourceFiles() {
@@ -34,6 +35,12 @@ async function copySourceFiles() {
   for (const file of assetFiles) {
     await copyFile(path.join(assetsDir, file), path.join(dist, 'assets', file));
   }
+
+  const cssDir = path.join(root, 'css');
+  const cssFiles = (await readdir(cssDir)).filter((name) => name.endsWith('.css'));
+  for (const file of cssFiles) {
+    await copyFile(path.join(cssDir, file), path.join(dist, 'css', file));
+  }
 }
 
 async function getBuildVersion() {
@@ -51,7 +58,7 @@ async function getBuildVersion() {
 
 function versionAssetUrls(source, buildVersion) {
   return source
-    .replace(/(href|src)="((?:style\.css|js\/[^"]+\.js|assets\/[^"]+\.(?:svg|png|jpe?g|webp|ico))(?:\?v=[^"]*)?)"/g, (_, attr, assetPath) => {
+    .replace(/(href|src)="((?:style\.css|css\/[^"]+\.css|js\/[^"]+\.js|assets\/[^"]+\.(?:svg|png|jpe?g|webp|ico))(?:\?v=[^"]*)?)"/g, (_, attr, assetPath) => {
       const cleanAssetPath = assetPath.replace(/\?v=[^"]*$/, '');
       return `${attr}="${cleanAssetPath}?v=${buildVersion}"`;
     })
@@ -79,14 +86,22 @@ async function minifyHtmlFiles(buildVersion) {
   }
 }
 
-async function minifyCssFile() {
-  const cssPath = path.join(dist, 'style.css');
+async function minifyCssFile(cssPath) {
   const source = await readFile(cssPath, 'utf8');
   const result = new CleanCSS({ level: 2 }).minify(source);
   if (result.errors.length) {
-    throw new Error(`CSS minification failed: ${result.errors.join('; ')}`);
+    throw new Error(`CSS minification failed (${path.relative(dist, cssPath)}): ${result.errors.join('; ')}`);
   }
   await writeFile(cssPath, result.styles, 'utf8');
+}
+
+async function minifyCssFiles() {
+  await minifyCssFile(path.join(dist, 'style.css'));
+  const cssDir = path.join(dist, 'css');
+  const cssFiles = (await readdir(cssDir)).filter((name) => name.endsWith('.css'));
+  for (const file of cssFiles) {
+    await minifyCssFile(path.join(cssDir, file));
+  }
 }
 
 async function minifyJsFiles() {
@@ -115,7 +130,7 @@ async function main() {
   await ensureCleanDist();
   await copySourceFiles();
   await minifyHtmlFiles(buildVersion);
-  await minifyCssFile();
+  await minifyCssFiles();
   await minifyJsFiles();
   console.log('Built minified deployment in dist/');
 }

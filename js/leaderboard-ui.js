@@ -1,4 +1,20 @@
 (function () {
+  const lbState = window.FluxLeaderboardState || {
+    getMetric: () => (window._fluxLeaderboardMetric || 'focusMinutesTotal'),
+    setMetric: (metric) => { if (window.FluxLeaderboardState) window.FluxLeaderboardState.setMetric(metric); else window._fluxLeaderboardMetric = metric || 'focusMinutesTotal'; },
+    getRange: () => (window._fluxLeaderboardRange || 'week'),
+    setRange: (range) => { if (window.FluxLeaderboardState) window.FluxLeaderboardState.setRange(range); else window._fluxLeaderboardRange = range || 'week'; },
+    getUsers: () => (window._fluxLeaderboardLast || []),
+    setUsers: (users) => { if (window.FluxLeaderboardState) window.FluxLeaderboardState.setUsers(users); else window._fluxLeaderboardLast = Array.isArray(users) ? users : []; },
+  };
+
+  const authSvc = window.FluxAuthService || {
+    getUser: () => (window.FluxAuth?.user?.() || window.FluxAuthState?.user || null),
+    isGuest: () => true,
+    onAuthChange: () => {},
+    onAuthReady: () => {},
+  };
+
   const fmtNum = (n) => (typeof n === 'number' ? n.toLocaleString() : n || '0');
   const looksLikeEmail = (v) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v || '').trim());
   const displayNameOf = (u, fallback = 'User') => {
@@ -70,7 +86,7 @@
 
     const ranges = [ { key: 'today', label: 'Today' }, { key: 'week', label: 'This Week' }, { key: 'month', label: 'This Month' } ];
     ranges.forEach(r => {
-      const t = document.createElement('button'); t.className = 'tab'; t.type = 'button'; t.dataset.leaderRange = r.key; t.textContent = r.label; t.setAttribute('aria-label', `Range ${r.label}`); tabs.appendChild(t);
+      const t = document.createElement('button'); t.className = 'tab'; t.type = 'button'; t.dataset.leaderRange = r.key; t.textContent = r.label; t.setAttribute('aria-label', `Range ${r.label}`); t.setAttribute('role', 'tab'); t.setAttribute('tabindex', '0'); t.setAttribute('aria-selected', 'false'); tabs.appendChild(t);
     });
 
     const metrics = [
@@ -80,7 +96,7 @@
     ];
     const metricGroup = document.createElement('div'); metricGroup.className = 'leaderboard-tabs';
     metrics.forEach((m) => {
-      const btn = document.createElement('button'); btn.className = 'tab'; btn.type = 'button'; btn.dataset.leaderMetric = m.key; btn.textContent = m.label; btn.setAttribute('aria-label', `Metric ${m.label}`); metricGroup.appendChild(btn);
+      const btn = document.createElement('button'); btn.className = 'tab'; btn.type = 'button'; btn.dataset.leaderMetric = m.key; btn.textContent = m.label; btn.setAttribute('aria-label', `Metric ${m.label}`); btn.setAttribute('role', 'tab'); btn.setAttribute('tabindex', '0'); btn.setAttribute('aria-selected', 'false'); metricGroup.appendChild(btn);
     });
 
     const cta = document.createElement('button'); cta.className = 'leaderboard-cta'; cta.type = 'button'; cta.textContent = 'Sign in to compete';
@@ -134,7 +150,7 @@
       const name = document.createElement('div'); name.className = 'name'; name.textContent = displayNameOf(u, 'User');
       const handle = document.createElement('div'); handle.className = 'handle'; handle.textContent = displayHandle(u);
       const val = document.createElement('div'); val.className = 'val';
-      const metricKey = metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
+      const metricKey = metric || lbState.getMetric() || 'focusMinutesTotal';
       const metricVal = u[metricKey] || 0;
       val.textContent = metricText(metricKey, metricVal);
       meta.appendChild(name); if (handle.textContent) meta.appendChild(handle); meta.appendChild(val);
@@ -166,7 +182,7 @@
       nameCol.appendChild(primary);
       if (secondary.textContent) nameCol.appendChild(secondary);
       const statCol = document.createElement('div'); statCol.className = 'stat-col';
-      const metricKey = metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
+      const metricKey = metric || lbState.getMetric() || 'focusMinutesTotal';
       const metricVal = u[metricKey] || 0;
       statCol.textContent = metricText(metricKey, metricVal);
       row.appendChild(rankCol); row.appendChild(avatarCol); row.appendChild(nameCol); row.appendChild(statCol);
@@ -179,7 +195,7 @@
     try {
       const info = await window.Leaderboard.getUserEntryAndRank(metric, range);
       if (!info || !info.entry) return;
-      const users = window._fluxLeaderboardLast || [];
+      const users = lbState.getUsers() || [];
       const present = users.some(u => u.id === info.entry.id);
       if (present) return;
 
@@ -207,8 +223,8 @@
       const metricBtn = e.target.closest('[data-leader-metric]');
       if (metricBtn) {
         const metric = metricBtn.dataset.leaderMetric;
-        window._fluxLeaderboardMetric = metric;
-        render(container, window._fluxLeaderboardLast || []);
+        lbState.setMetric(metric);
+        render(container, lbState.getUsers() || []);
         try { window.dispatchEvent(new CustomEvent('flux-leaderboard-metric-change', { detail: { metric } })); } catch (e) {}
         return;
       }
@@ -216,8 +232,8 @@
       const rangeBtn = e.target.closest('[data-leader-range]');
       if (rangeBtn) {
         const range = rangeBtn.dataset.leaderRange;
-        window._fluxLeaderboardRange = range;
-        render(container, window._fluxLeaderboardLast || []);
+        lbState.setRange(range);
+        render(container, lbState.getUsers() || []);
         try { window.dispatchEvent(new CustomEvent('flux-leaderboard-range-change', { detail: { range } })); } catch (e) {}
         return;
       }
@@ -236,29 +252,47 @@
         next.click();
       }
     });
+
+    // Update UI on auth changes
+    try {
+      authSvc.onAuthChange((u) => {
+        const c = container.querySelector('.leaderboard-cta');
+        if (c) c.style.display = (u && !u.isGuest) ? 'none' : 'inline-flex';
+      });
+    } catch (e) { /* ignore */ }
+
+    // Listen for leaderboard state changes from FluxBus
+    try {
+      window.FluxBus?.on('flux-leaderboard-change', (payload) => {
+        if (!payload) return;
+        lbState.setUsers(payload.users || lbState.getUsers());
+        const r = document.getElementById('leaderboard-root');
+        if (r) render(r, lbState.getUsers() || []);
+      });
+    } catch (e) { /* ignore */ }
   }
 
   function render(container, users) {
-    window._fluxLeaderboardLast = users;
+    lbState.setUsers(users);
     container.replaceChildren();
-    const currentUid = window.FluxAuth?.user?.()?.uid || null;
+    const currentUid = (typeof authSvc.getUser === 'function' ? (authSvc.getUser()?.uid || null) : (window.FluxAuth?.user?.()?.uid || null));
     const header = buildHeader();
     container.appendChild(header);
     // ensure active tab
-    const activeKey = window._fluxLeaderboardMetric || 'focusMinutesTotal';
-    header.querySelectorAll('[data-leader-metric]').forEach((el) => el.setAttribute('aria-pressed', 'false'));
+    const activeKey = lbState.getMetric() || 'focusMinutesTotal';
+    header.querySelectorAll('[data-leader-metric]').forEach((el) => el.setAttribute('aria-selected', 'false'));
     const tabBtn = header.querySelector(`[data-leader-metric="${activeKey}"]`);
     if (tabBtn) tabBtn.classList.add('active');
-    const activeRange = window._fluxLeaderboardRange || 'week';
-    header.querySelectorAll('[data-leader-range]').forEach((el) => el.setAttribute('aria-pressed', 'false'));
+    const activeRange = lbState.getRange() || 'week';
+    header.querySelectorAll('[data-leader-range]').forEach((el) => el.setAttribute('aria-selected', 'false'));
     const rangeBtn = header.querySelector(`[data-leader-range="${activeRange}"]`);
     if (rangeBtn) rangeBtn.classList.add('active');
-    if (tabBtn) tabBtn.setAttribute('aria-pressed', 'true');
-    if (rangeBtn) rangeBtn.setAttribute('aria-pressed', 'true');
+    if (tabBtn) tabBtn.setAttribute('aria-selected', 'true');
+    if (rangeBtn) rangeBtn.setAttribute('aria-selected', 'true');
 
     // hide CTA if user is signed in
     const cta = header.querySelector('.leaderboard-cta');
-    const user = window.FluxAuth?.user?.() || window.FluxAuthState?.user;
+    const user = (typeof authSvc.getUser === 'function' ? authSvc.getUser() : (window.FluxAuth?.user?.() || window.FluxAuthState?.user));
     if (cta) cta.style.display = (user && !user.isGuest) ? 'none' : 'inline-flex';
 
     const body = document.createElement('div'); body.className = 'leaderboard-body';
@@ -273,7 +307,7 @@
     container.appendChild(body);
     // pinned current-user row when not in top list (async, non-blocking)
     setTimeout(() => {
-      renderPinnedRow(container.querySelector('.leader-list-wrap') || container, window._fluxLeaderboardMetric || 'focusMinutesTotal', window._fluxLeaderboardRange || 'week');
+      renderPinnedRow(container.querySelector('.leader-list-wrap') || container, lbState.getMetric() || 'focusMinutesTotal', lbState.getRange() || 'week');
     }, 0);
   }
 

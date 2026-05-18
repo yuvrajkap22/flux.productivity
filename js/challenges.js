@@ -85,11 +85,16 @@ const FluxChallenges = {
       monthTime     += (stats.totalTime?.[key]) || 0;
     }
     const monthKeys = [];
-    // Count tasks completed this month by checking createdAt
+    // Count tasks completed this month using completion timestamp.
+    // Fallback to createdAt for backward compatibility with older task data.
     monthTasksCompleted = todos.filter(t => {
-      if (!t.completed || !t.createdAt) return false;
-      const taskMonth = new Date(t.createdAt).getMonth();
-      const taskYear = new Date(t.createdAt).getFullYear();
+      if (!t.completed) return false;
+      const completedAt = t.completedAt || t.createdAt;
+      if (!completedAt) return false;
+      const completedDate = new Date(completedAt);
+      if (Number.isNaN(completedDate.getTime())) return false;
+      const taskMonth = completedDate.getMonth();
+      const taskYear = completedDate.getFullYear();
       return taskMonth === month && taskYear === year;
     }).length;
 

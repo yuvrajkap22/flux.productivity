@@ -299,22 +299,22 @@
   <!-- Top Navigation (replaces sidebar) -->
   <nav class="top-nav" id="top-nav" aria-label="Main navigation">
     <div class="top-nav-inner">
-      <button class="nav-item active" data-view="dashboard" id="nav-dashboard">
+      <button class="nav-item active" data-view="dashboard" id="nav-dashboard" role="tab" aria-selected="true" tabindex="0">
         <span class="nav-label">Dashboard</span>
       </button>
-      <button class="nav-item" data-view="tasks" id="nav-tasks">
+      <button class="nav-item" data-view="tasks" id="nav-tasks" role="tab" aria-selected="false" tabindex="0">
         <span class="nav-label">Today's Tasks</span>
       </button>
-      <button class="nav-item" data-view="pomodoro" id="nav-pomodoro">
+      <button class="nav-item" data-view="pomodoro" id="nav-pomodoro" role="tab" aria-selected="false" tabindex="0">
         <span class="nav-label">Pomodoro</span>
       </button>
-      <button class="nav-item" data-view="stats" id="nav-stats">
+      <button class="nav-item" data-view="stats" id="nav-stats" role="tab" aria-selected="false" tabindex="0">
         <span class="nav-label">Stats</span>
       </button>
-      <button class="nav-item" data-view="challenges" id="nav-challenges">
+      <button class="nav-item" data-view="challenges" id="nav-challenges" role="tab" aria-selected="false" tabindex="0">
         <span class="nav-label">Challenges</span>
       </button>
-      <button class="nav-item" data-view="leaderboard" id="nav-leaderboard">
+      <button class="nav-item" data-view="leaderboard" id="nav-leaderboard" role="tab" aria-selected="false" tabindex="0">
         <span class="nav-label">Leaderboard</span>
       </button>
     </div>
@@ -322,6 +322,12 @@
 
   <!-- Main Content -->
   <main class="main-content" id="main-content">
+
+    <!-- Load small runtime services early for progressive migration -->
+    <script src="js/event-bus.js"></script>
+    <script src="js/auth-service.js"></script>
+    <script src="js/profile-service.js"></script>
+    <script src="js/pomo-service.js"></script>
 
     <!-- Quote Bar -->
     <div class="quote-bar" id="quote-bar">
@@ -345,10 +351,15 @@
         <div class="bento-card todo-panel glass-panel" id="todo-panel">
           <div class="panel-header">
             <h2>Today's Tasks</h2>
-            <div class="todo-filters" id="todo-filters">
-              <button class="filter-btn active" data-filter="all">All</button>
-              <button class="filter-btn" data-filter="active">Active</button>
-              <button class="filter-btn" data-filter="completed">Done</button>
+            <div class="todo-header-actions">
+              <div class="todo-filters" id="todo-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="completed">Done</button>
+              </div>
+              <button class="todo-utility-btn" id="todo-clear-completed-btn" type="button" aria-label="Clear completed tasks">
+                Clear Done
+              </button>
             </div>
           </div>
           <div class="todo-list" id="todo-list"></div>
@@ -694,6 +705,7 @@
               <option value="pomodoro">Pomodoro</option>
               <option value="stats">Stats</option>
               <option value="challenges">Challenges</option>
+              <option value="leaderboard">Leaderboard</option>
               <option value="settings">Settings</option>
             </select>
           </div>
@@ -850,10 +862,12 @@
   <script src="js/auth-shared.js?v=2.0.2"></script>
   <script type="module" src="js/firebase-auth.js?v=2.0.2"></script>
   <script src="js/utils.js?v=2.0.2"></script>
+  <script src="js/storage-migrations.js?v=2.0.2"></script>
   <script src="js/sounds.js?v=2.0.2"></script>
   <script src="js/todo.js?v=2.0.2"></script>
   <script src="js/pomo.js?v=2.0.2"></script>
   <script type="module" src="js/leaderboard.js?v=2.0.2"></script>
+  <script src="js/leaderboard-state.js?v=2.0.2"></script>
   <script src="js/leaderboard-ui.js?v=2.0.2"></script>
   <script src="js/profile.js?v=2.0.2"></script>
   <script src="js/stats.js?v=2.0.2"></script>
