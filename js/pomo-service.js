@@ -6,8 +6,11 @@
 
   function onChange(handler) {
     if (!handler) return;
-    // FluxPomo may emit custom events; listen to a generic bus event as well
-    if (window.FluxBus) window.FluxBus.on('flux-pomo-change', handler);
+    // Prefer FluxBus when available to avoid duplicate callbacks from bridged window events.
+    if (window.FluxBus) {
+      window.FluxBus.on('flux-pomo-change', handler);
+      return;
+    }
     window.addEventListener('flux-pomo-change', (e) => handler(e.detail));
   }
 
