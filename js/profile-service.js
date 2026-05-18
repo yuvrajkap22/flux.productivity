@@ -11,6 +11,14 @@
     try { return window.FluxProfile?.activeUser || window.FluxAuthState?.user || window.FluxAuth?.user?.() || null; } catch (e) { return null; }
   }
 
+  function getFallbackAvatar(name) {
+    try {
+      return window.FluxAuthUtils?.fallbackAvatarDataUri?.(name) || 'assets/flux-logo.svg';
+    } catch (e) {
+      return 'assets/flux-logo.svg';
+    }
+  }
+
   function onProfileChange(handler) {
     if (!handler) return;
     if (window.FluxBus) {
@@ -26,5 +34,5 @@
     } catch (e) { /* ignore */ }
   }
 
-  window.FluxProfileService = window.FluxProfileService || { getProfile, getActiveUser, onProfileChange, init };
+  window.FluxProfileService = window.FluxProfileService || { getProfile, getActiveUser, getFallbackAvatar, onProfileChange, init };
 }());

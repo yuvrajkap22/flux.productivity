@@ -23,17 +23,17 @@
 
   // Safe service bridges (use new services when available, fall back to legacy globals)
   const authSvc = window.FluxAuthService || {
-    getUser: () => (window.FluxAuth?.user?.() || window.FluxAuthState?.user || null),
+    getUser: () => null,
     isGuest: () => true,
     onAuthChange: () => {},
     onAuthReady: () => {},
   };
 
   const profileSvc = window.FluxProfileService || {
-    getProfile: () => (window.FluxProfile?.data || {}),
-    getActiveUser: () => (window.FluxProfile?.activeUser || window.FluxAuthState?.user || window.FluxAuth?.user?.() || null),
+    getProfile: () => ({}),
+    getActiveUser: () => null,
     onProfileChange: () => {},
-    init: (u) => { try { if (window.FluxProfile && typeof window.FluxProfile.init === 'function') window.FluxProfile.init(u); } catch (e) {} },
+    init: () => {},
   };
 
   const pomoSvc = window.FluxPomoService || {
@@ -187,8 +187,8 @@
   }
 
   function getProfileShortcutData() {
-    const profile = (profileSvc && typeof profileSvc.getProfile === 'function') ? profileSvc.getProfile() : (window.FluxProfile?.data || {});
-    const user = (profileSvc && typeof profileSvc.getActiveUser === 'function') ? profileSvc.getActiveUser() : (window.FluxProfile?.activeUser || window.FluxAuthState?.user || null);
+    const profile = (profileSvc && typeof profileSvc.getProfile === 'function') ? profileSvc.getProfile() : {};
+    const user = (profileSvc && typeof profileSvc.getActiveUser === 'function') ? profileSvc.getActiveUser() : null;
     const name = profile.displayName || user?.displayName || user?.email || 'Flux User';
     const username = profile.username ? `@${profile.username}` : '';
     const bio = profile.bio || 'Open your Flux profile editor to update your name, bio, photo, and banner.';
@@ -231,7 +231,7 @@
     if (settingsProfileAvatar) {
       settingsProfileAvatar.alt = profile.name;
       try {
-        settingsProfileAvatar.src = profile.photoURL || window.FluxProfile?.getFallbackAvatar?.(profile.name) || 'assets/flux-logo.svg';
+        settingsProfileAvatar.src = profile.photoURL || profileSvc.getFallbackAvatar?.(profile.name) || 'assets/flux-logo.svg';
       } catch (e) { settingsProfileAvatar.src = 'assets/flux-logo.svg'; }
     }
     if (settingsProfileSummary) settingsProfileSummary.textContent = profile.bio;
@@ -315,12 +315,7 @@
   });
 
   document.getElementById('settings-open-profile')?.addEventListener('click', () => {
-    if (window.FluxProfile?.openModal) {
-      try { window.FluxProfile.openModal(); } catch (e) { /* ignore */ }
-    } else {
-      // fallback: initialize profile service UI if available
-      try { profileSvc.init(profileSvc.getActiveUser && profileSvc.getActiveUser()); } catch (e) { /* ignore */ }
-    }
+    try { profileSvc.init(profileSvc.getActiveUser?.() || null); } catch (e) { /* ignore */ }
     FluxAudio.buttonClick();
   });
 
@@ -467,7 +462,7 @@
         document.getElementById('pomo-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else if (view === 'stats') {
           document.getElementById('view-stats').classList.add('active');
-          if (window.FluxStats?.scheduleRender) window.FluxStats.scheduleRender(); else if (window.FluxStats?.render) window.FluxStats.render();
+          if (window.FluxStatsService?.scheduleRender) window.FluxStatsService.scheduleRender(); else if (window.FluxStatsService?.render) window.FluxStatsService.render();
       } else if (view === 'challenges') {
         document.getElementById('view-challenges').classList.add('active');
         FluxChallenges.render();
@@ -679,7 +674,7 @@
   };
 
   // Use auth service to detect current user and bootstrap when ready
-  const currentAuthUser = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuthState?.user || window.FluxAuth?.user?.());
+  const currentAuthUser = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : null;
   if (currentAuthUser) {
     window.FluxApp.onAuthChange(currentAuthUser);
   } else if (window.FluxAuthState?.ready && !currentAuthUser) {
