@@ -98,6 +98,12 @@ const FluxPomo = {
     const settingsDropdown = document.getElementById('pomo-settings-dropdown');
     if (settingsBtn && settingsDropdown) settingsBtn.addEventListener('click', () => settingsDropdown.classList.toggle('hidden'));
 
+    const taskAction = document.getElementById('pomo-task-action');
+    if (taskAction) taskAction.addEventListener('click', () => {
+      try { window.FluxApp?.showView?.('tasks'); } catch (e) { /* ignore */ }
+      FluxAudio.buttonClick();
+    });
+
     // Settings inputs
     const settingInputs = {
       'setting-focus': (v) => { this.settings.focus = v; if (this.mode === 'focus' && !this.running) this.setDuration(v * 60); },
@@ -132,13 +138,19 @@ const FluxPomo = {
     this.activeTaskId = task?.id || null;
     this.activeTaskText = task?.text || '';
     const label = document.getElementById('pomo-task-label');
+    const action = document.getElementById('pomo-task-action');
+    const panel = document.getElementById('pomo-task-panel');
     if (!label) return;
     if (this.activeTaskText) {
       label.textContent = `Task: ${this.activeTaskText}`;
       label.title = this.activeTaskText;
+      if (action) action.textContent = 'Change task';
+      if (panel) panel.classList.add('has-task');
     } else {
       label.textContent = 'No task selected';
       label.removeAttribute('title');
+      if (action) action.textContent = 'Pick a task';
+      if (panel) panel.classList.remove('has-task');
     }
   },
 

@@ -15,9 +15,31 @@ const FluxProfile = {
     photoURL: '',
   },
   usesDefaultBanner: true,
+  _serviceBridge: null,
+
+  getServiceBridge() {
+    if (this._serviceBridge) return this._serviceBridge;
+    this._serviceBridge = window.FluxProfileService || {
+      getProfile: () => (window.FluxProfile?.data || {}),
+      getActiveUser: () => (window.FluxProfile?.activeUser || window.FluxAuthState?.user || window.FluxAuth?.user?.() || null),
+      onProfileChange: (handler) => {
+        if (!handler) return;
+        window.addEventListener('flux-profile-change', (e) => handler(e.detail || {}));
+      },
+    };
+    return this._serviceBridge;
+  },
+
+  getActiveUser() {
+    try {
+      return this.getServiceBridge().getActiveUser?.() || null;
+    } catch (e) {
+      return this.activeUser || null;
+    }
+  },
 
   init(user) {
-    this.activeUser = user || null;
+    this.activeUser = user || this.getActiveUser() || null;
     this.storageKey = this.getStorageKey(user);
 
     if (!user) {
@@ -53,7 +75,7 @@ const FluxProfile = {
       this.data.photoURL    = saved.photoURL || user.photoURL || '';
     }
 
-    this.renderHeader(user);
+    this.renderHeader(this.activeUser);
     if (!this.isBound) this.bindEvents();
   },
 
@@ -133,9 +155,10 @@ const FluxProfile = {
     btn.classList.remove('hidden');
     if (signOutBtn) signOutBtn.classList.toggle('hidden', !this.activeUser);
 
-    const fallbackName = this.data.displayName || user?.displayName || user?.email || 'Flux User';
+    const serviceProfile = this.getServiceBridge().getProfile?.() || {};
+    const fallbackName = this.data.displayName || serviceProfile.displayName || user?.displayName || user?.email || 'Flux User';
     img.src = this.getAvatarSource(user);
-    img.alt = this.data.displayName || user?.displayName || user?.email || 'Profile photo';
+    img.alt = this.data.displayName || serviceProfile.displayName || user?.displayName || user?.email || 'Profile photo';
     img.style.display = 'block';
     img.onerror = () => {
       this.data.photoURL = '';
@@ -177,6 +200,7 @@ const FluxProfile = {
   },
 
   populateModal() {
+    const serviceProfile = this.getServiceBridge().getProfile?.() || {};
     // Banner
     document.getElementById('profile-banner').style.background = this.data.banner;
     document.querySelectorAll('.banner-color-opt').forEach(el => {
@@ -189,7 +213,7 @@ const FluxProfile = {
     mImg.src = this.getAvatarSource(this.activeUser);
     mImg.style.display = 'block';
     mImg.onerror = () => {
-      mImg.src = this.getFallbackAvatar(this.data.displayName || this.activeUser?.displayName || this.activeUser?.email || 'Flux User');
+      mImg.src = this.getFallbackAvatar(this.data.displayName || serviceProfile.displayName || this.activeUser?.displayName || this.activeUser?.email || 'Flux User');
     };
     if (mInit) mInit.style.display = 'none';
 
@@ -197,9 +221,9 @@ const FluxProfile = {
     if (removeBtn) removeBtn.disabled = !this.data.photoURL;
 
     // Fields
-    document.getElementById('profile-display-name').value = this.data.displayName;
-    document.getElementById('profile-username').value = this.data.username;
-    document.getElementById('profile-bio').value = this.data.bio;
+    document.getElementById('profile-display-name').value = this.data.displayName || serviceProfile.displayName || '';
+    document.getElementById('profile-username').value = this.data.username || serviceProfile.username || '';
+    document.getElementById('profile-bio').value = this.data.bio || serviceProfile.bio || '';
     document.getElementById('profile-goal-slider').value = this.data.goalHours;
     document.getElementById('profile-goal-val').textContent = this.data.goalHours + 'h';
 
@@ -231,6 +255,24 @@ const FluxProfile = {
         this.populateModal();
       }
     });
+
+    try {
+      this.getServiceBridge().onProfileChange?.((detail) => {
+        const nextProfile = detail.profile || detail || {};
+        const nextUser = detail.user || this.getActiveUser();
+        if (nextProfile && typeof nextProfile === 'object') {
+          this.data = { ...this.data, ...nextProfile };
+        }
+        if (nextUser && nextUser.uid) {
+          this.activeUser = nextUser;
+          this.storageKey = this.getStorageKey(nextUser);
+        }
+        this.renderHeader(this.activeUser);
+        if (!document.getElementById('profile-modal-overlay')?.classList.contains('hidden')) {
+          this.populateModal();
+        }
+      });
+    } catch (e) { /* ignore */ }
 
     document.getElementById('profile-avatar-btn')?.addEventListener('click', () => {
       this.toggleMenu();
@@ -369,7 +411,7 @@ const FluxProfile = {
   }
 };
 
-FluxProfile.init(window.FluxAuthState?.user || null);
+FluxProfile.init(window.FluxProfileService?.getActiveUser?.() || window.FluxAuthState?.user || null);
 
 window.addEventListener('flux-auth-ready', (event) => {
   FluxProfile.init(event.detail?.user || null);

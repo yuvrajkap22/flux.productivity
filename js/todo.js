@@ -500,8 +500,44 @@ const FluxTodo = {
     if (todo.timeTracked % 5 === 0) {
       this.save();
       this.refreshStatsViews();
-      // Ask leaderboard to sync immediately for near-instant leaderboard updates
-      try { window.Leaderboard?.syncLeaderboardImmediate?.(); } catch (e) { /* ignore */ }
+      // Optimistically update the local leaderboard UI without forcing an immediate Firestore write
+      try {
+        const lbState = window.FluxLeaderboardState;
+        const authUser = window.FluxAuth?.user?.() || window.FluxAuthState?.user;
+        const profileSvc = window.FluxProfileService;
+        const profile = profileSvc?.getProfile?.() || window.FluxProfile?.data || {};
+        const displayName = (profile.displayName || authUser?.displayName || 'Flux User').trim ? (profile.displayName || authUser?.displayName || 'Flux User').trim() : (profile.displayName || authUser?.displayName || 'Flux User');
+        const username = (profile.username || '').trim ? (profile.username || '').trim() : (profile.username || '');
+        const photoURL = profile.photoURL || authUser?.photoURL || '';
+        if (lbState && typeof lbState.getUsers === 'function' && authUser && authUser.uid) {
+          const users = Array.isArray(lbState.getUsers()) ? lbState.getUsers().slice() : [];
+          const metric = lbState.getMetric ? lbState.getMetric() : 'focusMinutesTotal';
+          const deltaMinutes = seconds / 60;
+          const idx = users.findIndex(u => u.id === authUser.uid);
+          if (idx >= 0) {
+            users[idx][metric] = (Number(users[idx][metric]) || 0) + deltaMinutes;
+            users[idx].displayName = displayName;
+            users[idx].username = username;
+            users[idx].photoURL = photoURL;
+            users[idx].lastUpdated = new Date().toISOString();
+          } else {
+            // Insert a lightweight entry so the current user appears
+            const entry = {
+              id: authUser.uid,
+              displayName,
+              username,
+              photoURL,
+              showOnLeaderboard: true,
+              lastUpdated: new Date().toISOString(),
+            };
+            entry[metric] = deltaMinutes;
+            users.unshift(entry);
+          }
+          lbState.setUsers(users);
+        }
+      } catch (e) { /* ignore optimistic update failures */ }
+      // Still schedule a real leaderboard sync to persist to Firestore (debounced)
+      this.scheduleLeaderboardSync();
     }
   },
 
