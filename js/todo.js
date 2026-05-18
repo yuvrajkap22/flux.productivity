@@ -6,6 +6,7 @@ const FluxTodo = {
   todos: [],
   filter: 'all',
   trackingId: null,
+  _leaderboardSyncTimer: null,
 
   init() {
     this.todos = Flux.load('flux_todos', []);
@@ -175,8 +176,8 @@ const FluxTodo = {
 
     Flux.saveNow('flux_todos', this.todos);
     this.render();
-    this.updateStats();
-    try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
+    this.refreshStatsViews();
+    this.scheduleLeaderboardSync();
   },
 
   togglePriority(id) {
@@ -364,7 +365,6 @@ const FluxTodo = {
     checkbox.type = 'button';
     checkbox.setAttribute('aria-label', 'Toggle complete');
     checkbox.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
-    checkbox.addEventListener('click', () => this.toggleComplete(todo.id));
 
     const trackingDot = document.createElement('span');
     trackingDot.className = 'todo-tracking-dot';
@@ -450,7 +450,11 @@ const FluxTodo = {
     todo.timeTracked = (todo.timeTracked || 0) + seconds;
     const badge = document.querySelector(`[data-id="${this.trackingId}"] .todo-time-badge`);
     if (badge) badge.textContent = Flux.formatTrackedTime(todo.timeTracked);
-    if (todo.timeTracked % 10 === 0) this.save();
+    if (todo.timeTracked % 10 === 0) {
+      this.save();
+      this.refreshStatsViews();
+      this.scheduleLeaderboardSync();
+    }
   },
 
   catLabel(cat) {
@@ -463,7 +467,20 @@ const FluxTodo = {
   updateStats() {
     // Update sidebar stats from live todo data
     const totalTime = this.todos.reduce((sum, t) => sum + (t.timeTracked || 0), 0);
-    document.getElementById('sidebar-focus-time').textContent = Flux.formatTime(totalTime);
+    const focusTimeEl = document.getElementById('sidebar-focus-time');
+    if (focusTimeEl) focusTimeEl.textContent = Flux.formatTime(totalTime);
+  },
+
+  refreshStatsViews() {
+    this.updateStats();
+    try { window.FluxStats?.render?.(); } catch (e) { /* ignore */ }
+  },
+
+  scheduleLeaderboardSync() {
+    clearTimeout(this._leaderboardSyncTimer);
+    this._leaderboardSyncTimer = setTimeout(() => {
+      try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
+    }, 250);
   },
 
   save() {
