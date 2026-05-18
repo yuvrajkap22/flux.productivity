@@ -412,7 +412,10 @@
       const currentNav = document.querySelector(`.nav-item[data-view="${view}"]`);
       if (currentNav) currentNav.classList.add('active');
 
-      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.view-panel').forEach(p => {
+        p.classList.remove('active');
+        p.classList.remove('hidden');
+      });
 
       if (view === 'dashboard') {
         document.getElementById('view-dashboard').classList.add('active');
@@ -433,6 +436,7 @@
         const root = document.getElementById('leaderboard-root');
         if (root && window.LeaderboardUI) {
           window.LeaderboardUI.attach(root);
+          window.LeaderboardUI.renderLeaderboard(root, window._fluxLeaderboardLast || []);
         }
         try {
           if (window._fluxLeaderboardUnsub) {

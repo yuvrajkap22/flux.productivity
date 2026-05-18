@@ -163,6 +163,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css?v=2.0.2" />
+  <link rel="stylesheet" href="css/leaderboard.css?v=2.0.2" />
 </head>
 
 <body>
@@ -762,6 +763,13 @@
       </div>
     </div>
 
+    <!-- Leaderboard View -->
+    <div id="view-leaderboard" class="view-panel hidden">
+      <div class="panel-inner" style="max-width:100%;margin:0;padding:0">
+        <div id="leaderboard-root" style="min-height:600px;background:var(--bg-alt);border-radius:8px"></div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Profile Modal -->
@@ -838,13 +846,6 @@
   <div class="toast-container" id="toast-container"></div>
 
   </div><!-- end app-shell -->
-
-  <!-- Leaderboard view (panel) -->
-  <div id="view-leaderboard" class="view-panel hidden">
-    <div class="panel-inner" style="max-width:100%;margin:0;padding:0">
-      <div id="leaderboard-root" style="min-height:600px;background:var(--bg-alt);border-radius:8px"></div>
-    </div>
-  </div>
 
   <script src="js/auth-shared.js?v=2.0.2"></script>
   <script type="module" src="js/firebase-auth.js?v=2.0.2"></script>

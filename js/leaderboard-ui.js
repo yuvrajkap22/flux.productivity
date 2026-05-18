@@ -1,5 +1,13 @@
 (function () {
   const fmtNum = (n) => (typeof n === 'number' ? n.toLocaleString() : n || '0');
+  const looksLikeEmail = (v) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v || '').trim());
+  const displayNameOf = (u, fallback = 'User') => {
+    const name = safeText(u?.displayName || '').trim();
+    if (name && !looksLikeEmail(name)) return name;
+    const alt = safeText(u?.username || '').trim().replace(/^@/, '');
+    if (alt) return alt;
+    return fallback;
+  };
   const metricText = (metricKey, value) => {
     const n = Number(value) || 0;
     if (metricKey === 'focusMinutesTotal') return `${fmtNum(n)} min`;
@@ -21,21 +29,21 @@
   function createAvatarEl(u) {
     const wrap = document.createElement('div');
     wrap.className = 'avatar-col';
-    const resolved = window.FluxAuthUtils?.resolveAvatarSource?.(u.photoURL, u.displayName) || u.photoURL;
+    const resolved = window.FluxAuthUtils?.resolveAvatarSource?.(u.photoURL, displayNameOf(u, 'Profile')) || u.photoURL;
     if (resolved && /^https?:\/\//i.test(resolved)) {
       const img = document.createElement('img');
       img.src = resolved;
-      img.alt = safeText(u.displayName || 'Profile');
+      img.alt = safeText(displayNameOf(u, 'Profile'));
       wrap.appendChild(img);
     } else if (resolved && /^data:image\//i.test(resolved)) {
       const img = document.createElement('img');
       img.src = resolved;
-      img.alt = safeText(u.displayName || 'Profile');
+      img.alt = safeText(displayNameOf(u, 'Profile'));
       wrap.appendChild(img);
     } else {
       const initials = document.createElement('div');
       initials.className = 'initials';
-      initials.textContent = (safeText(u.displayName || 'User')[0] || 'F').toUpperCase();
+      initials.textContent = (safeText(displayNameOf(u, 'User'))[0] || 'F').toUpperCase();
       wrap.appendChild(initials);
     }
     return wrap;
@@ -114,7 +122,7 @@
 
       const rank = document.createElement('div'); rank.className = 'rank'; rank.textContent = `#${rankNum}`;
       const avatarWrap = document.createElement('div'); avatarWrap.className = 'avatar';
-      const resolved = window.FluxAuthUtils?.resolveAvatarSource?.(u.photoURL, u.displayName) || u.photoURL;
+      const resolved = window.FluxAuthUtils?.resolveAvatarSource?.(u.photoURL, displayNameOf(u, 'User')) || u.photoURL;
       if (resolved && /^https?:\/\//i.test(resolved)) {
         const img = document.createElement('img'); img.src = resolved; img.alt = safeText(u.displayName || ''); avatarWrap.appendChild(img);
       } else if (resolved && /^data:image\//i.test(resolved)) {
@@ -123,7 +131,7 @@
         const initials = document.createElement('div'); initials.className = 'initials'; initials.textContent = (safeText(u.displayName || '')[0] || 'F').toUpperCase(); avatarWrap.appendChild(initials);
       }
       const meta = document.createElement('div'); meta.className = 'meta';
-      const name = document.createElement('div'); name.className = 'name'; name.textContent = safeText(u.displayName || 'User');
+      const name = document.createElement('div'); name.className = 'name'; name.textContent = displayNameOf(u, 'User');
       const handle = document.createElement('div'); handle.className = 'handle'; handle.textContent = displayHandle(u);
       const val = document.createElement('div'); val.className = 'val';
       const metricKey = metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
@@ -153,7 +161,7 @@
       const rankCol = document.createElement('div'); rankCol.className = 'rank-col'; rankCol.textContent = String(idx + 1 + 3);
       const avatarCol = createAvatarEl(u);
       const nameCol = document.createElement('div'); nameCol.className = 'name-col';
-      const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = safeText(u.displayName || 'User');
+      const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = displayNameOf(u, 'User');
       const secondary = document.createElement('div'); secondary.className = 'secondary'; secondary.textContent = displayHandle(u);
       nameCol.appendChild(primary);
       if (secondary.textContent) nameCol.appendChild(secondary);
@@ -180,7 +188,7 @@
       const rankCol = document.createElement('div'); rankCol.className = 'rank-col'; rankCol.textContent = info.rank ? String(info.rank) : '—';
       const avatarCol = createAvatarEl(info.entry);
       const nameCol = document.createElement('div'); nameCol.className = 'name-col';
-      const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = safeText(info.entry.displayName || 'You');
+      const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = displayNameOf(info.entry, 'You');
       const secondary = document.createElement('div'); secondary.className = 'secondary'; secondary.textContent = displayHandle(info.entry);
       nameCol.appendChild(primary);
       if (secondary.textContent) nameCol.appendChild(secondary);
