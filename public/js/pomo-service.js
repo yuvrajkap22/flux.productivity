@@ -1,0 +1,1 @@
+window.FluxPomoService=window.FluxPomoService||{getPomo:function(){try{return window.FluxPomo||null}catch(o){return null}},onChange:function(o){o&&(window.FluxBus?window.FluxBus.on("flux-pomo-change",o):window.addEventListener("flux-pomo-change",n=>o(n.detail)))},init:function(){try{window.FluxPomo&&"function"==typeof window.FluxPomo.init&&window.FluxPomo.init()}catch(o){}}};

@@ -9,7 +9,7 @@ import { minify as minifyJs } from 'terser';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, '..');
-const dist = path.join(root, 'dist');
+const dist = path.join(root, 'public');
 
 async function ensureCleanDist() {
   await rm(dist, { recursive: true, force: true });
