@@ -81,21 +81,22 @@ const FluxPomo = {
   },
 
   bindEvents() {
-    document.getElementById('pomo-play').addEventListener('click', () => this.togglePlay());
-    document.getElementById('pomo-reset').addEventListener('click', () => this.reset());
-    document.getElementById('pomo-skip').addEventListener('click', () => this.skip());
+    const play = document.getElementById('pomo-play'); if (play) play.addEventListener('click', () => this.togglePlay());
+    const reset = document.getElementById('pomo-reset'); if (reset) reset.addEventListener('click', () => this.reset());
+    const skip = document.getElementById('pomo-skip'); if (skip) skip.addEventListener('click', () => this.skip());
 
     // Mode buttons
-    document.getElementById('pomo-modes').addEventListener('click', (e) => {
+    const modesEl = document.getElementById('pomo-modes');
+    if (modesEl) modesEl.addEventListener('click', (e) => {
       const btn = e.target.closest('.mode-btn');
       if (!btn) return;
       this.setMode(btn.dataset.mode);
     });
 
     // Settings toggle
-    document.getElementById('pomo-settings-btn').addEventListener('click', () => {
-      document.getElementById('pomo-settings-dropdown').classList.toggle('hidden');
-    });
+    const settingsBtn = document.getElementById('pomo-settings-btn');
+    const settingsDropdown = document.getElementById('pomo-settings-dropdown');
+    if (settingsBtn && settingsDropdown) settingsBtn.addEventListener('click', () => settingsDropdown.classList.toggle('hidden'));
 
     // Settings inputs
     const settingInputs = {
@@ -106,20 +107,16 @@ const FluxPomo = {
     };
 
     for (const [id, handler] of Object.entries(settingInputs)) {
-      document.getElementById(id).addEventListener('change', (e) => {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      el.addEventListener('change', (e) => {
         handler(parseInt(e.target.value) || 1);
         this.saveSettings();
       });
     }
 
-    document.getElementById('setting-autobreak').addEventListener('change', (e) => {
-      this.settings.autoBreak = e.target.checked;
-      this.saveSettings();
-    });
-    document.getElementById('setting-autofocus').addEventListener('change', (e) => {
-      this.settings.autoFocus = e.target.checked;
-      this.saveSettings();
-    });
+    const autobreak = document.getElementById('setting-autobreak'); if (autobreak) autobreak.addEventListener('change', (e) => { this.settings.autoBreak = e.target.checked; this.saveSettings(); });
+    const autofocus = document.getElementById('setting-autofocus'); if (autofocus) autofocus.addEventListener('change', (e) => { this.settings.autoFocus = e.target.checked; this.saveSettings(); });
 
     window.addEventListener('flux-task-tracking-change', (event) => {
       this.setActiveTask(event.detail || null);
@@ -146,12 +143,12 @@ const FluxPomo = {
   },
 
   syncSettingsUI() {
-    document.getElementById('setting-focus').value = this.settings.focus;
-    document.getElementById('setting-short').value = this.settings.short;
-    document.getElementById('setting-long').value = this.settings.long;
-    document.getElementById('setting-interval').value = this.settings.interval;
-    document.getElementById('setting-autobreak').checked = this.settings.autoBreak;
-    document.getElementById('setting-autofocus').checked = this.settings.autoFocus;
+    const sf = document.getElementById('setting-focus'); if (sf) sf.value = this.settings.focus;
+    const ss = document.getElementById('setting-short'); if (ss) ss.value = this.settings.short;
+    const sl = document.getElementById('setting-long'); if (sl) sl.value = this.settings.long;
+    const si = document.getElementById('setting-interval'); if (si) si.value = this.settings.interval;
+    const sab = document.getElementById('setting-autobreak'); if (sab) sab.checked = this.settings.autoBreak;
+    const saf = document.getElementById('setting-autofocus'); if (saf) saf.checked = this.settings.autoFocus;
   },
 
   setMode(mode) {
@@ -162,17 +159,18 @@ const FluxPomo = {
 
     // Update UI
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+    const modeBtn = document.querySelector(`[data-mode="${mode}"]`);
+    if (modeBtn) modeBtn.classList.add('active');
 
     const labels = { focus: 'FOCUS', short: 'SHORT BREAK', long: 'LONG BREAK' };
-    document.getElementById('pomo-mode-label').textContent = labels[mode];
+    const modeLabel = document.getElementById('pomo-mode-label');
+    if (modeLabel) modeLabel.textContent = labels[mode];
 
     // Ring color
     const ring = document.getElementById('pomo-ring-progress');
-    if (mode === 'focus') {
-      ring.style.stroke = 'var(--accent)';
-    } else {
-      ring.style.stroke = 'var(--green)';
+    if (ring) {
+      if (mode === 'focus') ring.style.stroke = 'var(--accent)';
+      else ring.style.stroke = 'var(--green)';
     }
   },
 
@@ -193,7 +191,7 @@ const FluxPomo = {
   start() {
     if (this.remaining <= 0) return;
     this.running = true;
-    document.getElementById('pomo-play').classList.add('playing');
+    const playBtn = document.getElementById('pomo-play'); if (playBtn) playBtn.classList.add('playing');
 
     if (this.mode === 'focus') FluxAudio.pomoStart();
 
@@ -215,7 +213,7 @@ const FluxPomo = {
   pause() {
     this.running = false;
     clearInterval(this.interval);
-    document.getElementById('pomo-play').classList.remove('playing');
+    const playBtn = document.getElementById('pomo-play'); if (playBtn) playBtn.classList.remove('playing');
   },
 
   stop() {
@@ -279,22 +277,24 @@ const FluxPomo = {
   },
 
   updateDisplay() {
-    document.getElementById('pomo-time').textContent = Flux.formatTimeShort(this.remaining);
+    const timeEl = document.getElementById('pomo-time');
+    if (timeEl) timeEl.textContent = Flux.formatTimeShort(this.remaining);
 
     // Update ring
     const progress = this.duration > 0 ? (this.duration - this.remaining) / this.duration : 0;
     const offset = this.circumference * (1 - progress);
-    document.getElementById('pomo-ring-progress').style.strokeDashoffset = offset;
+    const ringEl = document.getElementById('pomo-ring-progress');
+    if (ringEl) ringEl.style.strokeDashoffset = offset;
   },
 
   updateStatsBar() {
-    document.getElementById('pomo-session-count').textContent = this.sessionsToday;
-    document.getElementById('pomo-streak').textContent = this.streak + ' 🔥';
-    document.getElementById('pomo-total-time').textContent = Flux.formatTime(this.totalFocusToday);
+    const sessEl = document.getElementById('pomo-session-count'); if (sessEl) sessEl.textContent = this.sessionsToday;
+    const streakEl = document.getElementById('pomo-streak'); if (streakEl) streakEl.textContent = this.streak + ' 🔥';
+    const totalEl = document.getElementById('pomo-total-time'); if (totalEl) totalEl.textContent = Flux.formatTime(this.totalFocusToday);
 
-    // Also update sidebar
-    document.getElementById('sidebar-focus-time').textContent = Flux.formatTime(this.totalFocusToday);
-    document.getElementById('sidebar-sessions').textContent = this.sessionsToday;
+    // Also update sidebar (guarded)
+    const sidebarFocus = document.getElementById('sidebar-focus-time'); if (sidebarFocus) sidebarFocus.textContent = Flux.formatTime(this.totalFocusToday);
+    const sidebarSess = document.getElementById('sidebar-sessions'); if (sidebarSess) sidebarSess.textContent = this.sessionsToday;
   },
 
   saveSettings() {

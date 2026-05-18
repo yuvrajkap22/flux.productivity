@@ -413,7 +413,7 @@ body.sounds-muted .icon-speaker-off { display: block; }
 /* ─── Main Content ─── */
 .main-content {
   margin-left: var(--sidebar-w); margin-top: var(--header-h);
-  padding: 22px 24px 40px;
+  padding: 20px 24px 40px;
   transition: margin-left 0.35s var(--ease);
   position: relative; z-index: 1; min-height: calc(100vh - var(--header-h));
 }
@@ -422,19 +422,11 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
 /* ─── Quote Bar ─── */
 .quote-bar {
   display: flex; align-items: center; gap: 16px;
-  padding: 16px 22px; margin-bottom: 22px;
+  padding: 14px 20px; margin-bottom: 20px;
   background: var(--bg-panel); backdrop-filter: blur(16px);
   border-radius: var(--radius); border: 1px solid var(--border);
   position: relative; overflow: hidden;
   animation: fadeInUp 0.5s var(--ease) 0.1s both;
-}
-.quote-bar::before {
-  content: '❝';
-  position: absolute; right: 16px; top: 6px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 34px; line-height: 1;
-  color: rgba(245, 166, 35, 0.12);
-  pointer-events: none;
 }
 .quote-accent-stripe {
   position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
@@ -443,12 +435,11 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
 }
 .quote-content { flex: 1; min-height: 40px; display: flex; flex-direction: column; justify-content: center; }
 .quote-text {
-  font-size: 15px; font-style: italic; line-height: 1.6; color: var(--text);
+  font-size: 14px; font-style: italic; line-height: 1.5; color: var(--text);
   transition: opacity 0.4s var(--ease);
-  max-width: 900px;
 }
 .quote-author {
-  font-size: 12px; color: var(--accent); margin-top: 4px; font-weight: 500; letter-spacing: 0.03em;
+  font-size: 12px; color: var(--accent); margin-top: 4px; font-weight: 500;
   transition: color 0.4s var(--ease), opacity 0.4s var(--ease);
 }
 .quote-next-btn {
@@ -467,33 +458,27 @@ body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed); }
 /* ─── Bento Grid ─── */
 .bento-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr);
+  grid-template-columns: 1.4fr 1fr;
   grid-template-rows: auto auto;
-  gap: 20px;
-  align-items: start;
+  gap: 18px;
 }
-.todo-panel {
-  grid-row: 1 / 3;
-  min-height: 520px;
-  display: flex;
-  flex-direction: column;
-}
+.todo-panel { grid-row: 1 / 3; min-height: 500px; }
 
 /* ─── Glass Panel Base ─── */
 .glass-panel {
   background: var(--bg-panel); backdrop-filter: blur(20px);
   border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 22px; position: relative; overflow: hidden;
+  padding: 20px; position: relative; overflow: hidden;
   transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
 }
 .glass-panel:hover { border-color: var(--border-hover); }
 
 .panel-header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 .panel-header h2 {
-  font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+  font-size: 16px; font-weight: 600;
 }
 
 /* ─── Staggered fade-in for bento cards ─── */
@@ -2996,7 +2981,7 @@ body.sidebar-collapsed .main-content {
 .sidebar-toggle { display: none !important; }
 .main-content {
   margin-left: 0 !important;
-  margin-top: calc(var(--header-h) + var(--top-nav-h) + 18px) !important;
+  margin-top: calc(var(--header-h) + var(--top-nav-h) + 14px) !important;
 }
 
 .top-nav {
@@ -3024,42 +3009,19 @@ body.sidebar-collapsed .main-content {
 /* ensure main content sits under top-nav */
 .main-content { padding-top: 24px; }
 
-.main-content > .quote-bar {
-  max-width: 1240px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 .quote-bar {
-  margin-top: 8px;
-  padding: 18px 22px;
-  border: 1px solid rgba(245, 166, 35, 0.16);
+  margin-top: 6px;
+  padding: 16px 20px;
+  border: 1px solid rgba(245, 166, 35, 0.14);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 72%),
     linear-gradient(130deg, rgba(245, 166, 35, 0.09), rgba(245, 166, 35, 0.02) 58%, rgba(255,255,255,0.02) 100%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 12px 30px rgba(0,0,0,0.22);
 }
 
-.quote-bar::before {
-  content: '❝';
-  position: absolute;
-  right: 18px;
-  top: 8px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 34px;
-  line-height: 1;
-  color: rgba(245, 166, 35, 0.12);
-  pointer-events: none;
-}
-
 .quote-text {
   font-size: 15px;
-  line-height: 1.6;
-  max-width: 900px;
-}
-
-.quote-author {
-  letter-spacing: 0.03em;
+  line-height: 1.55;
 }
 
 .quote-author {

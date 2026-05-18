@@ -101,6 +101,32 @@ Required fields:
 
 For local testing, use localhost and ensure your domain is authorized in Firebase Auth settings.
 
+## Leaderboard Index Notes
+
+The leaderboard now supports metric + range tabs (`today`, `week`, `month`) using the `lastUpdated` field.
+
+- Primary mode: Firestore query ordered by selected metric.
+- Compatibility mode: If Firestore returns an index-related error, Flux automatically falls back to a broader query and applies sorting/filtering client-side.
+
+Recommended indexes for best performance:
+
+1. Collection: `leaderboard`
+  - `showOnLeaderboard` Ascending
+  - `focusMinutesTotal` Descending
+2. Collection: `leaderboard`
+  - `showOnLeaderboard` Ascending
+  - `sessionsTotal` Descending
+3. Collection: `leaderboard`
+  - `showOnLeaderboard` Ascending
+  - `tasksDoneTotal` Descending
+
+Optional range-optimized indexes (if you add server-side filtering by `lastUpdated` later):
+
+1. Collection: `leaderboard`
+  - `showOnLeaderboard` Ascending
+  - `lastUpdated` Descending
+  - one metric field Descending
+
 ## Release Notes
 
 Version: 2.0.0

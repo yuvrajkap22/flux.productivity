@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebase
 import { firebaseConfig } from './firebase-config.js';
 import {
   getFirestore, doc, setDoc, deleteDoc, serverTimestamp, getDoc, collection,
-  query, where, orderBy, limit, onSnapshot, getCountFromServer
+  query, where, orderBy, limit, onSnapshot, getCountFromServer, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 
 let app;
@@ -104,24 +104,107 @@ async function setLeaderboardVisibility(visible) {
   }
 }
 
-function subscribeLeaderboard(metric, callback) {
-  if (!metric || typeof callback !== 'function') return () => {};
-  const col = collection(db, 'leaderboard');
-  const q = query(col, where('showOnLeaderboard', '==', true), orderBy(metric, 'desc'), orderBy('lastUpdated', 'asc'), limit(50));
-  const unsub = onSnapshot(q, (snap) => {
-    const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    callback(users, snap.metadata.fromCache);
-  }, (err) => {
-    console.warn('leaderboard subscription error', err);
+function _rangeStartTimestamp(range) {
+  if (!range || range === 'all') return null;
+  const now = new Date();
+  if (range === 'today') {
+    const d = new Date(now); d.setHours(0,0,0,0); return d;
+  }
+  if (range === 'week') {
+    const d = new Date(now); d.setDate(d.getDate() - 7); d.setHours(0,0,0,0); return d;
+  }
+  if (range === 'month') {
+    const d = new Date(now); d.setMonth(d.getMonth() - 1); d.setHours(0,0,0,0); return d;
+  }
+  return null;
+}
+
+function _toMillis(value) {
+  if (!value) return 0;
+  try {
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    if (typeof value.seconds === 'number') return value.seconds * 1000;
+    const parsed = new Date(value).getTime();
+    return Number.isFinite(parsed) ? parsed : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+function _sortAndFilterUsers(users, metric, range) {
+  const start = _rangeStartTimestamp(range);
+  const filtered = start
+    ? users.filter((u) => _toMillis(u.lastUpdated) >= start.getTime())
+    : users.slice();
+  filtered.sort((a, b) => {
+    const mv = (Number(b?.[metric]) || 0) - (Number(a?.[metric]) || 0);
+    if (mv !== 0) return mv;
+    return _toMillis(b?.lastUpdated) - _toMillis(a?.lastUpdated);
   });
-  return unsub;
+  return filtered;
+}
+
+function subscribeLeaderboard(metric, range, callback) {
+  // allow calling with (metric, callback)
+  if (typeof range === 'function') { callback = range; range = 'week'; }
+  if (!metric || typeof callback !== 'function') return () => {};
+  
+  // Check if user is guest (no Firebase auth)
+  const user = window.FluxAuth?.user?.() || window.FluxAuthState?.user;
+  const isGuest = !user || user.isGuest;
+  
+  // Guest mode: show demo data
+  if (isGuest || !db) {
+    const demoUsers = [
+      { id: 'user1', displayName: 'Alex Chen', focusMinutesTotal: 1240, sessionsTotal: 52, tasksDoneTotal: 128, photoURL: null },
+      { id: 'user2', displayName: 'Jordan Lee', focusMinutesTotal: 1120, sessionsTotal: 48, tasksDoneTotal: 115, photoURL: null },
+      { id: 'user3', displayName: 'Sam Taylor', focusMinutesTotal: 980, sessionsTotal: 42, tasksDoneTotal: 98, photoURL: null },
+      { id: 'user4', displayName: 'Casey Rivers', focusMinutesTotal: 850, sessionsTotal: 38, tasksDoneTotal: 87, photoURL: null },
+      { id: 'user5', displayName: 'Morgan Stone', focusMinutesTotal: 720, sessionsTotal: 35, tasksDoneTotal: 72, photoURL: null },
+    ];
+    setTimeout(() => callback(demoUsers, true), 100);
+    return () => {};
+  }
+  
+  const col = collection(db, 'leaderboard');
+  const primaryQuery = query(col, where('showOnLeaderboard', '==', true), orderBy(metric, 'desc'), limit(200));
+
+  let fallbackUnsub = null;
+  const startFallback = () => {
+    if (fallbackUnsub) return;
+    const fallbackQuery = query(col, where('showOnLeaderboard', '==', true), limit(500));
+    fallbackUnsub = onSnapshot(fallbackQuery, (snap) => {
+      const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      callback(_sortAndFilterUsers(users, metric, range).slice(0, 50), snap.metadata.fromCache);
+    }, (fallbackErr) => {
+      console.warn('leaderboard fallback subscription error', fallbackErr);
+    });
+  };
+
+  const unsub = onSnapshot(primaryQuery, (snap) => {
+    const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    callback(_sortAndFilterUsers(users, metric, range).slice(0, 50), snap.metadata.fromCache);
+  }, (err) => {
+    const code = err?.code || '';
+    const isIndexIssue = code === 'failed-precondition' || code === 'invalid-argument';
+    console.warn('leaderboard subscription error', err);
+    if (isIndexIssue) {
+      try { window.Flux?.showToast?.('Leaderboard running in compatibility mode while indexes sync.'); } catch (e) {}
+      startFallback();
+    }
+  });
+
+  return () => {
+    try { unsub?.(); } catch (e) {}
+    try { fallbackUnsub?.(); } catch (e) {}
+  };
 }
 
 window.Leaderboard = window.Leaderboard || {};
 window.Leaderboard.syncLeaderboard = syncLeaderboard;
 window.Leaderboard.setLeaderboardVisibility = setLeaderboardVisibility;
 window.Leaderboard.subscribeLeaderboard = subscribeLeaderboard;
-async function getUserEntryAndRank(metric = 'focusMinutesTotal') {
+async function getUserEntryAndRank(metric = 'focusMinutesTotal', range = 'week') {
   if (!db) return { entry: null, rank: null };
   try {
     const user = window.FluxAuth?.user?.();
@@ -132,12 +215,31 @@ async function getUserEntryAndRank(metric = 'focusMinutesTotal') {
     const entry = { id: snap.id, ...snap.data() };
     let rank = null;
     try {
-      const q = query(collection(db, 'leaderboard'), where('showOnLeaderboard', '==', true), where(metric, '>', entry[metric] || 0));
-      const cnt = await getCountFromServer(q);
-      rank = (cnt.data()?.count || 0) + 1;
+      const start = _rangeStartTimestamp(range);
+      if (start) {
+        // attempt a count query with range filter (may require composite index)
+        const luField = 'lastUpdated';
+        const threshold = entry[metric] || 0;
+        const q = query(collection(db, 'leaderboard'), where('showOnLeaderboard', '==', true), where(metric, '>', threshold), where(luField, '>=', start));
+        const cnt = await getCountFromServer(q);
+        rank = (cnt.data()?.count || 0) + 1;
+      } else {
+        const q = query(collection(db, 'leaderboard'), where('showOnLeaderboard', '==', true), where(metric, '>', entry[metric] || 0));
+        const cnt = await getCountFromServer(q);
+        rank = (cnt.data()?.count || 0) + 1;
+      }
     } catch (e) {
-      // count API or index may not be available; leave rank null
-      rank = null;
+      // count API or index may not be available; fallback to client-side rank estimate
+      try {
+        const q = query(collection(db, 'leaderboard'), where('showOnLeaderboard', '==', true), limit(500));
+        const snapAll = await getDocs(q);
+        const users = snapAll.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const ranked = _sortAndFilterUsers(users, metric, range);
+        const idx = ranked.findIndex((u) => u.id === entry.id);
+        rank = idx >= 0 ? idx + 1 : null;
+      } catch (fallbackErr) {
+        rank = null;
+      }
     }
     return { entry, rank };
   } catch (err) {

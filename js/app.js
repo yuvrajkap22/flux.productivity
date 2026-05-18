@@ -13,100 +13,11 @@
   let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
   let cursorRaf = 0;
 
-  const hasFinePointer = window.matchMedia?.('(pointer: fine)')?.matches;
-  const hasCursorElements = Boolean(cursorDot && cursorRing);
-  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-  const disableCursorEffects = !hasFinePointer || !hasCursorElements || prefersReducedMotion;
-
-  if (!disableCursorEffects) {
-    document.body.classList.add('custom-cursor-enabled');
-
-    let pendingCursorDotUpdate = false;
-    document.addEventListener('pointermove', (e) => {
-      mouseX = e.clientX; mouseY = e.clientY;
-      if (!pendingCursorDotUpdate) {
-        pendingCursorDotUpdate = true;
-        requestAnimationFrame(() => {
-          if (cursorDot) {
-            cursorDot.style.setProperty('--x', mouseX + 'px');
-            cursorDot.style.setProperty('--y', mouseY + 'px');
-            if (cursorDot.style.opacity !== '1') cursorDot.style.opacity = '1';
-          }
-          if (cursorRing && cursorRing.style.opacity !== '1') cursorRing.style.opacity = '1';
-          pendingCursorDotUpdate = false;
-        });
-      }
-    }, { passive: true });
-
-    function animateCursor() {
-      if (document.hidden) {
-        cursorRaf = 0;
-        return;
-      }
-
-      const ease = 0.12;
-      ringX += (mouseX - ringX) * ease;
-      ringY += (mouseY - ringY) * ease;
-      cursorRing.style.setProperty('--x', ringX + 'px');
-      cursorRing.style.setProperty('--y', ringY + 'px');
-      cursorRaf = requestAnimationFrame(animateCursor);
-    }
-
-    const startCursorLoop = () => {
-      if (cursorRaf || document.hidden) return;
-      cursorRaf = requestAnimationFrame(animateCursor);
-    };
-
-    const stopCursorLoop = () => {
-      if (!cursorRaf) return;
-      cancelAnimationFrame(cursorRaf);
-      cursorRaf = 0;
-    };
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        stopCursorLoop();
-      } else {
-        startCursorLoop();
-      }
-    });
-
-    startCursorLoop();
-  }
-
-  // Hover on interactive elements
-  if (!disableCursorEffects) {
-    document.addEventListener('mouseover', (e) => {
-      if (e.target.closest('button, a, [draggable], .todo-item, .accent-dot, .banner-color-opt, .nav-item, .sound-btn, .challenge-card')) {
-        document.body.classList.add('cursor-hover');
-        document.body.classList.remove('cursor-text');
-      } else if (e.target.closest('input[type="text"], input[type="number"], textarea, select')) {
-        document.body.classList.add('cursor-text');
-        document.body.classList.remove('cursor-hover');
-      }
-    });
-    document.addEventListener('mouseout', (e) => {
-      if (e.target.closest('button, a, [draggable], .todo-item, .accent-dot, .banner-color-opt, .nav-item, .sound-btn, .challenge-card')) {
-        document.body.classList.remove('cursor-hover');
-      } else if (e.target.closest('input[type="text"], input[type="number"], textarea, select')) {
-        document.body.classList.remove('cursor-text');
-      }
-    });
-    document.addEventListener('mousedown', () => {
-      document.body.classList.add('cursor-click');
-    });
-    document.addEventListener('mouseup', () => {
-      setTimeout(() => document.body.classList.remove('cursor-click'), 120);
-    });
-  }
-
-  // Hide cursor on touch devices
-  if (disableCursorEffects) {
-    document.body.classList.remove('custom-cursor-enabled');
-    if (cursorDot) cursorDot.style.display = 'none';
-    if (cursorRing) cursorRing.style.display = 'none';
-    document.body.style.cursor = 'auto';
-  }
+  // Simplified cursor: hide custom elements, use standard pointer
+  if (cursorDot) cursorDot.style.display = 'none';
+  if (cursorRing) cursorRing.style.display = 'none';
+  document.body.style.cursor = 'auto';
+  document.body.classList.remove('custom-cursor-enabled');
 
   /* ─── Theme Toggle ─── */
   const themeToggle = document.getElementById('theme-toggle');
@@ -529,7 +440,8 @@
             window._fluxLeaderboardUnsub = null;
           }
           const metric = window._fluxLeaderboardMetric || 'focusMinutesTotal';
-          window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, (users) => {
+          const range = window._fluxLeaderboardRange || 'week';
+          window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
             const r = document.getElementById('leaderboard-root');
             if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
           });
@@ -546,6 +458,33 @@
     item.addEventListener('click', () => {
       showView(item.dataset.view);
     });
+  });
+
+  // Re-subscribe leaderboard when metric changes from the UI
+  window.addEventListener('flux-leaderboard-metric-change', (e) => {
+    const metric = e?.detail?.metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
+    if (!document.getElementById('view-leaderboard')?.classList.contains('active')) return;
+    try {
+      const range = window._fluxLeaderboardRange || 'week';
+      if (window._fluxLeaderboardUnsub) { window._fluxLeaderboardUnsub(); window._fluxLeaderboardUnsub = null; }
+      window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
+        const r = document.getElementById('leaderboard-root');
+        if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
+      });
+    } catch (err) { console.warn('leaderboard re-subscribe failed', err); }
+  });
+
+  window.addEventListener('flux-leaderboard-range-change', (e) => {
+    const range = e?.detail?.range || window._fluxLeaderboardRange || 'week';
+    if (!document.getElementById('view-leaderboard')?.classList.contains('active')) return;
+    try {
+      const metric = window._fluxLeaderboardMetric || 'focusMinutesTotal';
+      if (window._fluxLeaderboardUnsub) { window._fluxLeaderboardUnsub(); window._fluxLeaderboardUnsub = null; }
+      window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
+        const r = document.getElementById('leaderboard-root');
+        if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
+      });
+    } catch (err) { console.warn('leaderboard re-subscribe failed', err); }
   });
 
   /* ─── Quotes ─── */

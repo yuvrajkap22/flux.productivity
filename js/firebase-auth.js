@@ -69,11 +69,12 @@ function emitAuthReady(user) {
 
 function setAuthenticated(user) {
   const isLoginPage = authUtils.isLoginPage();
+  const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
   authState.user = user;
   body.classList.toggle('authenticated', Boolean(user));
 
-  if (!user && !isLoginPage) {
+  if (!user && !isLoginPage && !isLocalhost) {
     if (appShell) appShell.style.display = 'none';
     location.replace('login.html');
     return;
@@ -182,18 +183,29 @@ if (authUtils.normalizeDevHost()) {
     }
   });
 
+  
   onAuthStateChanged(auth, (user) => {
     authState.ready = true;
     clearPopupSafetyTimer();
     setBusy(false);
-    setAuthenticated(user);
-    emitAuthReady(user);
-    if (!user && authUtils.isLoginPage()) {
+    
+    if (user) {
+      setAuthenticated(user);
+      emitAuthReady(user);
+      if (typeof FluxProfile !== 'undefined') FluxProfile.init(user);
+      try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
+    } else if (!user && !authUtils.isLoginPage()) {
+      // No user on app page: use guest user
+      const guestUser = createGuestUser();
+      setAuthenticated(guestUser);
+      emitAuthReady(guestUser);
+      setMessage('Running in guest mode. Sign in for full features.', 'success');
+    } else {
+      // On login page with no user
+      setAuthenticated(null);
+      emitAuthReady(null);
       setMessage('Continue with Google to enter Flux.');
     }
-    if (user && typeof FluxProfile !== 'undefined') FluxProfile.init(user);
-    // ensure leaderboard is synced after sign-in
-    try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
   });
 
   window.FluxAuth = {
