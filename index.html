@@ -163,7 +163,6 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css?v=2.0.2" />
-  <link rel="stylesheet" href="css/leaderboard.css?v=2.0.2" />
 </head>
 
 <body>
@@ -299,22 +298,22 @@
   <!-- Top Navigation (replaces sidebar) -->
   <nav class="top-nav" id="top-nav" aria-label="Main navigation">
     <div class="top-nav-inner">
-      <button class="nav-item active" data-view="dashboard" id="nav-dashboard" role="tab" aria-selected="true" tabindex="0">
+      <button class="nav-item active" data-view="dashboard" id="nav-dashboard">
         <span class="nav-label">Dashboard</span>
       </button>
-      <button class="nav-item" data-view="tasks" id="nav-tasks" role="tab" aria-selected="false" tabindex="0">
+      <button class="nav-item" data-view="tasks" id="nav-tasks">
         <span class="nav-label">Today's Tasks</span>
       </button>
-      <button class="nav-item" data-view="pomodoro" id="nav-pomodoro" role="tab" aria-selected="false" tabindex="0">
+      <button class="nav-item" data-view="pomodoro" id="nav-pomodoro">
         <span class="nav-label">Pomodoro</span>
       </button>
-      <button class="nav-item" data-view="stats" id="nav-stats" role="tab" aria-selected="false" tabindex="0">
+      <button class="nav-item" data-view="stats" id="nav-stats">
         <span class="nav-label">Stats</span>
       </button>
-      <button class="nav-item" data-view="challenges" id="nav-challenges" role="tab" aria-selected="false" tabindex="0">
+      <button class="nav-item" data-view="challenges" id="nav-challenges">
         <span class="nav-label">Challenges</span>
       </button>
-      <button class="nav-item" data-view="leaderboard" id="nav-leaderboard" role="tab" aria-selected="false" tabindex="0">
+      <button class="nav-item" data-view="leaderboard" id="nav-leaderboard">
         <span class="nav-label">Leaderboard</span>
       </button>
     </div>
@@ -322,13 +321,6 @@
 
   <!-- Main Content -->
   <main class="main-content" id="main-content">
-
-    <!-- Load small runtime services early for progressive migration -->
-    <script src="js/event-bus.js"></script>
-    <script src="js/auth-service.js"></script>
-    <script src="js/profile-service.js"></script>
-    <script src="js/pomo-service.js"></script>
-    <script src="js/stats-service.js"></script>
 
     <!-- Quote Bar -->
     <div class="quote-bar" id="quote-bar">
@@ -352,15 +344,10 @@
         <div class="bento-card todo-panel glass-panel" id="todo-panel">
           <div class="panel-header">
             <h2>Today's Tasks</h2>
-            <div class="todo-header-actions">
-              <div class="todo-filters" id="todo-filters">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="active">Active</button>
-                <button class="filter-btn" data-filter="completed">Done</button>
-              </div>
-              <button class="todo-utility-btn" id="todo-clear-completed-btn" type="button" aria-label="Clear completed tasks">
-                Clear Done
-              </button>
+            <div class="todo-filters" id="todo-filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="active">Active</button>
+              <button class="filter-btn" data-filter="completed">Done</button>
             </div>
           </div>
           <div class="todo-list" id="todo-list"></div>
@@ -419,14 +406,7 @@
             <div class="pomo-time-display">
               <span class="pomo-time" id="pomo-time">25:00</span>
               <span class="pomo-mode-label" id="pomo-mode-label">FOCUS</span>
-              <div class="pomo-task-panel" id="pomo-task-panel" data-state="empty">
-                <div class="pomo-task-copy">
-                  <span class="pomo-task-kicker">Selected task</span>
-                  <span class="pomo-task-label" id="pomo-task-label">No task selected yet</span>
-                </div>
-                <span class="pomo-task-hint" id="pomo-task-hint">Open Tasks to choose a focus target.</span>
-                <button class="pomo-task-action" id="pomo-task-action" type="button">Choose task</button>
-              </div>
+              <span class="pomo-task-label" id="pomo-task-label">No task selected</span>
             </div>
           </div>
           <div class="pomo-controls">
@@ -483,155 +463,113 @@
 
     <!-- Stats View -->
     <div class="view-panel" id="view-stats">
-      <section class="stats-shell">
-        <header class="stats-hero glass-panel">
-          <div class="stats-hero-copy">
-            <p class="stats-kicker">Performance atlas</p>
-            <h1>Everything you did, remixed into a sharper story.</h1>
-            <p class="stats-hero-text">Focus time, streaks, task momentum, and recent activity are reorganized into a cleaner, denser dashboard with a 30-day heatmap instead of the old line chart.</p>
-          </div>
-          <div class="stats-period-toggle stats-period-toggle-compact">
-            <button class="period-btn active" data-period="week">Week</button>
-            <button class="period-btn" data-period="30">30 Days</button>
-            <button class="period-btn" data-period="month">Month</button>
-            <button class="period-btn" data-period="all">All Time</button>
-          </div>
-        </header>
-
-        <section class="stats-metrics-grid" id="stats-overview-row">
-          <article class="stat-card glass-panel stat-card-primary">
+      <!-- Stats Period Toggle -->
+      <div class="stats-period-toggle">
+        <button class="period-btn active" data-period="week">This Week</button>
+        <button class="period-btn" data-period="30">30 Days</button>
+        <button class="period-btn" data-period="month">This Month</button>
+        <button class="period-btn" data-period="all">All Time</button>
+      </div>
+      <div class="stats-grid">
+        <!-- Overview Cards -->
+        <div class="stats-overview-row" id="stats-overview-row">
+          <div class="stat-card glass-panel">
             <div class="stat-card-icon">⏱</div>
             <div class="stat-card-value" id="stat-total-time">0h</div>
             <div class="stat-card-label">Focus Time</div>
             <div class="stat-card-delta" id="stat-time-delta"></div>
-          </article>
-          <article class="stat-card glass-panel">
+          </div>
+          <div class="stat-card glass-panel">
             <div class="stat-card-icon">🍅</div>
             <div class="stat-card-value" id="stat-total-sessions">0</div>
             <div class="stat-card-label">Sessions</div>
             <div class="stat-card-delta" id="stat-sessions-delta"></div>
-          </article>
-          <article class="stat-card glass-panel">
+          </div>
+          <div class="stat-card glass-panel">
             <div class="stat-card-icon">🔥</div>
             <div class="stat-card-value" id="stat-current-streak">0</div>
             <div class="stat-card-label">Day Streak</div>
             <div class="stat-card-delta">Best: <span id="stat-longest-streak">0</span></div>
-          </article>
-          <article class="stat-card glass-panel">
+          </div>
+          <div class="stat-card glass-panel">
             <div class="stat-card-icon">✅</div>
             <div class="stat-card-value" id="stat-tasks-done">0</div>
             <div class="stat-card-label">Tasks Done</div>
             <div class="stat-card-delta" id="stat-completion-rate"></div>
-          </article>
-        </section>
+          </div>
+        </div>
 
-        <section class="stats-main-grid">
-          <article class="stats-panel glass-panel stats-heatmap-card">
-            <div class="panel-header">
-              <div>
-                <p class="panel-eyebrow">30-day activity</p>
-                <h2 id="heatmap-title">30-Day Heatmap</h2>
-              </div>
-              <div class="chart-legend heatmap-legend">
-                <span class="legend-swatch heatmap-low"></span><span>Low</span>
-                <span class="legend-swatch heatmap-mid"></span><span>Med</span>
-                <span class="legend-swatch heatmap-high"></span><span>High</span>
-              </div>
+        <!-- Bar Chart -->
+        <div class="bento-card glass-panel stats-chart-card">
+          <div class="panel-header">
+            <h2 id="bar-chart-title">Daily Focus Histogram</h2>
+            <div class="chart-legend">
+              <span class="legend-dot"></span><span>Focus time</span>
             </div>
-            <div class="heatmap-summary">
-              <div>
-                <span class="heatmap-summary-label">Most active day</span>
-                <strong id="heatmap-best-day">—</strong>
-              </div>
-              <div>
-                <span class="heatmap-summary-label">Best day focus</span>
-                <strong id="heatmap-best-day-time">0m</strong>
-              </div>
-              <div>
-                <span class="heatmap-summary-label">30-day total</span>
-                <strong id="heatmap-total-time">0m</strong>
-              </div>
-            </div>
-            <div class="heatmap-wrap">
-              <div class="heatmap-grid" id="focus-heatmap" aria-label="30 day focus heatmap"></div>
-            </div>
-          </article>
+          </div>
+          <div class="bar-chart-wrap">
+            <div class="bar-chart" id="bar-chart"></div>
+          </div>
+        </div>
 
-          <article class="stats-panel glass-panel stats-bar-card">
-            <div class="panel-header">
-              <div>
-                <p class="panel-eyebrow">Current period</p>
-                <h2 id="bar-chart-title">Focus histogram</h2>
-              </div>
-              <div class="chart-legend">
-                <span class="legend-dot"></span><span>Focus time</span>
-              </div>
+        <!-- 30-day Line Graph -->
+        <div class="bento-card glass-panel stats-line-card">
+          <div class="panel-header">
+            <h2>30-Day Focus Line</h2>
+            <div class="chart-legend">
+              <span class="legend-dot"></span><span>Total focus per day</span>
             </div>
-            <div class="bar-chart-wrap">
-              <div class="bar-chart" id="bar-chart"></div>
-            </div>
-          </article>
+          </div>
+          <div class="line-chart-wrap">
+            <svg id="line-chart-30" class="line-chart-30" viewBox="0 0 620 180" preserveAspectRatio="none" aria-label="30 day line chart"></svg>
+          </div>
+        </div>
 
-          <article class="stats-panel glass-panel stats-day-card">
-            <div class="panel-header">
-              <div>
-                <p class="panel-eyebrow">Daily rhythm</p>
-                <h2 id="day-hist-title">1-Day Hourly Histogram</h2>
-              </div>
-            </div>
-            <div class="day-hist-wrap">
-              <div class="day-histogram" id="day-histogram"></div>
-            </div>
-          </article>
+        <!-- 1-day Histogram -->
+        <div class="bento-card glass-panel stats-day-card">
+          <div class="panel-header">
+            <h2 id="day-hist-title">1-Day Hourly Histogram</h2>
+          </div>
+          <div class="day-hist-wrap">
+            <div class="day-histogram" id="day-histogram"></div>
+          </div>
+        </div>
 
-          <article class="stats-panel glass-panel stats-category-card">
-            <div class="panel-header">
-              <div>
-                <p class="panel-eyebrow">Distribution</p>
-                <h2>By Category</h2>
-              </div>
-            </div>
-            <div class="category-bars" id="category-bars"></div>
-          </article>
+        <!-- Category Breakdown -->
+        <div class="bento-card glass-panel stats-category-card">
+          <div class="panel-header"><h2>By Category</h2></div>
+          <div class="category-bars" id="category-bars"></div>
+        </div>
 
-          <article class="stats-panel glass-panel stats-tasks-card">
-            <div class="panel-header">
-              <div>
-                <p class="panel-eyebrow">Momentum</p>
-                <h2>Top Tasks by Time</h2>
-              </div>
-            </div>
-            <div class="top-tasks-list" id="top-tasks-list"></div>
-          </article>
+        <!-- Top Tasks -->
+        <div class="bento-card glass-panel stats-tasks-card">
+          <div class="panel-header"><h2>Top Tasks by Time</h2></div>
+          <div class="top-tasks-list" id="top-tasks-list"></div>
+        </div>
 
-          <article class="stats-panel glass-panel stats-avg-card">
-            <div class="panel-header">
-              <div>
-                <p class="panel-eyebrow">Benchmarks</p>
-                <h2>Daily Averages</h2>
-              </div>
+        <!-- Daily Average -->
+        <div class="bento-card glass-panel stats-avg-card">
+          <div class="panel-header"><h2>Daily Averages</h2></div>
+          <div class="avg-grid" id="avg-grid">
+            <div class="avg-item">
+              <div class="avg-value" id="avg-focus">0m</div>
+              <div class="avg-label">Avg Focus/Day</div>
             </div>
-            <div class="avg-grid" id="avg-grid">
-              <div class="avg-item">
-                <div class="avg-value" id="avg-focus">0m</div>
-                <div class="avg-label">Avg Focus/Day</div>
-              </div>
-              <div class="avg-item">
-                <div class="avg-value" id="avg-sessions">0</div>
-                <div class="avg-label">Avg Sessions/Day</div>
-              </div>
-              <div class="avg-item">
-                <div class="avg-value" id="best-day-label">—</div>
-                <div class="avg-label">Most Productive Day</div>
-              </div>
-              <div class="avg-item">
-                <div class="avg-value" id="best-day-time">0h</div>
-                <div class="avg-label">Best Day Focus</div>
-              </div>
+            <div class="avg-item">
+              <div class="avg-value" id="avg-sessions">0</div>
+              <div class="avg-label">Avg Sessions/Day</div>
             </div>
-          </article>
-        </section>
-      </section>
+            <div class="avg-item">
+              <div class="avg-value" id="best-day-label">—</div>
+              <div class="avg-label">Most Productive Day</div>
+            </div>
+            <div class="avg-item">
+              <div class="avg-value" id="best-day-time">0h</div>
+              <div class="avg-label">Best Day Focus</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Challenges View -->
@@ -755,7 +693,6 @@
               <option value="pomodoro">Pomodoro</option>
               <option value="stats">Stats</option>
               <option value="challenges">Challenges</option>
-              <option value="leaderboard">Leaderboard</option>
               <option value="settings">Settings</option>
             </select>
           </div>
@@ -822,13 +759,6 @@
             <button class="settings-btn settings-btn-danger" id="settings-reset-preferences" type="button">Reset preferences</button>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Leaderboard View -->
-    <div id="view-leaderboard" class="view-panel hidden">
-      <div class="panel-inner" style="max-width:100%;margin:0;padding:0">
-        <div id="leaderboard-root" style="min-height:600px;background:var(--bg-alt);border-radius:8px"></div>
       </div>
     </div>
 
@@ -909,25 +839,24 @@
 
   </div><!-- end app-shell -->
 
+  <!-- Leaderboard view (panel) -->
+  <div id="view-leaderboard" class="view-panel hidden">
+    <div class="panel-inner" style="max-width:100%;margin:0;padding:0">
+      <div id="leaderboard-root" style="min-height:600px;background:var(--bg-alt);border-radius:8px"></div>
+    </div>
+  </div>
+
   <script src="js/auth-shared.js?v=2.0.2"></script>
   <script type="module" src="js/firebase-auth.js?v=2.0.2"></script>
   <script src="js/utils.js?v=2.0.2"></script>
-  <script src="js/storage-migrations.js?v=2.0.2"></script>
   <script src="js/sounds.js?v=2.0.2"></script>
   <script src="js/todo.js?v=2.0.2"></script>
   <script src="js/pomo.js?v=2.0.2"></script>
   <script type="module" src="js/leaderboard.js?v=2.0.2"></script>
-  <script src="js/leaderboard-state.js?v=2.0.2"></script>
   <script src="js/leaderboard-ui.js?v=2.0.2"></script>
   <script src="js/profile.js?v=2.0.2"></script>
   <script src="js/stats.js?v=2.0.2"></script>
   <script src="js/challenges.js?v=2.0.2"></script>
   <script src="js/app.js?v=2.0.2"></script>
-  <script type="module">
-    import { inject } from "https://cdn.jsdelivr.net/npm/@vercel/analytics@1.3.1/+esm";
-    import { injectSpeedInsights } from "https://cdn.jsdelivr.net/npm/@vercel/speed-insights@1.1.3/+esm";
-    inject();
-    injectSpeedInsights();
-  </script>
 </body>
 </html>

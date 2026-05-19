@@ -18,11 +18,6 @@ const FluxChallenges = {
     { id: 'p8', title: 'No-Distraction Day',    desc: 'Complete 4 pomodoros in a single day', icon: '🧘', cat: 'focus',      target: 4, metric: 'dailySessions' },
     { id: 'p9', title: 'Category Explorer',     desc: 'Track tasks in all 5 categories', icon: '🗂', cat: 'tasks',           target: 5, metric: 'categories' },
     { id: 'p10', title: 'Long Haul',            desc: 'Complete 3 long (25+ min) pomodoros in one day', icon: '🏋', cat: 'focus', target: 3, metric: 'longSessions' },
-    { id: 'p11', title: 'Focus Marathon',       desc: 'Complete 50 pomodoro sessions this month', icon: '🚀', cat: 'focus', target: 50, metric: 'sessions' },
-    { id: 'p12', title: 'Deep Work Sprint',     desc: 'Reach 25 total hours of focused work', icon: '⚡', cat: 'focus', target: 90000, metric: 'totalTime' },
-    { id: 'p13', title: 'Consistency Champion', desc: 'Build a 12-day focus streak', icon: '🏁', cat: 'consistency', target: 12, metric: 'streak' },
-    { id: 'p14', title: 'Task Crusher',         desc: 'Complete 50 tasks this month', icon: '🧨', cat: 'tasks', target: 50, metric: 'tasksCompleted' },
-    { id: 'p15', title: 'Morning Momentum',     desc: 'Start a session before 9 AM on 8 days', icon: '🌄', cat: 'wellness', target: 8, metric: 'earlyBird' },
   ],
 
   init() {
@@ -90,16 +85,11 @@ const FluxChallenges = {
       monthTime     += (stats.totalTime?.[key]) || 0;
     }
     const monthKeys = [];
-    // Count tasks completed this month using completion timestamp.
-    // Fallback to createdAt for backward compatibility with older task data.
+    // Count tasks completed this month by checking createdAt
     monthTasksCompleted = todos.filter(t => {
-      if (!t.completed) return false;
-      const completedAt = t.completedAt || t.createdAt;
-      if (!completedAt) return false;
-      const completedDate = new Date(completedAt);
-      if (Number.isNaN(completedDate.getTime())) return false;
-      const taskMonth = completedDate.getMonth();
-      const taskYear = completedDate.getFullYear();
+      if (!t.completed || !t.createdAt) return false;
+      const taskMonth = new Date(t.createdAt).getMonth();
+      const taskYear = new Date(t.createdAt).getFullYear();
       return taskMonth === month && taskYear === year;
     }).length;
 

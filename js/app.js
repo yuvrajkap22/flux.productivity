@@ -5,41 +5,7 @@
 (function() {
   'use strict';
 
-  const lbState = window.FluxLeaderboardState || {
-    getMetric: () => window._fluxLeaderboardMetric || 'focusMinutesTotal',
-    getRange: () => window._fluxLeaderboardRange || 'week',
-    getUsers: () => window._fluxLeaderboardLast || [],
-    getUnsubscribe: () => window._fluxLeaderboardUnsub || null,
-    setUnsubscribe: (unsub) => { window._fluxLeaderboardUnsub = typeof unsub === 'function' ? unsub : null; },
-    clearUnsubscribe: () => {
-      if (typeof window._fluxLeaderboardUnsub === 'function') {
-        try { window._fluxLeaderboardUnsub(); } catch (e) { /* ignore */ }
-      }
-      window._fluxLeaderboardUnsub = null;
-    },
-  };
-
   const isLowPerformance = typeof Flux !== 'undefined' && Flux.applyPerformanceClass();
-
-  // Safe service bridges (use new services when available, fall back to legacy globals)
-  const authSvc = window.FluxAuthService || {
-    getUser: () => null,
-    isGuest: () => true,
-    onAuthChange: () => {},
-    onAuthReady: () => {},
-  };
-
-  const profileSvc = window.FluxProfileService || {
-    getProfile: () => ({}),
-    getActiveUser: () => null,
-    onProfileChange: () => {},
-    init: () => {},
-  };
-
-  const pomoSvc = window.FluxPomoService || {
-    getPomo: () => (window.FluxPomo || null),
-    init: () => { try { if (window.FluxPomo && typeof window.FluxPomo.init === 'function') window.FluxPomo.init(); } catch (e) {} },
-  };
 
   /* ─── Custom Cursor — Magnetic with Trail ─── */
   const cursorDot  = document.getElementById('cursor-dot');
@@ -154,7 +120,7 @@
   const settingsProfileNote = document.getElementById('settings-profile-note');
   const settingsResetBtn = document.getElementById('settings-reset-preferences');
 
-  const settingsViewOptions = new Set(['dashboard', 'tasks', 'pomodoro', 'stats', 'challenges', 'leaderboard', 'settings']);
+  const settingsViewOptions = new Set(['dashboard', 'tasks', 'pomodoro', 'stats', 'challenges', 'settings']);
 
   function getCurrentSettings() {
     return Flux.load('flux_settings', {});
@@ -180,15 +146,15 @@
       pomodoro: 'Pomodoro',
       stats: 'Stats',
       challenges: 'Challenges',
-      leaderboard: 'Leaderboard',
       settings: 'Settings',
     };
     return labels[view] || 'Dashboard';
   }
 
   function getProfileShortcutData() {
-    const profile = (profileSvc && typeof profileSvc.getProfile === 'function') ? profileSvc.getProfile() : {};
-    const user = (profileSvc && typeof profileSvc.getActiveUser === 'function') ? profileSvc.getActiveUser() : null;
+    const profileApi = window.FluxProfile || null;
+    const profile = profileApi?.data || {};
+    const user = profileApi?.activeUser || window.FluxAuthState?.user || null;
     const name = profile.displayName || user?.displayName || user?.email || 'Flux User';
     const username = profile.username ? `@${profile.username}` : '';
     const bio = profile.bio || 'Open your Flux profile editor to update your name, bio, photo, and banner.';
@@ -230,9 +196,7 @@
     const profile = getProfileShortcutData();
     if (settingsProfileAvatar) {
       settingsProfileAvatar.alt = profile.name;
-      try {
-        settingsProfileAvatar.src = profile.photoURL || profileSvc.getFallbackAvatar?.(profile.name) || 'assets/flux-logo.svg';
-      } catch (e) { settingsProfileAvatar.src = 'assets/flux-logo.svg'; }
+      settingsProfileAvatar.src = profile.photoURL || window.FluxProfile?.getFallbackAvatar?.(profile.name) || 'assets/flux-logo.svg';
     }
     if (settingsProfileSummary) settingsProfileSummary.textContent = profile.bio;
     if (settingsProfileNote) settingsProfileNote.textContent = profile.username || 'Quick access';
@@ -315,7 +279,8 @@
   });
 
   document.getElementById('settings-open-profile')?.addEventListener('click', () => {
-    try { profileSvc.init(profileSvc.getActiveUser?.() || null); } catch (e) { /* ignore */ }
+    const profileApi = window.FluxProfile || (typeof FluxProfile !== 'undefined' ? FluxProfile : null);
+    profileApi?.openModal?.();
     FluxAudio.buttonClick();
   });
 
@@ -447,10 +412,7 @@
       const currentNav = document.querySelector(`.nav-item[data-view="${view}"]`);
       if (currentNav) currentNav.classList.add('active');
 
-      document.querySelectorAll('.view-panel').forEach(p => {
-        p.classList.remove('active');
-        p.classList.remove('hidden');
-      });
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
 
       if (view === 'dashboard') {
         document.getElementById('view-dashboard').classList.add('active');
@@ -461,8 +423,8 @@
         document.getElementById('view-dashboard').classList.add('active');
         document.getElementById('pomo-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else if (view === 'stats') {
-          document.getElementById('view-stats').classList.add('active');
-          if (window.FluxStatsService?.scheduleRender) window.FluxStatsService.scheduleRender(); else if (window.FluxStatsService?.render) window.FluxStatsService.render();
+        document.getElementById('view-stats').classList.add('active');
+        FluxStats.render();
       } else if (view === 'challenges') {
         document.getElementById('view-challenges').classList.add('active');
         FluxChallenges.render();
@@ -471,16 +433,18 @@
         const root = document.getElementById('leaderboard-root');
         if (root && window.LeaderboardUI) {
           window.LeaderboardUI.attach(root);
-          window.LeaderboardUI.renderLeaderboard(root, lbState.getUsers() || []);
         }
         try {
-          lbState.clearUnsubscribe();
-          const metric = lbState.getMetric() || 'focusMinutesTotal';
-          const range = lbState.getRange() || 'week';
-          lbState.setUnsubscribe(window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
+          if (window._fluxLeaderboardUnsub) {
+            window._fluxLeaderboardUnsub();
+            window._fluxLeaderboardUnsub = null;
+          }
+          const metric = window._fluxLeaderboardMetric || 'focusMinutesTotal';
+          const range = window._fluxLeaderboardRange || 'week';
+          window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
             const r = document.getElementById('leaderboard-root');
             if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
-          }));
+          });
         } catch (e) { console.warn('leaderboard subscribe failed', e); }
       } else if (view === 'settings') {
         document.getElementById('view-settings')?.classList.add('active');
@@ -498,28 +462,28 @@
 
   // Re-subscribe leaderboard when metric changes from the UI
   window.addEventListener('flux-leaderboard-metric-change', (e) => {
-    const metric = e?.detail?.metric || lbState.getMetric() || 'focusMinutesTotal';
+    const metric = e?.detail?.metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
     if (!document.getElementById('view-leaderboard')?.classList.contains('active')) return;
     try {
-      const range = lbState.getRange() || 'week';
-      lbState.clearUnsubscribe();
-      lbState.setUnsubscribe(window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
+      const range = window._fluxLeaderboardRange || 'week';
+      if (window._fluxLeaderboardUnsub) { window._fluxLeaderboardUnsub(); window._fluxLeaderboardUnsub = null; }
+      window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
         const r = document.getElementById('leaderboard-root');
         if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
-      }));
+      });
     } catch (err) { console.warn('leaderboard re-subscribe failed', err); }
   });
 
   window.addEventListener('flux-leaderboard-range-change', (e) => {
-    const range = e?.detail?.range || lbState.getRange() || 'week';
+    const range = e?.detail?.range || window._fluxLeaderboardRange || 'week';
     if (!document.getElementById('view-leaderboard')?.classList.contains('active')) return;
     try {
-      const metric = lbState.getMetric() || 'focusMinutesTotal';
-      lbState.clearUnsubscribe();
-      lbState.setUnsubscribe(window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
+      const metric = window._fluxLeaderboardMetric || 'focusMinutesTotal';
+      if (window._fluxLeaderboardUnsub) { window._fluxLeaderboardUnsub(); window._fluxLeaderboardUnsub = null; }
+      window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
         const r = document.getElementById('leaderboard-root');
         if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
-      }));
+      });
     } catch (err) { console.warn('leaderboard re-subscribe failed', err); }
   });
 
@@ -626,23 +590,21 @@
 
   function bootstrapModules(user) {
     if (window.__fluxModulesBootstrapped) {
-      if (user) {
-        try { profileSvc.init(user); } catch (e) { /* ignore */ }
-      }
+      if (user && typeof FluxProfile !== 'undefined') FluxProfile.init(user);
       return;
     }
 
     window.__fluxModulesBootstrapped = true;
     FluxAudio.init();
     FluxTodo.init();
-    try { pomoSvc.init(); } catch (e) { try { if (typeof FluxPomo !== 'undefined' && FluxPomo.init) FluxPomo.init(); } catch (e) {} }
-    try { if (window.FluxStats && typeof window.FluxStats.init === 'function') window.FluxStats.init(); } catch (e) { /* ignore */ }
+    FluxPomo.init();
+    FluxStats.init();
     FluxChallenges.init();
     soundBtns.forEach((btn) => {
       btn.classList.toggle('active', FluxAudio.isActive(btn.dataset.sound));
     });
     waveBars.classList.toggle('hidden', !FluxAudio.hasAnySoundActive());
-    if (user) { try { profileSvc.init(user); } catch (e) { /* ignore */ } }
+    if (user && typeof FluxProfile !== 'undefined') FluxProfile.init(user);
 
     if (!window.__fluxInitialViewApplied) {
       window.__fluxInitialViewApplied = true;
@@ -673,18 +635,11 @@
     }
   };
 
-  // Use auth service to detect current user and bootstrap when ready
-  const currentAuthUser = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : null;
+  const currentAuthUser = window.FluxAuthState?.user || window.FluxAuth?.user?.();
   if (currentAuthUser) {
     window.FluxApp.onAuthChange(currentAuthUser);
   } else if (window.FluxAuthState?.ready && !currentAuthUser) {
     window.FluxApp.onAuthChange(null);
   }
-
-  try {
-    if (authSvc && typeof authSvc.onAuthReady === 'function') {
-      authSvc.onAuthReady((u) => { window.FluxApp.onAuthChange(u || null); });
-    }
-  } catch (e) { /* ignore */ }
 
 })();

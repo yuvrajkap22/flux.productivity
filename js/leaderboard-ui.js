@@ -1,29 +1,5 @@
 (function () {
-  const lbState = window.FluxLeaderboardState || {
-    getMetric: () => (window._fluxLeaderboardMetric || 'focusMinutesTotal'),
-    setMetric: (metric) => { if (window.FluxLeaderboardState) window.FluxLeaderboardState.setMetric(metric); else window._fluxLeaderboardMetric = metric || 'focusMinutesTotal'; },
-    getRange: () => (window._fluxLeaderboardRange || 'week'),
-    setRange: (range) => { if (window.FluxLeaderboardState) window.FluxLeaderboardState.setRange(range); else window._fluxLeaderboardRange = range || 'week'; },
-    getUsers: () => (window._fluxLeaderboardLast || []),
-    setUsers: (users) => { if (window.FluxLeaderboardState) window.FluxLeaderboardState.setUsers(users); else window._fluxLeaderboardLast = Array.isArray(users) ? users : []; },
-  };
-
-  const authSvc = window.FluxAuthService || {
-    getUser: () => (window.FluxAuth?.user?.() || window.FluxAuthState?.user || null),
-    isGuest: () => true,
-    onAuthChange: () => {},
-    onAuthReady: () => {},
-  };
-
   const fmtNum = (n) => (typeof n === 'number' ? n.toLocaleString() : n || '0');
-  const looksLikeEmail = (v) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v || '').trim());
-  const displayNameOf = (u, fallback = 'User') => {
-    const name = safeText(u?.displayName || '').trim();
-    if (name && !looksLikeEmail(name)) return name;
-    const alt = safeText(u?.username || '').trim().replace(/^@/, '');
-    if (alt) return alt;
-    return fallback;
-  };
   const metricText = (metricKey, value) => {
     const n = Number(value) || 0;
     if (metricKey === 'focusMinutesTotal') return `${fmtNum(n)} min`;
@@ -45,21 +21,21 @@
   function createAvatarEl(u) {
     const wrap = document.createElement('div');
     wrap.className = 'avatar-col';
-    const resolved = window.FluxAuthUtils?.resolveAvatarSource?.(u.photoURL, displayNameOf(u, 'Profile')) || u.photoURL;
+    const resolved = window.FluxAuthUtils?.resolveAvatarSource?.(u.photoURL, u.displayName) || u.photoURL;
     if (resolved && /^https?:\/\//i.test(resolved)) {
       const img = document.createElement('img');
       img.src = resolved;
-      img.alt = safeText(displayNameOf(u, 'Profile'));
+      img.alt = safeText(u.displayName || 'Profile');
       wrap.appendChild(img);
     } else if (resolved && /^data:image\//i.test(resolved)) {
       const img = document.createElement('img');
       img.src = resolved;
-      img.alt = safeText(displayNameOf(u, 'Profile'));
+      img.alt = safeText(u.displayName || 'Profile');
       wrap.appendChild(img);
     } else {
       const initials = document.createElement('div');
       initials.className = 'initials';
-      initials.textContent = (safeText(displayNameOf(u, 'User'))[0] || 'F').toUpperCase();
+      initials.textContent = (safeText(u.displayName || 'User')[0] || 'F').toUpperCase();
       wrap.appendChild(initials);
     }
     return wrap;
@@ -86,7 +62,7 @@
 
     const ranges = [ { key: 'today', label: 'Today' }, { key: 'week', label: 'This Week' }, { key: 'month', label: 'This Month' } ];
     ranges.forEach(r => {
-      const t = document.createElement('button'); t.className = 'tab'; t.type = 'button'; t.dataset.leaderRange = r.key; t.textContent = r.label; t.setAttribute('aria-label', `Range ${r.label}`); t.setAttribute('role', 'tab'); t.setAttribute('tabindex', '0'); t.setAttribute('aria-selected', 'false'); tabs.appendChild(t);
+      const t = document.createElement('button'); t.className = 'tab'; t.type = 'button'; t.dataset.leaderRange = r.key; t.textContent = r.label; t.setAttribute('aria-label', `Range ${r.label}`); tabs.appendChild(t);
     });
 
     const metrics = [
@@ -96,7 +72,7 @@
     ];
     const metricGroup = document.createElement('div'); metricGroup.className = 'leaderboard-tabs';
     metrics.forEach((m) => {
-      const btn = document.createElement('button'); btn.className = 'tab'; btn.type = 'button'; btn.dataset.leaderMetric = m.key; btn.textContent = m.label; btn.setAttribute('aria-label', `Metric ${m.label}`); btn.setAttribute('role', 'tab'); btn.setAttribute('tabindex', '0'); btn.setAttribute('aria-selected', 'false'); metricGroup.appendChild(btn);
+      const btn = document.createElement('button'); btn.className = 'tab'; btn.type = 'button'; btn.dataset.leaderMetric = m.key; btn.textContent = m.label; btn.setAttribute('aria-label', `Metric ${m.label}`); metricGroup.appendChild(btn);
     });
 
     const cta = document.createElement('button'); cta.className = 'leaderboard-cta'; cta.type = 'button'; cta.textContent = 'Sign in to compete';
@@ -138,7 +114,7 @@
 
       const rank = document.createElement('div'); rank.className = 'rank'; rank.textContent = `#${rankNum}`;
       const avatarWrap = document.createElement('div'); avatarWrap.className = 'avatar';
-      const resolved = window.FluxAuthUtils?.resolveAvatarSource?.(u.photoURL, displayNameOf(u, 'User')) || u.photoURL;
+      const resolved = window.FluxAuthUtils?.resolveAvatarSource?.(u.photoURL, u.displayName) || u.photoURL;
       if (resolved && /^https?:\/\//i.test(resolved)) {
         const img = document.createElement('img'); img.src = resolved; img.alt = safeText(u.displayName || ''); avatarWrap.appendChild(img);
       } else if (resolved && /^data:image\//i.test(resolved)) {
@@ -147,10 +123,10 @@
         const initials = document.createElement('div'); initials.className = 'initials'; initials.textContent = (safeText(u.displayName || '')[0] || 'F').toUpperCase(); avatarWrap.appendChild(initials);
       }
       const meta = document.createElement('div'); meta.className = 'meta';
-      const name = document.createElement('div'); name.className = 'name'; name.textContent = displayNameOf(u, 'User');
+      const name = document.createElement('div'); name.className = 'name'; name.textContent = safeText(u.displayName || 'User');
       const handle = document.createElement('div'); handle.className = 'handle'; handle.textContent = displayHandle(u);
       const val = document.createElement('div'); val.className = 'val';
-      const metricKey = metric || lbState.getMetric() || 'focusMinutesTotal';
+      const metricKey = metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
       const metricVal = u[metricKey] || 0;
       val.textContent = metricText(metricKey, metricVal);
       meta.appendChild(name); if (handle.textContent) meta.appendChild(handle); meta.appendChild(val);
@@ -177,12 +153,12 @@
       const rankCol = document.createElement('div'); rankCol.className = 'rank-col'; rankCol.textContent = String(idx + 1 + 3);
       const avatarCol = createAvatarEl(u);
       const nameCol = document.createElement('div'); nameCol.className = 'name-col';
-      const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = displayNameOf(u, 'User');
+      const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = safeText(u.displayName || 'User');
       const secondary = document.createElement('div'); secondary.className = 'secondary'; secondary.textContent = displayHandle(u);
       nameCol.appendChild(primary);
       if (secondary.textContent) nameCol.appendChild(secondary);
       const statCol = document.createElement('div'); statCol.className = 'stat-col';
-      const metricKey = metric || lbState.getMetric() || 'focusMinutesTotal';
+      const metricKey = metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
       const metricVal = u[metricKey] || 0;
       statCol.textContent = metricText(metricKey, metricVal);
       row.appendChild(rankCol); row.appendChild(avatarCol); row.appendChild(nameCol); row.appendChild(statCol);
@@ -195,7 +171,7 @@
     try {
       const info = await window.Leaderboard.getUserEntryAndRank(metric, range);
       if (!info || !info.entry) return;
-      const users = lbState.getUsers() || [];
+      const users = window._fluxLeaderboardLast || [];
       const present = users.some(u => u.id === info.entry.id);
       if (present) return;
 
@@ -204,7 +180,7 @@
       const rankCol = document.createElement('div'); rankCol.className = 'rank-col'; rankCol.textContent = info.rank ? String(info.rank) : '—';
       const avatarCol = createAvatarEl(info.entry);
       const nameCol = document.createElement('div'); nameCol.className = 'name-col';
-      const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = displayNameOf(info.entry, 'You');
+      const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = safeText(info.entry.displayName || 'You');
       const secondary = document.createElement('div'); secondary.className = 'secondary'; secondary.textContent = displayHandle(info.entry);
       nameCol.appendChild(primary);
       if (secondary.textContent) nameCol.appendChild(secondary);
@@ -219,17 +195,12 @@
 
   function attach(container) {
     if (!container) return;
-    if (container.__fluxLeaderboardAttached) {
-      return;
-    }
-    container.__fluxLeaderboardAttached = true;
-
     container.addEventListener('click', (e) => {
       const metricBtn = e.target.closest('[data-leader-metric]');
       if (metricBtn) {
         const metric = metricBtn.dataset.leaderMetric;
-        lbState.setMetric(metric);
-        render(container, lbState.getUsers() || []);
+        window._fluxLeaderboardMetric = metric;
+        render(container, window._fluxLeaderboardLast || []);
         try { window.dispatchEvent(new CustomEvent('flux-leaderboard-metric-change', { detail: { metric } })); } catch (e) {}
         return;
       }
@@ -237,8 +208,8 @@
       const rangeBtn = e.target.closest('[data-leader-range]');
       if (rangeBtn) {
         const range = rangeBtn.dataset.leaderRange;
-        lbState.setRange(range);
-        render(container, lbState.getUsers() || []);
+        window._fluxLeaderboardRange = range;
+        render(container, window._fluxLeaderboardLast || []);
         try { window.dispatchEvent(new CustomEvent('flux-leaderboard-range-change', { detail: { range } })); } catch (e) {}
         return;
       }
@@ -257,52 +228,29 @@
         next.click();
       }
     });
-
-    // Update UI on auth changes
-    try {
-      authSvc.onAuthChange((u) => {
-        const c = container.querySelector('.leaderboard-cta');
-        if (c) c.style.display = (u && !u.isGuest) ? 'none' : 'inline-flex';
-      });
-    } catch (e) { /* ignore */ }
-
-    // Listen for leaderboard state changes from FluxBus
-    try {
-      const unsubscribe = window.FluxBus?.on('flux-leaderboard-change', (payload) => {
-        if (!payload) return;
-        const nextUsers = payload.users || lbState.getUsers() || [];
-        const r = document.getElementById('leaderboard-root');
-        if (r) render(r, nextUsers);
-      });
-      if (typeof unsubscribe === 'function') {
-        container.__fluxLeaderboardUnsub = unsubscribe;
-      }
-    } catch (e) { /* ignore */ }
   }
 
   function render(container, users) {
-    if (lbState.getUsers() !== users) {
-      lbState.setUsers(users);
-    }
+    window._fluxLeaderboardLast = users;
     container.replaceChildren();
-    const currentUid = (typeof authSvc.getUser === 'function' ? (authSvc.getUser()?.uid || null) : (window.FluxAuth?.user?.()?.uid || null));
+    const currentUid = window.FluxAuth?.user?.()?.uid || null;
     const header = buildHeader();
     container.appendChild(header);
     // ensure active tab
-    const activeKey = lbState.getMetric() || 'focusMinutesTotal';
-    header.querySelectorAll('[data-leader-metric]').forEach((el) => el.setAttribute('aria-selected', 'false'));
+    const activeKey = window._fluxLeaderboardMetric || 'focusMinutesTotal';
+    header.querySelectorAll('[data-leader-metric]').forEach((el) => el.setAttribute('aria-pressed', 'false'));
     const tabBtn = header.querySelector(`[data-leader-metric="${activeKey}"]`);
     if (tabBtn) tabBtn.classList.add('active');
-    const activeRange = lbState.getRange() || 'week';
-    header.querySelectorAll('[data-leader-range]').forEach((el) => el.setAttribute('aria-selected', 'false'));
+    const activeRange = window._fluxLeaderboardRange || 'week';
+    header.querySelectorAll('[data-leader-range]').forEach((el) => el.setAttribute('aria-pressed', 'false'));
     const rangeBtn = header.querySelector(`[data-leader-range="${activeRange}"]`);
     if (rangeBtn) rangeBtn.classList.add('active');
-    if (tabBtn) tabBtn.setAttribute('aria-selected', 'true');
-    if (rangeBtn) rangeBtn.setAttribute('aria-selected', 'true');
+    if (tabBtn) tabBtn.setAttribute('aria-pressed', 'true');
+    if (rangeBtn) rangeBtn.setAttribute('aria-pressed', 'true');
 
     // hide CTA if user is signed in
     const cta = header.querySelector('.leaderboard-cta');
-    const user = (typeof authSvc.getUser === 'function' ? authSvc.getUser() : (window.FluxAuth?.user?.() || window.FluxAuthState?.user));
+    const user = window.FluxAuth?.user?.() || window.FluxAuthState?.user;
     if (cta) cta.style.display = (user && !user.isGuest) ? 'none' : 'inline-flex';
 
     const body = document.createElement('div'); body.className = 'leaderboard-body';
@@ -317,7 +265,7 @@
     container.appendChild(body);
     // pinned current-user row when not in top list (async, non-blocking)
     setTimeout(() => {
-      renderPinnedRow(container.querySelector('.leader-list-wrap') || container, lbState.getMetric() || 'focusMinutesTotal', lbState.getRange() || 'week');
+      renderPinnedRow(container.querySelector('.leader-list-wrap') || container, window._fluxLeaderboardMetric || 'focusMinutesTotal', window._fluxLeaderboardRange || 'week');
     }, 0);
   }
 

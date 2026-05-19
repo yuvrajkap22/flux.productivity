@@ -14,7 +14,7 @@ const FluxStats = {
         document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.period = btn.dataset.period;
-        this.scheduleRender();
+        this.render();
         FluxAudio.buttonClick();
       });
     });
@@ -23,6 +23,7 @@ const FluxStats = {
     this.refs = {
       barChartTitle: document.getElementById('bar-chart-title'),
       barChart: document.getElementById('bar-chart'),
+      lineChart30: document.getElementById('line-chart-30'),
       dayHistogram: document.getElementById('day-histogram'),
       dayHistTitle: document.getElementById('day-hist-title'),
       topTasksList: document.getElementById('top-tasks-list'),
@@ -37,19 +38,7 @@ const FluxStats = {
       avgSessions: document.getElementById('avg-sessions'),
       bestDayLabel: document.getElementById('best-day-label'),
       bestDayTime: document.getElementById('best-day-time'),
-      heatmapTitle: document.getElementById('heatmap-title'),
-      heatmapGrid: document.getElementById('focus-heatmap'),
-      heatmapBestDay: document.getElementById('heatmap-best-day'),
-      heatmapBestDayTime: document.getElementById('heatmap-best-day-time'),
-      heatmapTotalTime: document.getElementById('heatmap-total-time'),
     };
-  },
-
-  scheduleRender(delay = 250) {
-    clearTimeout(this._renderTimer);
-    this._renderTimer = setTimeout(() => {
-      try { this.render(); } catch (e) { /* ignore */ }
-    }, Number(delay) || 250);
   },
 
   render() {
@@ -60,7 +49,7 @@ const FluxStats = {
     else if (this.period === '30') this.render30Days(stats, todos);
     else if (this.period === 'month') this.renderMonth(stats, todos);
     else if (this.period === 'all') this.renderAll(stats, todos);
-    this.render30DayHeatmap(stats);
+    this.render30DayLineGraph(stats);
     this.renderDayHistogram(stats);
     this.renderTopTasks(todos);
     this.renderCategoryBreakdown(todos);
@@ -81,7 +70,7 @@ const FluxStats = {
       totalTime += time;
     }
 
-    if (this.refs?.barChartTitle) this.refs.barChartTitle.textContent = '30-Day Focus Distribution';
+    if (this.refs?.barChartTitle) this.refs.barChartTitle.textContent = 'Focus Trend (Last 30 Days)';
     this.setOverviewCards(totalTime, totalSessions, stats, todos);
     this.renderBarChart(days, 'time');
     this.renderAverages(days, totalTime, totalSessions);
@@ -175,35 +164,16 @@ const FluxStats = {
     if (this.refs?.statCurrentStreak) this.refs.statCurrentStreak.textContent = (stats.streak || 0) + ' 🔥';
     if (this.refs?.statLongestStreak) this.refs.statLongestStreak.textContent = stats.longestStreak || 0;
 
-    let relevantTodos = todos;
-    if (this.period && this.period !== 'all') {
-      relevantTodos = todos.filter(t => {
-        const d = t.completed ? new Date(t.completedAt) : new Date(t.createdAt);
-        if (isNaN(d)) return true;
-        const ms = d.getTime();
-        const now = Date.now();
-        if (this.period === 'week') return now - ms <= 7 * 86400000;
-        if (this.period === '30') return now - ms <= 30 * 86400000;
-        if (this.period === 'month') {
-          const cur = new Date();
-          return cur.getFullYear() === d.getFullYear() && cur.getMonth() === d.getMonth();
-        }
-        return true;
-      });
-    }
-
-    const done  = relevantTodos.filter(t => t.completed).length;
-    const total = relevantTodos.length;
+    const done  = todos.filter(t => t.completed).length;
+    const total = todos.length;
     if (this.refs?.statTasksDone) this.refs.statTasksDone.textContent = done;
     if (this.refs?.statCompletionRate) this.refs.statCompletionRate.textContent =
       total > 0 ? Math.round(done / total * 100) + '% completion' : '—';
   },
 
   renderBarChart(days, metric) {
-    if (!Array.isArray(days) || days.length === 0) return;
     const maxVal = Math.max(...days.map(d => d[metric] || 0), 1);
     const chart  = this.refs?.barChart || document.getElementById('bar-chart');
-    if (!chart) return;
     const MAX_BARS = 14; // limit labels for readability in month view
 
     let displayDays = days;
@@ -227,51 +197,52 @@ const FluxStats = {
     }).join('');
   },
 
-  render30DayHeatmap(stats) {
-    const grid = this.refs?.heatmapGrid || document.getElementById('focus-heatmap');
-    if (!grid) return;
+  render30DayLineGraph(stats) {
+    const svg = this.refs?.lineChart30 || document.getElementById('line-chart-30');
+    if (!svg) return;
 
-    const days = [];
-    let totalTime = 0;
-    let bestDay = null;
-
+    const points = [];
     for (let i = 29; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const key = date.toISOString().split('T')[0];
-      const time = Number(stats.totalTime?.[key]) || 0;
-      const sessions = Number(stats.sessions?.[key]) || 0;
-      const label = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-      const day = { key, date, label, time, sessions };
-      days.push(day);
-      totalTime += time;
-      if (!bestDay || time > bestDay.time) bestDay = day;
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      const time = (stats.totalTime?.[key]) || 0;
+      points.push({ key, time, day: d.getDate() });
     }
 
-    const maxTime = Math.max(...days.map((day) => day.time), 1);
-    const totalSessions = days.reduce((sum, day) => sum + day.sessions, 0);
-    const intensityFor = (time) => {
-      if (time <= 0) return 0;
-      const ratio = time / maxTime;
-      if (ratio > 0.75) return 4;
-      if (ratio > 0.5) return 3;
-      if (ratio > 0.25) return 2;
-      return 1;
-    };
+    const max = Math.max(...points.map(p => p.time), 1);
+    const width = 620;
+    const height = 180;
+    const padX = 18;
+    const padY = 16;
+    const usableW = width - padX * 2;
+    const usableH = height - padY * 2;
 
-    grid.innerHTML = days.map((day) => {
-      const level = intensityFor(day.time);
-      const title = `${day.label}: ${Flux.formatTime(day.time)} · ${day.sessions} session${day.sessions === 1 ? '' : 's'}`;
-      return `<button class="heatmap-cell ${level ? `level-${level}` : 'is-empty'}" type="button" title="${title}" aria-label="${title}">
-        <strong>${day.time > 0 ? Flux.formatTime(day.time) : '—'}</strong>
-        <span>${day.sessions > 0 ? `${day.sessions}x` : day.label}</span>
-      </button>`;
+    const linePoints = points.map((p, i) => {
+      const x = padX + (usableW * i) / Math.max(points.length - 1, 1);
+      const y = height - padY - ((p.time / max) * usableH);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(' ');
+
+    const areaPoints = `${padX},${height - padY} ${linePoints} ${width - padX},${height - padY}`;
+
+    const xLabels = [0, 9, 19, 29].map((idx) => {
+      const x = padX + (usableW * idx) / 29;
+      return `<text x="${x.toFixed(2)}" y="${height - 2}" class="line-axis-label">${points[idx].day}</text>`;
     }).join('');
 
-    if (this.refs?.heatmapBestDay) this.refs.heatmapBestDay.textContent = bestDay ? bestDay.label : '—';
-    if (this.refs?.heatmapBestDayTime) this.refs.heatmapBestDayTime.textContent = bestDay ? Flux.formatTime(bestDay.time || 0) : '0m';
-    if (this.refs?.heatmapTotalTime) this.refs.heatmapTotalTime.textContent = Flux.formatTime(totalTime);
-    if (this.refs?.heatmapTitle) this.refs.heatmapTitle.textContent = `30-Day Heatmap · ${totalSessions} sessions`;
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="lineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.36"></stop>
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"></stop>
+        </linearGradient>
+      </defs>
+      <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" class="line-axis"></line>
+      <polygon points="${areaPoints}" class="line-area" fill="url(#lineAreaGrad)"></polygon>
+      <polyline points="${linePoints}" class="line-path"></polyline>
+      ${xLabels}
+    `;
   },
 
   renderDayHistogram(stats) {
@@ -323,7 +294,6 @@ const FluxStats = {
 
   renderTopTasks(todos) {
     const list = this.refs?.topTasksList || document.getElementById('top-tasks-list');
-    if (!list) return;
     const top  = [...todos].filter(t => t.timeTracked > 0)
                            .sort((a, b) => b.timeTracked - a.timeTracked)
                            .slice(0, 6);
@@ -386,7 +356,6 @@ const FluxStats = {
     const colors  = { work: '#60a5fa', study: '#a78bfa', personal: '#f472b6', health: '#34d399', creative: '#fbbf24' };
     const labels  = { work: '💼 Work', study: '📚 Study', personal: '🏠 Personal', health: '💪 Health', creative: '🎨 Creative' };
     const container = this.refs?.categoryBars || document.getElementById('category-bars');
-    if (!container) return;
 
     container.innerHTML = Object.entries(cats)
       .sort(([, a], [, b]) => b - a)
@@ -412,16 +381,5 @@ const FluxStats = {
     if (this.refs?.avgSessions) this.refs.avgSessions.textContent = avgSess;
     if (this.refs?.bestDayLabel) this.refs.bestDayLabel.textContent = best?.label || '—';
     if (this.refs?.bestDayTime) this.refs.bestDayTime.textContent = best ? Flux.formatTime(best.time || 0) : '—';
-  },
-  updateOverview() {
-    const stats = Flux.load('flux_stats', { sessions: {}, totalTime: {}, streak: 0, longestStreak: 0 });
-    const todos = Flux.load('flux_todos', []);
-    // Update small, frequently-changing widgets without redrawing charts
-    const totalTime = Object.values(stats.totalTime || {}).reduce((a, b) => a + (b || 0), 0);
-    const totalSessions = Object.values(stats.sessions || {}).reduce((a, b) => a + (b || 0), 0);
-    this.setOverviewCards(totalTime, totalSessions, stats, todos);
-    // Update top tasks and category breakdown (DOM fragments)
-    try { this.renderTopTasks(todos); } catch (e) { /* ignore */ }
-    try { this.renderCategoryBreakdown(todos); } catch (e) { /* ignore */ }
   }
 };

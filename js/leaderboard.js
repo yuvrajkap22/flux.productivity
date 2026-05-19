@@ -1,9 +1,9 @@
-import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
 import { firebaseConfig } from './firebase-config.js';
 import {
   getFirestore, doc, setDoc, deleteDoc, serverTimestamp, getDoc, collection,
   query, where, orderBy, limit, onSnapshot, getCountFromServer, getDocs
-} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+} from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 
 let app;
 try {
@@ -14,21 +14,6 @@ try {
   app = null;
 }
 const db = app ? getFirestore(app) : null;
-
-// Safe service bridges (prefer new services, fall back to legacy globals)
-function getAuthSvc() {
-  return window.FluxAuthService || {
-    getUser: () => (window.FluxAuth?.user?.() || window.FluxAuthState?.user || null),
-    isGuest: () => { const u = (window.FluxAuth?.user?.() || window.FluxAuthState?.user); return !u || Boolean(u.isGuest); },
-  };
-}
-
-function getProfileSvc() {
-  return window.FluxProfileService || {
-    getProfile: () => (window.FluxProfile?.data || {}),
-    getActiveUser: () => (window.FluxProfile?.activeUser || window.FluxAuthState?.user || window.FluxAuth?.user?.() || null),
-  };
-}
 
 function _getVisibilitySetting() {
   try {
@@ -46,10 +31,8 @@ async function syncLeaderboard() {
 async function _syncLeaderboardImmediate() {
   if (!db) return;
   try {
-    const authSvc = getAuthSvc();
-    const profileSvc = getProfileSvc();
-    const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.() || window.FluxAuthState?.user);
-    if (!user || !user.uid || (authSvc && typeof authSvc.isGuest === 'function' ? authSvc.isGuest() : user.isGuest)) return;
+    const user = window.FluxAuth?.user?.();
+    if (!user || !user.uid) return;
     if (!_getVisibilitySetting()) return;
 
     const uid = user.uid;
@@ -62,10 +45,10 @@ async function _syncLeaderboardImmediate() {
     const tasksDoneTotal = (todos.filter(t => t.completed).length) || 0;
     const currentStreak = stats.streak || 0;
 
-    const profile = (profileSvc && typeof profileSvc.getProfile === 'function') ? profileSvc.getProfile() : (window.FluxProfile?.data || {});
-    const displayName = user.displayName || profile?.displayName || profile?.username || (user.email ? String(user.email).split('@')[0] : '') || 'Flux User';
-    const username = profile?.username || (user.email ? String(user.email).split('@')[0] : '');
-    const photoURL = user.photoURL || profile?.photoURL || null;
+    const profileApi = window.FluxProfile || null;
+    const displayName = user.displayName || profileApi?.data?.displayName || user.email || 'Flux User';
+    const username = profileApi?.data?.username || '';
+    const photoURL = user.photoURL || profileApi?.data?.photoURL || null;
 
     const payload = {
       displayName,
@@ -107,8 +90,7 @@ function _syncLeaderboardDebounced() {
 
 async function setLeaderboardVisibility(visible) {
   try {
-    const authSvc = getAuthSvc();
-    const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.());
+    const user = window.FluxAuth?.user?.();
     localStorage.setItem('flux_leaderboard_visible', visible ? 'true' : 'false');
     if (!user || !user.uid) return;
     const ref = doc(db, 'leaderboard', user.uid);
@@ -162,40 +144,26 @@ function _sortAndFilterUsers(users, metric, range) {
   return filtered;
 }
 
-async function _fetchLeaderboardFallback(metric, range) {
-  if (!db) return [];
-  try {
-    const snapAll = await getDocs(query(collection(db, 'leaderboard'), where('showOnLeaderboard', '==', true), limit(1000)));
-    return _sortAndFilterUsers(snapAll.docs.map((d) => ({ id: d.id, ...d.data() })), metric, range).slice(0, 50);
-  } catch (err) {
-    console.warn('leaderboard fallback fetch failed', err);
-    return [];
-  }
-}
-
 function subscribeLeaderboard(metric, range, callback) {
   // allow calling with (metric, callback)
   if (typeof range === 'function') { callback = range; range = 'week'; }
   if (!metric || typeof callback !== 'function') return () => {};
   
   // Check if user is guest (no Firebase auth)
-  const authSvc = getAuthSvc();
-  const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.() || window.FluxAuthState?.user);
-  const isGuest = (authSvc && typeof authSvc.isGuest === 'function') ? authSvc.isGuest() : (!user || user.isGuest);
+  const user = window.FluxAuth?.user?.() || window.FluxAuthState?.user;
+  const isGuest = !user || user.isGuest;
   
-  // Guest mode: do not show fake/demo users
+  // Guest mode: show demo data
   if (isGuest || !db) {
-    setTimeout(() => callback([], true), 100);
+    const demoUsers = [
+      { id: 'user1', displayName: 'Alex Chen', focusMinutesTotal: 1240, sessionsTotal: 52, tasksDoneTotal: 128, photoURL: null },
+      { id: 'user2', displayName: 'Jordan Lee', focusMinutesTotal: 1120, sessionsTotal: 48, tasksDoneTotal: 115, photoURL: null },
+      { id: 'user3', displayName: 'Sam Taylor', focusMinutesTotal: 980, sessionsTotal: 42, tasksDoneTotal: 98, photoURL: null },
+      { id: 'user4', displayName: 'Casey Rivers', focusMinutesTotal: 850, sessionsTotal: 38, tasksDoneTotal: 87, photoURL: null },
+      { id: 'user5', displayName: 'Morgan Stone', focusMinutesTotal: 720, sessionsTotal: 35, tasksDoneTotal: 72, photoURL: null },
+    ];
+    setTimeout(() => callback(demoUsers, true), 100);
     return () => {};
-  }
-
-  // If a range is active, use a broader fetch path first so we don't miss users
-  // who are in-range but not in the top metric slice returned by Firestore.
-  if (range && range !== 'all') {
-    const fallbackUsersPromise = _fetchLeaderboardFallback(metric, range);
-    fallbackUsersPromise.then((users) => {
-      if (Array.isArray(users) && users.length) callback(users, true);
-    });
   }
   
   const col = collection(db, 'leaderboard');
@@ -219,17 +187,10 @@ function subscribeLeaderboard(metric, range, callback) {
   }, (err) => {
     const code = err?.code || '';
     const isIndexIssue = code === 'failed-precondition' || code === 'invalid-argument';
-    const isPermissionIssue = code === 'permission-denied';
     console.warn('leaderboard subscription error', err);
     if (isIndexIssue) {
       try { window.Flux?.showToast?.('Leaderboard running in compatibility mode while indexes sync.'); } catch (e) {}
-      _fetchLeaderboardFallback(metric, range).then((users) => {
-        callback(users, true);
-      });
       startFallback();
-    } else if (isPermissionIssue) {
-      try { window.Flux?.showToast?.('Leaderboard is unavailable for this account right now.'); } catch (e) {}
-      _fetchLeaderboardFallback(metric, range).then((users) => callback(users, true));
     }
   });
 
@@ -241,17 +202,12 @@ function subscribeLeaderboard(metric, range, callback) {
 
 window.Leaderboard = window.Leaderboard || {};
 window.Leaderboard.syncLeaderboard = syncLeaderboard;
-// Expose an immediate sync method for callers that need near-instant updates.
-window.Leaderboard.syncLeaderboardImmediate = function () {
-  try { return _syncLeaderboardImmediate(); } catch (e) { return Promise.resolve(); }
-};
 window.Leaderboard.setLeaderboardVisibility = setLeaderboardVisibility;
 window.Leaderboard.subscribeLeaderboard = subscribeLeaderboard;
 async function getUserEntryAndRank(metric = 'focusMinutesTotal', range = 'week') {
   if (!db) return { entry: null, rank: null };
   try {
-    const authSvc = getAuthSvc();
-    const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.());
+    const user = window.FluxAuth?.user?.();
     if (!user || !user.uid) return { entry: null, rank: null };
     const ref = doc(db, 'leaderboard', user.uid);
     const snap = await getDoc(ref);
@@ -282,9 +238,7 @@ async function getUserEntryAndRank(metric = 'focusMinutesTotal', range = 'week')
         const idx = ranked.findIndex((u) => u.id === entry.id);
         rank = idx >= 0 ? idx + 1 : null;
       } catch (fallbackErr) {
-        const users = await _fetchLeaderboardFallback(metric, range);
-        const idx = users.findIndex((u) => u.id === entry.id);
-        rank = idx >= 0 ? idx + 1 : null;
+        rank = null;
       }
     }
     return { entry, rank };

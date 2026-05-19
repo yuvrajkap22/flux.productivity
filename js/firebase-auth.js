@@ -1,4 +1,4 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
 import {
   getAuth,
   GoogleAuthProvider,
@@ -7,7 +7,7 @@ import {
   setPersistence,
   signInWithPopup,
   signOut,
-} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+} from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
 import { firebaseConfig, isFirebaseConfigured } from './firebase-config.js';
 
 const appShell = document.getElementById('app-shell');
@@ -192,6 +192,7 @@ if (authUtils.normalizeDevHost()) {
     if (user) {
       setAuthenticated(user);
       emitAuthReady(user);
+      if (typeof FluxProfile !== 'undefined') FluxProfile.init(user);
       try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
     } else if (!user && !authUtils.isLoginPage()) {
       // No user on app page: use guest user

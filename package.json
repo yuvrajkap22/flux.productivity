@@ -6,14 +6,17 @@
   "scripts": {
     "build": "npm run build:dist",
     "build:dist": "node scripts/build-dist.mjs",
-    "verify:dist": "node scripts/verify-dist.mjs",
-    "verify": "npm run build && npm run verify:dist",
-    "ci": "npm run verify",
     "release": "bash scripts/release.sh"
   },
   "devDependencies": {
     "clean-css": "^5.3.3",
     "html-minifier-terser": "^7.2.0",
-    "terser": "^5.47.1"
+    "terser": "^5.39.2"
+  },
+  "dependencies": {
+    "puppeteer": "^25.0.3",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "serve": "^14.2.6"
   }
 }
