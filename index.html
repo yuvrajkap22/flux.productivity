@@ -419,10 +419,13 @@
             <div class="pomo-time-display">
               <span class="pomo-time" id="pomo-time">25:00</span>
               <span class="pomo-mode-label" id="pomo-mode-label">FOCUS</span>
-              <div class="pomo-task-panel" id="pomo-task-panel">
-                <span class="pomo-task-kicker">Selected task</span>
-                <span class="pomo-task-label" id="pomo-task-label">No task selected</span>
-                <button class="pomo-task-action" id="pomo-task-action" type="button">Pick a task</button>
+              <div class="pomo-task-panel" id="pomo-task-panel" data-state="empty">
+                <div class="pomo-task-copy">
+                  <span class="pomo-task-kicker">Selected task</span>
+                  <span class="pomo-task-label" id="pomo-task-label">No task selected yet</span>
+                </div>
+                <span class="pomo-task-hint" id="pomo-task-hint">Open Tasks to choose a focus target.</span>
+                <button class="pomo-task-action" id="pomo-task-action" type="button">Choose task</button>
               </div>
             </div>
           </div>

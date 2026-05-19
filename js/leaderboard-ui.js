@@ -219,6 +219,11 @@
 
   function attach(container) {
     if (!container) return;
+    if (container.__fluxLeaderboardAttached) {
+      return;
+    }
+    container.__fluxLeaderboardAttached = true;
+
     container.addEventListener('click', (e) => {
       const metricBtn = e.target.closest('[data-leader-metric]');
       if (metricBtn) {
@@ -263,12 +268,15 @@
 
     // Listen for leaderboard state changes from FluxBus
     try {
-      window.FluxBus?.on('flux-leaderboard-change', (payload) => {
+      const unsubscribe = window.FluxBus?.on('flux-leaderboard-change', (payload) => {
         if (!payload) return;
         lbState.setUsers(payload.users || lbState.getUsers());
         const r = document.getElementById('leaderboard-root');
         if (r) render(r, lbState.getUsers() || []);
       });
+      if (typeof unsubscribe === 'function') {
+        container.__fluxLeaderboardUnsub = unsubscribe;
+      }
     } catch (e) { /* ignore */ }
   }
 

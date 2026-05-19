@@ -139,18 +139,27 @@ const FluxPomo = {
     this.activeTaskText = task?.text || '';
     const label = document.getElementById('pomo-task-label');
     const action = document.getElementById('pomo-task-action');
+    const hint = document.getElementById('pomo-task-hint');
     const panel = document.getElementById('pomo-task-panel');
     if (!label) return;
     if (this.activeTaskText) {
-      label.textContent = `Task: ${this.activeTaskText}`;
+      label.textContent = this.activeTaskText;
       label.title = this.activeTaskText;
       if (action) action.textContent = 'Change task';
-      if (panel) panel.classList.add('has-task');
+      if (hint) hint.textContent = 'This task is linked to Pomodoro and leaderboard tracking.';
+      if (panel) {
+        panel.classList.add('has-task');
+        panel.dataset.state = 'ready';
+      }
     } else {
-      label.textContent = 'No task selected';
+      label.textContent = 'No task selected yet';
       label.removeAttribute('title');
-      if (action) action.textContent = 'Pick a task';
-      if (panel) panel.classList.remove('has-task');
+      if (action) action.textContent = 'Choose task';
+      if (hint) hint.textContent = 'Open Tasks to choose a focus target.';
+      if (panel) {
+        panel.classList.remove('has-task');
+        panel.dataset.state = 'empty';
+      }
     }
   },
 

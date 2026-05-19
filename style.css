@@ -2096,19 +2096,30 @@ h1, h2, h3, .logo-text, .sidebar-stat-value, .pomo-time, .sidebar-stat-value,
 
 .quote-next-btn {
 .pomo-task-panel {
-  margin-top: 10px;
-  max-width: 200px;
-  width: min(200px, 100%);
-  padding: 10px 12px;
-  border-radius: 18px;
+  margin-top: 12px;
+  width: min(260px, 100%);
+  padding: 14px 16px;
+  border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.08);
-  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
-  backdrop-filter: blur(14px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
+    radial-gradient(circle at top, rgba(245, 166, 35, 0.08), transparent 64%);
+  backdrop-filter: blur(16px);
+  display: grid;
+  gap: 10px;
+  box-shadow: 0 16px 38px rgba(0,0,0,0.16);
+  text-align: left;
+  transition: border-color 0.25s var(--ease), transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.pomo-task-panel[data-state="ready"] {
+  border-color: var(--accent-border);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.18), 0 0 0 1px rgba(245, 166, 35, 0.06) inset;
+}
+
+.pomo-task-copy {
+  display: grid;
+  gap: 4px;
 }
 
 .pomo-task-kicker {
@@ -2119,28 +2130,44 @@ h1, h2, h3, .logo-text, .sidebar-stat-value, .pomo-time, .sidebar-stat-value,
 }
 
 .pomo-task-label {
-  max-width: 170px;
-  text-align: center;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text);
-  font-weight: 500;
-  white-space: nowrap;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.pomo-task-hint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim);
 }
 
 .pomo-task-action {
-  margin-top: 2px;
-  border: 0;
-  background: transparent;
-  color: var(--accent);
+  justify-self: start;
+  border: 1px solid var(--accent-border);
+  background: rgba(245, 166, 35, 0.08);
+  color: var(--accent-text);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  padding: 0;
-  cursor: none;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+  transition: transform 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease);
 }
-.pomo-task-action:hover { color: #fff; text-decoration: underline; }
+
+.pomo-task-action:hover {
+  transform: translateY(-1px);
+  color: #fff;
+  border-color: var(--accent);
+  background: rgba(245, 166, 35, 0.14);
+  text-decoration: none;
+}
 .glass-panel {
   border-radius: var(--radius);
   padding: 20px;
