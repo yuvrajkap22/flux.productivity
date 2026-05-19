@@ -270,9 +270,9 @@
     try {
       const unsubscribe = window.FluxBus?.on('flux-leaderboard-change', (payload) => {
         if (!payload) return;
-        lbState.setUsers(payload.users || lbState.getUsers());
+        const nextUsers = payload.users || lbState.getUsers() || [];
         const r = document.getElementById('leaderboard-root');
-        if (r) render(r, lbState.getUsers() || []);
+        if (r) render(r, nextUsers);
       });
       if (typeof unsubscribe === 'function') {
         container.__fluxLeaderboardUnsub = unsubscribe;
@@ -281,7 +281,9 @@
   }
 
   function render(container, users) {
-    lbState.setUsers(users);
+    if (lbState.getUsers() !== users) {
+      lbState.setUsers(users);
+    }
     container.replaceChildren();
     const currentUid = (typeof authSvc.getUser === 'function' ? (authSvc.getUser()?.uid || null) : (window.FluxAuth?.user?.()?.uid || null));
     const header = buildHeader();

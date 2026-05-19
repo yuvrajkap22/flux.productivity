@@ -175,8 +175,25 @@ const FluxStats = {
     if (this.refs?.statCurrentStreak) this.refs.statCurrentStreak.textContent = (stats.streak || 0) + ' 🔥';
     if (this.refs?.statLongestStreak) this.refs.statLongestStreak.textContent = stats.longestStreak || 0;
 
-    const done  = todos.filter(t => t.completed).length;
-    const total = todos.length;
+    let relevantTodos = todos;
+    if (this.period && this.period !== 'all') {
+      relevantTodos = todos.filter(t => {
+        const d = t.completed ? new Date(t.completedAt) : new Date(t.createdAt);
+        if (isNaN(d)) return true;
+        const ms = d.getTime();
+        const now = Date.now();
+        if (this.period === 'week') return now - ms <= 7 * 86400000;
+        if (this.period === '30') return now - ms <= 30 * 86400000;
+        if (this.period === 'month') {
+          const cur = new Date();
+          return cur.getFullYear() === d.getFullYear() && cur.getMonth() === d.getMonth();
+        }
+        return true;
+      });
+    }
+
+    const done  = relevantTodos.filter(t => t.completed).length;
+    const total = relevantTodos.length;
     if (this.refs?.statTasksDone) this.refs.statTasksDone.textContent = done;
     if (this.refs?.statCompletionRate) this.refs.statCompletionRate.textContent =
       total > 0 ? Math.round(done / total * 100) + '% completion' : '—';

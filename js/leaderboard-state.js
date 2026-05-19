@@ -40,7 +40,9 @@
       return state.users;
     },
     setUsers(users) {
-      state.users = Array.isArray(users) ? users : [];
+      const next = Array.isArray(users) ? users : [];
+      if (state.users === next || (state.users.length === 0 && next.length === 0)) return;
+      state.users = next;
       syncLegacyGlobals();
     },
     getUnsubscribe() {

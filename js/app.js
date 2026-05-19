@@ -5,26 +5,6 @@
 (function() {
   'use strict';
 
-  // Optional Vercel integrations — dynamically import when available.
-  // These imports target Next.js/Server environments; use dynamic import
-  // to avoid breaking the static/vanilla build if the packages aren't present.
-  let VercelSpeedInsights = null;
-  let VercelAnalytics = null;
-  (async function loadVercelIntegrations() {
-    try {
-      const mod = await import('@vercel/speed-insights/next');
-      VercelSpeedInsights = mod?.SpeedInsights || mod?.default || null;
-    } catch (e) {
-      // Not available in this runtime — ignore silently.
-    }
-    try {
-      const mod2 = await import('@vercel/analytics/next');
-      VercelAnalytics = mod2?.Analytics || mod2?.default || null;
-    } catch (e) {
-      // Not available — ignore.
-    }
-  })();
-
   const lbState = window.FluxLeaderboardState || {
     getMetric: () => window._fluxLeaderboardMetric || 'focusMinutesTotal',
     getRange: () => window._fluxLeaderboardRange || 'week',

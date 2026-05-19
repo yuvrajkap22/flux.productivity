@@ -332,23 +332,30 @@ const FluxTodo = {
     const todo = this.todos.find(t => t.id === id);
     if (!todo || todo.completed) return;
 
-    if (this.trackingId !== id) {
+    const pomo = window.FluxPomo || (typeof FluxPomo !== 'undefined' ? FluxPomo : null);
+    if (!pomo) return;
+
+    if (this.trackingId === id) {
+      if (pomo.running) {
+        pomo.pause();
+      } else {
+        if (pomo.mode !== 'focus') pomo.setMode('focus');
+        pomo.start();
+      }
+    } else {
       this.todos.forEach(t => { t.tracking = false; });
       todo.tracking = true;
       this.trackingId = id;
       this.save();
       this.render();
       this.emitTrackingChange();
-    }
 
-    const pomo = window.FluxPomo || (typeof FluxPomo !== 'undefined' ? FluxPomo : null);
-    if (!pomo) return;
-
-    if (pomo.mode !== 'focus') {
-      pomo.setMode('focus');
-    }
-    if (!pomo.running) {
-      pomo.start();
+      if (pomo.mode !== 'focus') {
+        pomo.setMode('focus');
+      }
+      if (!pomo.running) {
+        pomo.start();
+      }
     }
 
     FluxAudio.buttonClick();
@@ -381,10 +388,7 @@ const FluxTodo = {
 
     if (filtered.length === 0) {
       const empty = document.createElement('div');
-      empty.style.textAlign = 'center';
-      empty.style.padding = '40px 0';
-      empty.style.color = 'var(--text-dim)';
-      empty.style.fontSize = '14px';
+      empty.className = 'todo-empty-state';
       empty.textContent = this.filter === 'all' ? 'No tasks yet. Add one below!' : `No ${this.filter} tasks.`;
       container.replaceChildren(empty);
       return;
@@ -497,7 +501,7 @@ const FluxTodo = {
     const badge = document.querySelector(`[data-id="${this.trackingId}"] .todo-time-badge`);
     if (badge) badge.textContent = Flux.formatTrackedTime(todo.timeTracked);
     // Persist and update views more responsively: save frequently but avoid per-second writes
-    if (todo.timeTracked % 5 === 0) {
+    if (todo.timeTracked % 15 === 0) {
       this.save();
       this.refreshStatsViews();
       // Optimistically update the local leaderboard UI without forcing an immediate Firestore write

@@ -1,9 +1,9 @@
-import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { firebaseConfig } from './firebase-config.js';
 import {
   getFirestore, doc, setDoc, deleteDoc, serverTimestamp, getDoc, collection,
   query, where, orderBy, limit, onSnapshot, getCountFromServer, getDocs
-} from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 let app;
 try {
@@ -16,14 +16,19 @@ try {
 const db = app ? getFirestore(app) : null;
 
 // Safe service bridges (prefer new services, fall back to legacy globals)
-const authSvc = window.FluxAuthService || {
-  getUser: () => (window.FluxAuth?.user?.() || window.FluxAuthState?.user || null),
-  isGuest: () => { const u = (window.FluxAuth?.user?.() || window.FluxAuthState?.user); return !u || Boolean(u.isGuest); },
-};
-const profileSvc = window.FluxProfileService || {
-  getProfile: () => (window.FluxProfile?.data || {}),
-  getActiveUser: () => (window.FluxProfile?.activeUser || window.FluxAuthState?.user || window.FluxAuth?.user?.() || null),
-};
+function getAuthSvc() {
+  return window.FluxAuthService || {
+    getUser: () => (window.FluxAuth?.user?.() || window.FluxAuthState?.user || null),
+    isGuest: () => { const u = (window.FluxAuth?.user?.() || window.FluxAuthState?.user); return !u || Boolean(u.isGuest); },
+  };
+}
+
+function getProfileSvc() {
+  return window.FluxProfileService || {
+    getProfile: () => (window.FluxProfile?.data || {}),
+    getActiveUser: () => (window.FluxProfile?.activeUser || window.FluxAuthState?.user || window.FluxAuth?.user?.() || null),
+  };
+}
 
 function _getVisibilitySetting() {
   try {
@@ -41,6 +46,8 @@ async function syncLeaderboard() {
 async function _syncLeaderboardImmediate() {
   if (!db) return;
   try {
+    const authSvc = getAuthSvc();
+    const profileSvc = getProfileSvc();
     const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.() || window.FluxAuthState?.user);
     if (!user || !user.uid || (authSvc && typeof authSvc.isGuest === 'function' ? authSvc.isGuest() : user.isGuest)) return;
     if (!_getVisibilitySetting()) return;
@@ -56,8 +63,8 @@ async function _syncLeaderboardImmediate() {
     const currentStreak = stats.streak || 0;
 
     const profile = (profileSvc && typeof profileSvc.getProfile === 'function') ? profileSvc.getProfile() : (window.FluxProfile?.data || {});
-    const displayName = user.displayName || profile?.displayName || 'Flux User';
-    const username = profile?.username || '';
+    const displayName = user.displayName || profile?.displayName || profile?.username || (user.email ? String(user.email).split('@')[0] : '') || 'Flux User';
+    const username = profile?.username || (user.email ? String(user.email).split('@')[0] : '');
     const photoURL = user.photoURL || profile?.photoURL || null;
 
     const payload = {
@@ -100,6 +107,7 @@ function _syncLeaderboardDebounced() {
 
 async function setLeaderboardVisibility(visible) {
   try {
+    const authSvc = getAuthSvc();
     const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.());
     localStorage.setItem('flux_leaderboard_visible', visible ? 'true' : 'false');
     if (!user || !user.uid) return;
@@ -171,6 +179,7 @@ function subscribeLeaderboard(metric, range, callback) {
   if (!metric || typeof callback !== 'function') return () => {};
   
   // Check if user is guest (no Firebase auth)
+  const authSvc = getAuthSvc();
   const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.() || window.FluxAuthState?.user);
   const isGuest = (authSvc && typeof authSvc.isGuest === 'function') ? authSvc.isGuest() : (!user || user.isGuest);
   
@@ -241,6 +250,7 @@ window.Leaderboard.subscribeLeaderboard = subscribeLeaderboard;
 async function getUserEntryAndRank(metric = 'focusMinutesTotal', range = 'week') {
   if (!db) return { entry: null, rank: null };
   try {
+    const authSvc = getAuthSvc();
     const user = (authSvc && typeof authSvc.getUser === 'function') ? authSvc.getUser() : (window.FluxAuth?.user?.());
     if (!user || !user.uid) return { entry: null, rank: null };
     const ref = doc(db, 'leaderboard', user.uid);
