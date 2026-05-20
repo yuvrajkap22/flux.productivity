@@ -21,7 +21,7 @@ const FluxProfile = {
     this.storageKey = this.getStorageKey(user);
 
     if (!user) {
-      this.data.displayName = 'Guest';
+      this.data.displayName = '';
       this.data.username = '';
       this.data.bio = '';
       this.data.goalHours = 4;
@@ -130,6 +130,16 @@ const FluxProfile = {
     const signOutBtn = document.getElementById('profile-menu-signout');
 
     if (!btn || !img) return;
+    if (!user) {
+      btn.classList.add('hidden');
+      if (signOutBtn) signOutBtn.classList.add('hidden');
+      img.src = '';
+      img.alt = 'Profile';
+      img.style.display = 'none';
+      if (initials) initials.style.display = 'block';
+      return;
+    }
+
     btn.classList.remove('hidden');
     if (signOutBtn) signOutBtn.classList.toggle('hidden', !this.activeUser);
 
@@ -251,7 +261,11 @@ const FluxProfile = {
 
     document.getElementById('profile-menu-signout')?.addEventListener('click', () => {
       this.closeMenu();
-      window.FluxAuth?.signOut();
+      Promise.resolve(window.FluxAuth?.signOut?.()).finally(() => {
+        if (!location.pathname.endsWith('login.html')) {
+          location.replace('login.html');
+        }
+      });
       FluxAudio.buttonClick();
     });
 
@@ -352,7 +366,11 @@ const FluxProfile = {
 
     // Sign out from modal
     document.getElementById('profile-signout-btn')?.addEventListener('click', () => {
-      window.FluxAuth?.signOut();
+      Promise.resolve(window.FluxAuth?.signOut?.()).finally(() => {
+        if (!location.pathname.endsWith('login.html')) {
+          location.replace('login.html');
+        }
+      });
       this.closeModal();
     });
 
