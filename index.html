@@ -487,16 +487,41 @@
       <div class="bento-grid">
         <!-- Todo Panel -->
         <div class="bento-card todo-panel glass-panel" id="todo-panel">
-          <div class="todo-panel-header">
-            <div class="todo-panel-copy">
+          <style>
+            .todo-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+            .todo-header-left{display:flex;flex-direction:column;min-width:180px}
+            .todo-greeting{font-size:18px;font-weight:700;margin:0;color:var(--text-primary)}
+            .todo-day{font-size:13px;color:var(--text-dim);margin-top:4px}
+            .todo-header-right{display:flex;align-items:center;gap:10px}
+            .todo-actions .todo-ghost-btn{margin-left:6px}
+            .todo-filters{display:flex;gap:8px}
+            .filter-btn{padding:6px 10px;border-radius:8px;font-size:13px}
+            .todo-ghost-btn{padding:8px 10px;border-radius:8px}
+            @media (max-width:720px){
+              .todo-header{align-items:flex-start}
+              .todo-header-right{width:100%;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+              .todo-filters{order:2;flex:1;justify-content:flex-start;overflow:auto}
+              .todo-actions{order:3}
+            }
+          </style>
+          <div class="todo-panel-header todo-header">
+            <div class="todo-header-left">
               <span class="todo-panel-kicker">Today</span>
-              <h2>Today's Tasks</h2>
+              <div id="todo-greeting" class="todo-greeting">Good morning, Flux User</div>
+              <div id="todo-day" class="todo-day">Loading date…</div>
               <p class="todo-panel-subtitle">Keep the day focused. Track one active task, sort by priority, and clear the noise without leaving the page.</p>
             </div>
-            <div class="todo-panel-actions">
-              <button class="todo-ghost-btn" id="todo-focus-input-btn" type="button">New task</button>
-              <button class="todo-ghost-btn" id="todo-focus-active-btn" type="button">Focus active</button>
-              <button class="todo-ghost-btn todo-ghost-danger" id="todo-clear-completed-btn" type="button">Clear done</button>
+            <div class="todo-panel-actions todo-header-right">
+              <div class="todo-filters" id="todo-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="completed">Done</button>
+              </div>
+              <div class="todo-actions">
+                <button class="todo-ghost-btn" id="todo-focus-input-btn" type="button">New task</button>
+                <button class="todo-ghost-btn" id="todo-focus-active-btn" type="button">Focus active</button>
+                <button class="todo-ghost-btn todo-ghost-danger" id="todo-clear-completed-btn" type="button">Clear done</button>
+              </div>
             </div>
           </div>
           <div class="todo-panel-stats" aria-label="Task summary">
@@ -1033,5 +1058,21 @@
   <script src="js/stats.js?v=2.0.2"></script>
   <script src="js/challenges.js?v=2.0.2"></script>
   <script src="js/app.js?v=2.0.2"></script>
+  <script>
+    (function(){
+      function capitalise(s){return String(s||'').split(' ')[0]?.replace(/(^|\s)\S/g,m=>m.toUpperCase())||'User'}
+      function getName(){
+        const p=window.FluxProfile||null;const profile=p?.data||{};const user=p?.activeUser||window.FluxAuthState?.user||null;
+        return capitalise(profile.displayName||user?.displayName||user?.email||'Flux User');
+      }
+      function dayLabel(){const h=new Date().getHours();if(h<12)return 'Good morning';if(h<17)return 'Good afternoon';return 'Good evening'}
+      function formatDay(){const d=new Date();return d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});}
+      function setHeader(){const g=document.getElementById('todo-greeting'),D=document.getElementById('todo-day');if(g)g.textContent=`${dayLabel()}, ${getName()}`;if(D)D.textContent=formatDay();}
+      document.addEventListener('DOMContentLoaded',setHeader);
+      window.addEventListener('flux-profile-change',setHeader);
+      window.addEventListener('flux-auth-ready',setHeader);
+      setInterval(()=>{const D=document.getElementById('todo-day');if(D&&D.textContent!==formatDay())setHeader();},30*60*1000);
+    })();
+  </script>
 </body>
 </html>

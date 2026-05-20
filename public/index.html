@@ -27,6 +27,7 @@
   <link rel="shortcut icon" href="assets/flux-favicon.svg?v=2.0.0+8fe7edc" />
   <link rel="mask-icon" href="assets/flux-mask-icon.svg?v=2.0.0+8fe7edc" color="#f59e0b" />
   <link rel="stylesheet" href="/performance-lite.css" />
+  <link rel="stylesheet" href="/share-stats.css" />
   <style>
     body.flux-loading {
       margin: 0;
@@ -121,6 +122,32 @@
       100% { transform: translateX(360%); }
     }
   </style>
+  <style>
+    /* Leaderboard presence visuals + podium glow/float for top-3 */
+    .leader-podium .medal{font-size:20px}
+    .leader-podium .podium-slot{transition:transform .28s ease,box-shadow .28s ease}
+    .leader-podium .podium-slot .avatar{border-radius:50%;overflow:hidden}
+
+    /* Float animation */
+    @keyframes podiumFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes podiumGlowGold{0%,100%{box-shadow:0 8px 20px rgba(255,184,56,0.18)}50%{box-shadow:0 24px 48px rgba(255,184,56,0.28)}}
+    @keyframes podiumGlowSilver{0%,100%{box-shadow:0 8px 18px rgba(192,192,192,0.14)}50%{box-shadow:0 20px 40px rgba(192,192,192,0.22)}}
+    @keyframes podiumGlowBronze{0%,100%{box-shadow:0 8px 16px rgba(205,127,50,0.12)}50%{box-shadow:0 18px 36px rgba(205,127,50,0.18)}}
+
+    .leader-podium .podium-slot.rank-1{transform:scale(1.02);animation:podiumFloat 4s ease-in-out infinite}
+    .leader-podium .podium-slot.rank-1 .avatar{animation:podiumGlowGold 2.6s ease-in-out infinite}
+
+    .leader-podium .podium-slot.rank-2{transform:scale(.98);animation:podiumFloat 4.2s ease-in-out infinite}
+    .leader-podium .podium-slot.rank-2 .avatar{animation:podiumGlowSilver 2.6s ease-in-out infinite}
+
+    .leader-podium .podium-slot.rank-3{transform:scale(.96);animation:podiumFloat 4.4s ease-in-out infinite}
+    .leader-podium .podium-slot.rank-3 .avatar{animation:podiumGlowBronze 2.6s ease-in-out infinite}
+
+    .presence{display:inline-flex;align-items:center;gap:8px;color:var(--text-dim);margin-top:6px}
+    .presence span{display:inline-block;width:8px;height:8px;border-radius:50%}
+    .presence-inline{color:var(--text-dim);font-size:12px;margin-left:6px}
+  </style>
+  
   <style>
     [data-theme="light"] .top-nav {
       background: linear-gradient(180deg, rgba(255, 253, 248, 0.94), rgba(247, 240, 229, 0.9));
@@ -455,12 +482,39 @@
       <div class="bento-grid">
         <!-- Todo Panel -->
         <div class="bento-card todo-panel glass-panel" id="todo-panel">
-          <div class="panel-header">
-            <h2>Today's Tasks</h2>
-            <div class="todo-filters" id="todo-filters">
-              <button class="filter-btn active" data-filter="all">All</button>
-              <button class="filter-btn" data-filter="active">Active</button>
-              <button class="filter-btn" data-filter="completed">Done</button>
+          <style>
+            .todo-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+            .todo-header-left{display:flex;flex-direction:column;min-width:180px}
+            .todo-greeting{font-size:16px;font-weight:700;margin:0;color:var(--text-primary)}
+            .todo-day{font-size:13px;color:var(--text-dim);margin-top:4px}
+            .todo-header-right{display:flex;align-items:center;gap:10px}
+            .todo-actions .todo-ghost-btn{margin-left:6px}
+            .todo-filters{display:flex;gap:8px}
+            .filter-btn{padding:6px 10px;border-radius:8px;font-size:13px}
+            .todo-ghost-btn{padding:8px 10px;border-radius:8px}
+            @media (max-width:720px){
+              .todo-header{align-items:flex-start}
+              .todo-header-right{width:100%;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+              .todo-filters{order:2;flex:1;justify-content:flex-start;overflow:auto}
+              .todo-actions{order:3}
+            }
+          </style>
+          <div class="panel-header todo-header">
+            <div class="todo-header-left">
+              <div id="todo-greeting" class="todo-greeting">Good morning, Flux User</div>
+              <div id="todo-day" class="todo-day">Loading date…</div>
+            </div>
+            <div class="todo-header-right">
+              <div class="todo-filters" id="todo-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="completed">Done</button>
+              </div>
+              <div class="todo-actions">
+                <button class="todo-ghost-btn" id="todo-focus-input-btn" type="button">New task</button>
+                <button class="todo-ghost-btn" id="todo-focus-active-btn" type="button">Focus active</button>
+                <button class="todo-ghost-btn todo-ghost-danger" id="todo-clear-completed-btn" type="button">Clear done</button>
+              </div>
             </div>
           </div>
           <div class="todo-list" id="todo-list"></div>
@@ -582,6 +636,7 @@
         <button class="period-btn" data-period="30">30 Days</button>
         <button class="period-btn" data-period="month">This Month</button>
         <button class="period-btn" data-period="all">All Time</button>
+        <button id="share-stats-btn" class="header-btn" style="margin-left:auto">Share</button>
       </div>
       <div class="stats-grid">
         <!-- Overview Cards -->
@@ -969,7 +1024,25 @@
   <script src="js/leaderboard-ui.js?v=2.0.0+8fe7edc"></script>
   <script src="js/profile.js?v=2.0.0+8fe7edc"></script>
   <script src="js/stats.js?v=2.0.0+8fe7edc"></script>
+  <script src="js/share-stats.js?v=2.0.0+8fe7edc"></script>
   <script src="js/challenges.js?v=2.0.0+8fe7edc"></script>
   <script src="js/app.js?v=2.0.0+8fe7edc"></script>
+  <script>
+    (function(){
+      function capitalise(s){return String(s||'').split(' ')[0]?.replace(/(^|\s)\S/g,m=>m.toUpperCase())||'User'}
+      function getName(){
+        const p=window.FluxProfile||null;const profile=p?.data||{};const user=p?.activeUser||window.FluxAuthState?.user||null;
+        return capitalise(profile.displayName||user?.displayName||user?.email||'Flux User');
+      }
+      function dayLabel(){const h=new Date().getHours();if(h<12)return 'Good morning';if(h<17)return 'Good afternoon';return 'Good evening'}
+      function formatDay(){const d=new Date();return d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});}
+      function setHeader(){const g=document.getElementById('todo-greeting'),D=document.getElementById('todo-day');if(g)g.textContent=`${dayLabel()}, ${getName()}`;if(D)D.textContent=formatDay();}
+      document.addEventListener('DOMContentLoaded',setHeader);
+      window.addEventListener('flux-profile-change',setHeader);
+      window.addEventListener('flux-auth-ready',setHeader);
+      // Update day at hour boundaries
+      setInterval(()=>{const D=document.getElementById('todo-day');if(D&&D.textContent!==formatDay())setHeader();},30*60*1000);
+    })();
+  </script>
 </body>
 </html>

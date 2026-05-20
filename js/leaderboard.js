@@ -59,6 +59,8 @@ async function _syncLeaderboardImmediate() {
       currentStreak,
       tasksDoneTotal,
       showOnLeaderboard: true,
+      // presence: treat Pomodoro running as "live" for leaderboard UI
+      isLive: Boolean(window.FluxPomo?.running),
       lastUpdated: serverTimestamp(),
     };
 
