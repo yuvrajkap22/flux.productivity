@@ -100,8 +100,7 @@ function setAuthenticated(user) {
   window.FluxApp?.onAuthChange?.(user);
 
   if (user) {
-    if (user.isGuest) setMessage('Running in local guest mode.', 'success');
-    else setMessage('Signed in successfully.', 'success');
+    setMessage('Signed in successfully.', 'success');
   } else {
     setMessage('Continue with Google to enter Flux.');
   }
@@ -136,25 +135,19 @@ if (authUtils.normalizeDevHost()) {
   window.FluxAuthState = { ready: false, user: null };
   emitAuthReady(null);
 } else if (!isFirebaseConfigured(firebaseConfig) || location.protocol === 'file:') {
-  const guestUser = createGuestUser();
-  if (!isFirebaseConfigured(firebaseConfig)) {
-    setMessage('Firebase not configured. Running in local guest mode.', 'success');
-  } else {
-    setMessage('File mode detected. Running in local guest mode.', 'success');
-  }
-  setAuthenticated(guestUser);
+  const setupMessage = !isFirebaseConfigured(firebaseConfig)
+    ? 'Firebase not configured. Add config in js/firebase-config.js to enable login.'
+    : 'File mode detected. Use localhost or a deployed URL for auth.';
+
+  setMessage(setupMessage, !isFirebaseConfigured(firebaseConfig) ? 'error' : 'success');
   window.FluxAuth = {
     ready: true,
-    user: () => guestUser,
-    signOut: async () => {
-      authState.user = null;
-      window.FluxAuthState = { ready: true, user: null };
-      emitAuthReady(null);
-      setAuthenticated(null);
-    },
+    user: () => null,
+    signOut: async () => {},
   };
-  window.FluxAuthState = { ready: true, user: guestUser };
-  emitAuthReady(guestUser);
+  window.FluxAuthState = { ready: true, user: null };
+  emitAuthReady(null);
+  setAuthenticated(null);
 } else {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
@@ -192,7 +185,9 @@ if (authUtils.normalizeDevHost()) {
       setAuthenticated(user);
       emitAuthReady(user);
       if (typeof FluxProfile !== 'undefined') FluxProfile.init(user);
-      try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
+      if (!user.isGuest) {
+        try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
+      }
     } else {
       setAuthenticated(null);
       emitAuthReady(null);

@@ -32,7 +32,7 @@ async function _syncLeaderboardImmediate() {
   if (!db) return;
   try {
     const user = window.FluxAuth?.user?.();
-    if (!user || !user.uid) return;
+    if (!user || !user.uid || user.isGuest) return;
     if (!_getVisibilitySetting()) return;
 
     const uid = user.uid;
@@ -92,7 +92,7 @@ async function setLeaderboardVisibility(visible) {
   try {
     const user = window.FluxAuth?.user?.();
     localStorage.setItem('flux_leaderboard_visible', visible ? 'true' : 'false');
-    if (!user || !user.uid) return;
+    if (!user || !user.uid || user.isGuest) return;
     const ref = doc(db, 'leaderboard', user.uid);
     if (!visible) {
       await deleteDoc(ref).catch(()=>{});
@@ -200,7 +200,7 @@ async function getUserEntryAndRank(metric = 'focusMinutesTotal', range = 'week')
   if (!db) return { entry: null, rank: null };
   try {
     const user = window.FluxAuth?.user?.();
-    if (!user || !user.uid) return { entry: null, rank: null };
+    if (!user || !user.uid || user.isGuest) return { entry: null, rank: null };
     const ref = doc(db, 'leaderboard', user.uid);
     const snap = await getDoc(ref);
     if (!snap.exists()) return { entry: null, rank: null };
