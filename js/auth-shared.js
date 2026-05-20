@@ -12,6 +12,37 @@
     return pathname.endsWith('login.html');
   }
 
+  function isPreviewMode() {
+    try {
+      const raw = localStorage.getItem('flux_preview_mode');
+      return raw === 'true' || raw === '1';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function setPreviewMode(enabled) {
+    try {
+      if (enabled) {
+        localStorage.setItem('flux_preview_mode', 'true');
+      } else {
+        localStorage.removeItem('flux_preview_mode');
+      }
+    } catch (error) {
+      // Ignore storage failures and continue with the in-memory state.
+    }
+
+    window.dispatchEvent(new CustomEvent('flux-preview-mode-change', {
+      detail: { enabled: Boolean(enabled) },
+    }));
+
+    return Boolean(enabled);
+  }
+
+  function clearPreviewMode() {
+    return setPreviewMode(false);
+  }
+
   function cleanLabel(label) {
     return String(label || '')
       .replace(/[<>]/g, '')
@@ -47,6 +78,9 @@
   window.FluxAuthUtils = Object.freeze({
     normalizeDevHost,
     isLoginPage,
+    isPreviewMode,
+    setPreviewMode,
+    clearPreviewMode,
     getInitials,
     fallbackAvatarDataUri,
     resolveAvatarSource,

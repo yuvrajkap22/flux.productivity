@@ -6,7 +6,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flux — Your Productivity Companion</title>
   <meta name="description"
-    content="Flux is a premium productivity companion featuring Pomodoro timer, task tracking, ambient sounds, and focus statistics." />
+    content="Flux is a focused productivity workspace for Pomodoro timers, task tracking, ambient sounds, and daily progress stats." />
+  <link rel="canonical" href="https://yuvrajkap22.github.io/flux.productivity/" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Flux — Your Productivity Companion" />
+  <meta property="og:description" content="Flux is a focused productivity workspace for Pomodoro timers, task tracking, ambient sounds, and daily progress stats." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://yuvrajkap22.github.io/flux.productivity/" />
+  <meta property="og:image" content="https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg" />
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Flux — Your Productivity Companion" />
+  <meta name="twitter:description" content="Flux is a focused productivity workspace for Pomodoro timers, task tracking, ambient sounds, and daily progress stats." />
+  <meta name="twitter:image" content="https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg" />
   <meta name="theme-color" content="#0a0905" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
@@ -14,6 +26,7 @@
   <link rel="icon" type="image/svg+xml" sizes="any" href="assets/flux-favicon.svg" />
   <link rel="shortcut icon" href="assets/flux-favicon.svg" />
   <link rel="mask-icon" href="assets/flux-mask-icon.svg" color="#f59e0b" />
+  <link rel="stylesheet" href="/performance-lite.css" />
   <style>
     body.flux-loading {
       margin: 0;
@@ -75,24 +88,32 @@
       letter-spacing: 0.01em;
     }
 
-    .flux-loader-bar {
+    .flux-loader-track {
       width: 100%;
-      height: 6px;
+      height: 10px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.08);
       overflow: hidden;
       position: relative;
     }
 
-    .flux-loader-bar::before {
-      content: '';
+    .flux-loader-progress {
       position: absolute;
-      inset: 0;
-      width: 40%;
+      inset: 0 auto 0 0;
+      width: 24%;
       border-radius: inherit;
       background: linear-gradient(90deg, #f59e0b, #ffcf70);
       box-shadow: 0 0 20px rgba(245, 166, 35, 0.45);
       animation: fluxLoaderSweep 1.2s ease-in-out infinite;
+    }
+
+    .flux-loader-track::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
+      transform: translateX(-120%);
+      animation: fluxLoaderShine 1.8s ease-in-out infinite;
     }
 
     .flux-loader-hint {
@@ -107,6 +128,72 @@
       0% { transform: translateX(-120%); }
       100% { transform: translateX(360%); }
     }
+
+    @keyframes fluxLoaderShine {
+      0% { transform: translateX(-120%); }
+      60% { transform: translateX(120%); }
+      100% { transform: translateX(120%); }
+    }
+  </style>
+  <style>
+    [data-theme="light"] .top-nav {
+      background: linear-gradient(180deg, rgba(255, 253, 248, 0.94), rgba(247, 240, 229, 0.9));
+      border-bottom-color: rgba(120, 92, 60, 0.12);
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.72), 0 10px 28px rgba(86, 63, 35, 0.08);
+    }
+
+    [data-theme="light"] .top-nav .nav-item {
+      color: var(--text-dim);
+    }
+
+    [data-theme="light"] .top-nav .nav-item:hover {
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    [data-theme="light"] .top-nav .nav-item.active {
+      background: linear-gradient(135deg, rgba(180, 106, 19, 0.12), rgba(255, 255, 255, 0.34));
+      border-color: var(--accent-border);
+    }
+
+    body.performance-lite .bloom-container {
+      display: none;
+    }
+
+    body.performance-lite .top-nav {
+      background: var(--bg-panel-solid);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      box-shadow: none;
+    }
+
+    body.performance-lite .top-nav-inner {
+      padding: 0;
+    }
+
+    body.performance-lite .top-nav .nav-item {
+      transition: none;
+    }
+    /* Aggressive performance-lite overrides */
+    body.performance-lite * {
+      transition: none !important;
+      animation: none !important;
+      will-change: auto !important;
+      filter: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    body.performance-lite .bloom-orb,
+    body.performance-lite .bloom-container,
+    body.performance-lite .noise-overlay,
+    body.performance-lite .orb-1,
+    body.performance-lite .orb-2,
+    body.performance-lite .orb-3,
+    body.performance-lite .orb-4 {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
   </style>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -115,6 +202,15 @@
       var pageLoaded = false;
       var authReady = false;
       var hidden = false;
+      var progress = document.querySelector('.flux-loader-progress');
+      var status = document.querySelector('.flux-loader-hint');
+      var loaderSteps = [
+        { pct: 18, msg: 'Booting workspace shell...' },
+        { pct: 36, msg: 'Loading toolbar and panels...' },
+        { pct: 58, msg: 'Syncing tasks and timer state...' },
+        { pct: 78, msg: 'Preparing focus controls...' },
+        { pct: 96, msg: 'Finalizing dashboard...' },
+      ];
 
       var hideLoader = function () {
         if (hidden) return;
@@ -131,6 +227,13 @@
           document.body.classList.remove('flux-loading');
         }, 460);
       };
+
+      loaderSteps.forEach(function (step, index) {
+        window.setTimeout(function () {
+          if (progress) progress.style.width = step.pct + '%';
+          if (status) status.textContent = step.msg;
+        }, 220 + (index * 420));
+      });
 
       var maybeHide = function () {
         if (!pageLoaded || !authReady) return;
@@ -163,14 +266,56 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css?v=2.0.2" />
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Flux",
+      "url": "https://yuvrajkap22.github.io/flux.productivity/",
+      "description": "Flux — Pomodoro timer, task tracking, ambient sounds, and focus statistics to help you stay productive.",
+      "image": "https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg",
+      "sameAs": ["https://flux-productivity-nine.vercel.app/"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Flux",
+      "url": "https://yuvrajkap22.github.io/flux.productivity/",
+      "logo": "https://yuvrajkap22.github.io/flux.productivity/assets/flux-logo.svg",
+      "image": "https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg",
+      "sameAs": ["https://flux-productivity-nine.vercel.app/"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Flux",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": "Web",
+      "url": "https://yuvrajkap22.github.io/flux.productivity/",
+      "description": "A productivity workspace for Pomodoro focus, task tracking, ambient sounds, and progress stats.",
+      "image": "https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+  </script>
 </head>
 
 <body>
+  <h1 style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Flux — Pomodoro productivity workspace</h1>
   <div id="flux-page-loader" role="status" aria-live="polite" aria-label="Loading Flux workspace">
     <div class="flux-loader-panel">
       <h1 class="flux-loader-brand">Flux</h1>
       <p class="flux-loader-copy">Setting up your productivity workspace...</p>
-      <div class="flux-loader-bar" aria-hidden="true"></div>
+      <div class="flux-loader-track" aria-hidden="true">
+        <div class="flux-loader-progress"></div>
+      </div>
       <div class="flux-loader-hint">Loading modules and syncing UI</div>
     </div>
   </div>
@@ -283,7 +428,7 @@
         </div>
       </div>
       <button class="profile-avatar-btn" id="profile-avatar-btn" aria-label="Open profile">
-        <img class="profile-avatar-img" id="profile-avatar-img" src="assets/flux-logo.svg" alt="" />
+        <img class="profile-avatar-img" id="profile-avatar-img" src="assets/flux-logo.svg" alt="Profile avatar" />
         <span class="profile-avatar-initials" id="profile-avatar-initials">?</span>
         <span class="profile-avatar-ring"></span>
       </button>
@@ -342,13 +487,43 @@
       <div class="bento-grid">
         <!-- Todo Panel -->
         <div class="bento-card todo-panel glass-panel" id="todo-panel">
-          <div class="panel-header">
-            <h2>Today's Tasks</h2>
+          <div class="todo-panel-header">
+            <div class="todo-panel-copy">
+              <span class="todo-panel-kicker">Today</span>
+              <h2>Today's Tasks</h2>
+              <p class="todo-panel-subtitle">Keep the day focused. Track one active task, sort by priority, and clear the noise without leaving the page.</p>
+            </div>
+            <div class="todo-panel-actions">
+              <button class="todo-ghost-btn" id="todo-focus-input-btn" type="button">New task</button>
+              <button class="todo-ghost-btn" id="todo-focus-active-btn" type="button">Focus active</button>
+              <button class="todo-ghost-btn todo-ghost-danger" id="todo-clear-completed-btn" type="button">Clear done</button>
+            </div>
+          </div>
+          <div class="todo-panel-stats" aria-label="Task summary">
+            <div class="todo-stat">
+              <span class="todo-stat-value" id="todo-total-count">0</span>
+              <span class="todo-stat-label">Tasks</span>
+            </div>
+            <div class="todo-stat">
+              <span class="todo-stat-value" id="todo-active-count">0</span>
+              <span class="todo-stat-label">Open</span>
+            </div>
+            <div class="todo-stat">
+              <span class="todo-stat-value" id="todo-tracked-time">0m</span>
+              <span class="todo-stat-label">Tracked</span>
+            </div>
+            <div class="todo-stat todo-stat-wide">
+              <span class="todo-stat-value todo-stat-inline" id="todo-active-label">No task selected</span>
+              <span class="todo-stat-label">Pomodoro target</span>
+            </div>
+          </div>
+          <div class="todo-panel-toolbar">
             <div class="todo-filters" id="todo-filters">
               <button class="filter-btn active" data-filter="all">All</button>
               <button class="filter-btn" data-filter="active">Active</button>
               <button class="filter-btn" data-filter="completed">Done</button>
             </div>
+            <button class="todo-ghost-btn" id="todo-priority-sort-btn" type="button">Sort priority</button>
           </div>
           <div class="todo-list" id="todo-list"></div>
           <div class="todo-add">
@@ -637,7 +812,7 @@
         <div class="settings-card glass-panel settings-card-wide settings-profile-card">
           <div class="settings-profile-meta">
             <div class="settings-profile-avatar-wrap">
-              <img id="settings-profile-avatar" class="settings-profile-avatar" src="assets/flux-logo.svg" alt="" />
+              <img id="settings-profile-avatar" class="settings-profile-avatar" src="assets/flux-logo.svg" alt="Profile avatar" />
             </div>
             <div class="settings-profile-copy">
               <div class="settings-card-head">
@@ -784,7 +959,7 @@
 
       <!-- Avatar -->
       <div class="profile-modal-avatar-wrap">
-        <img class="profile-modal-avatar-img" id="profile-modal-avatar-img" src="" alt="" />
+        <img class="profile-modal-avatar-img" id="profile-modal-avatar-img" src="" alt="Profile avatar" />
         <span class="profile-modal-avatar-initials" id="profile-modal-avatar-initials">?</span>
       </div>
       <input type="file" id="profile-photo-input" accept="image/*" class="hidden" />

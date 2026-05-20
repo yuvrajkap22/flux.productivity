@@ -3,8 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flux — Your Productivity Companion</title>
+  <title>Flux — Login</title>
   <meta name="description" content="Flux is a premium productivity companion for focused work, task tracking, and ambient sound." />
+  <link rel="canonical" href="https://yuvrajkap22.github.io/flux.productivity/login.html" />
+  <meta property="og:title" content="Flux — Login" />
+  <meta property="og:description" content="Sign in to Flux to access your Pomodoro timers, tasks, and focus stats." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://yuvrajkap22.github.io/flux.productivity/login.html" />
+  <meta property="og:image" content="https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Flux — Login" />
+  <meta name="twitter:description" content="Sign in to Flux to access your Pomodoro timers, tasks, and focus stats." />
   <meta name="theme-color" content="#0a0905" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
@@ -15,6 +24,37 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Flux",
+      "url": "https://yuvrajkap22.github.io/flux.productivity/",
+      "logo": "https://yuvrajkap22.github.io/flux.productivity/assets/flux-logo.svg",
+      "image": "https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg",
+      "sameAs": ["https://flux-productivity-nine.vercel.app/"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://yuvrajkap22.github.io/flux.productivity/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Login",
+          "item": "https://yuvrajkap22.github.io/flux.productivity/login.html"
+        }
+      ]
+    }
+  </script>
   <style>
     :root {
       --bg: #0a0800;
@@ -439,8 +479,39 @@
     .message.success { color: var(--green); }
 
     .card-footer { margin-top: 16px; font-size: 11px; color: var(--text-dim); text-align: center; }
+    .breadcrumb {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin: 0 0 18px; padding: 8px 12px;
+      border: 1px solid var(--border); border-radius: 999px;
+      background: rgba(255,255,255,0.03); color: var(--text-dim);
+      font-size: 12px; letter-spacing: 0.02em;
+    }
+    .breadcrumb a { color: var(--text); }
+    .faq-panel {
+      margin-top: 28px; padding: 22px;
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      background: rgba(255,255,255,0.03); backdrop-filter: blur(16px);
+    }
+    .faq-panel h2 { margin: 0 0 14px; font-family: 'Space Grotesk', 'Inter', sans-serif; font-size: 18px; }
+    .faq-list { display: grid; gap: 12px; }
+    .faq-item {
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.12);
+    }
+    .faq-item h3 { margin: 0 0 6px; font-size: 15px; line-height: 1.35; }
+    .faq-item p { margin: 0; color: var(--text-dim); font-size: 14px; line-height: 1.6; }
     .enter-flux-wrap { margin-top: 4px; display: none; }
     .enter-flux-wrap.is-visible { display: block; }
+    .enter-copy {
+      margin: 10px auto 0;
+      max-width: 280px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-dim);
+      text-align: center;
+    }
     .enter-btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       background: rgba(255,255,255,0.06); border-color: var(--border-hover); color: var(--text);
@@ -494,6 +565,7 @@
       .hero { display: none; }
       .page { padding: 18px; }
       .card { padding: 28px 20px; }
+      .faq-panel { margin-top: 18px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -547,14 +619,19 @@
 
   <main class="page" id="page">
     <div class="layout">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="https://yuvrajkap22.github.io/flux.productivity/">Home</a>
+        <span aria-hidden="true">/</span>
+        <span>Login</span>
+      </nav>
       <section class="hero" aria-label="Flux overview">
         <div class="brand-row">
           <img class="brand-mark" src="assets/flux-logo.svg" alt="Flux" width="32" height="32" />
           <div class="brand-wordmark">flux</div>
         </div>
-        <div class="hero-kicker">focus workspace</div>
+        <div class="hero-kicker">Pomodoro productivity workspace</div>
         <h1 class="hero-title">Focus. Track. Achieve.</h1>
-        <p class="hero-copy">Flux combines deep-work timers, task tracking, and ambient focus sounds into one beautifully minimal workspace.</p>
+        <p class="hero-copy">Sign in to Flux, the Pomodoro productivity app for deep work, task tracking, ambient focus sounds, and progress stats.</p>
         <div class="pill-row" aria-label="Product features">
           <span class="pill">⏱ Pomodoro</span>
           <span class="pill">✅ Task Tracker</span>
@@ -642,15 +719,31 @@
               </div>
 
               <div class="enter-flux-wrap" id="enter-wrap">
-                <a class="enter-btn" id="enter-flux-btn" href="index.html">Enter Flux →</a>
-              </div>
-              <div class="card-footer" style="margin-top: 6px;">
-                <a href="index.html" style="color: var(--gold-dim);">Back to the main app</a>
+                <button class="enter-btn" id="enter-flux-btn" type="button">Back to the main site</button>
+                <p class="enter-copy">Preview mode keeps Pomodoro and Tasks open. Sign in to unlock Stats, Challenges, and Leaderboard.</p>
               </div>
             </form>
           </div>
 
           <div class="card-footer">By continuing, you agree to Flux's terms.</div>
+        </div>
+      </section>
+
+      <section class="faq-panel" aria-labelledby="faq-heading">
+        <h2 id="faq-heading">Frequently asked questions</h2>
+        <div class="faq-list">
+          <article class="faq-item">
+            <h3>What is Flux?</h3>
+            <p>Flux is a productivity workspace with Pomodoro timers, task tracking, ambient focus sounds, and progress statistics.</p>
+          </article>
+          <article class="faq-item">
+            <h3>Do I need an account to use Flux?</h3>
+            <p>You can use preview mode for the core focus tools, then sign in to sync your data and unlock persistent stats.</p>
+          </article>
+          <article class="faq-item">
+            <h3>What does signing in unlock?</h3>
+            <p>Signing in unlocks stats, challenges, leaderboard features, and saved profile data across sessions.</p>
+          </article>
         </div>
       </section>
     </div>
@@ -833,7 +926,7 @@
         el.inputName.closest('.signup-only').querySelector('.field').classList.remove('is-valid', 'is-error');
       }
       clearMessage();
-      el.enterWrap.classList.remove('is-visible');
+      el.enterWrap.classList.add('is-visible');
     }
 
     function validateEmail(value) {
@@ -869,6 +962,8 @@
 
     function showSignedInState(user) {
       state.authed = true;
+      window.FluxAuthUtils?.clearPreviewMode?.();
+      el.enterBtn.textContent = 'Open Flux workspace →';
       clearMessage();
       setMessage(`Signed in as ${escapeHtml(user.email || 'your account')} ✓`, 'success');
       toast(`Signed in as ${escapeHtml(user.email || 'your account')} ✓`, 'success');
@@ -1247,7 +1342,15 @@
           if (!document.activeElement || !document.activeElement.matches('input')) document.body.classList.remove('cursor-input');
         });
       });
-      el.enterBtn.addEventListener('click', () => { state.entered = true; });
+      el.enterBtn.addEventListener('click', () => {
+        state.entered = true;
+        if (state.authed) {
+          window.FluxAuthUtils?.clearPreviewMode?.();
+        } else {
+          window.FluxAuthUtils?.setPreviewMode?.(true);
+        }
+        window.location.href = 'index.html';
+      });
       window.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
           document.body.classList.remove('cursor-click');

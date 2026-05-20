@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 The format follows Keep a Changelog principles and semantic versioning.
 
+## Unreleased
+
+- Guard particle RAF loop on low-performance devices (`body.performance-lite`).
+- Added `public/performance-lite.css` with overrides to disable heavy visuals.
+- Avoid creating `AudioContext` when `performance-lite` is active.
+
+
 ## [2.0.1] - 2026-04-27
 
 ### Fixed

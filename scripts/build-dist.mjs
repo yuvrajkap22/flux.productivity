@@ -2,7 +2,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdir, readFile, rm, writeFile, copyFile, readdir } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
-import { minify as minifyHtml } from 'html-minifier-terser';
 import CleanCSS from 'clean-css';
 import { minify as minifyJs } from 'terser';
 
@@ -55,7 +54,7 @@ function versionAssetUrls(source, buildVersion) {
       const cleanAssetPath = assetPath.replace(/\?v=[^"]*$/, '');
       return `${attr}="${cleanAssetPath}?v=${buildVersion}"`;
     })
-    .replace(/\.\/js\/firebase-config\.js(?:\?v=[^"]*)?/g, `./js/firebase-config.js?v=${buildVersion}`);
+    .replace(/\.\/js\/firebase-config\.js(?:\?v=[^'"]*)?/g, `./js/firebase-config.js?v=${buildVersion}`);
 }
 
 async function minifyHtmlFiles(buildVersion) {
@@ -64,18 +63,7 @@ async function minifyHtmlFiles(buildVersion) {
     const inputPath = path.join(dist, file);
     const source = await readFile(inputPath, 'utf8');
     const versionedSource = versionAssetUrls(source, buildVersion);
-    const minified = await minifyHtml(versionedSource, {
-      collapseWhitespace: true,
-      removeComments: true,
-      minifyCSS: true,
-      minifyJS: true,
-      keepClosingSlash: true,
-      removeRedundantAttributes: true,
-      removeScriptTypeAttributes: true,
-      removeStyleLinkTypeAttributes: true,
-      useShortDoctype: true,
-    });
-    await writeFile(inputPath, minified, 'utf8');
+    await writeFile(inputPath, versionedSource, 'utf8');
   }
 }
 

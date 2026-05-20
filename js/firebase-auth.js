@@ -69,17 +69,19 @@ function emitAuthReady(user) {
 
 function setAuthenticated(user) {
   const isLoginPage = authUtils.isLoginPage();
+  const previewMode = !user && Boolean(authUtils.isPreviewMode?.());
 
   authState.user = user;
-  body.classList.toggle('authenticated', Boolean(user));
+  body.classList.toggle('authenticated', Boolean(user || previewMode));
+  body.classList.toggle('preview-mode', previewMode);
 
-  if (!user && !isLoginPage) {
+  if (!user && !isLoginPage && !previewMode) {
     if (appShell) appShell.style.display = 'none';
     location.replace('login.html');
     return;
   }
 
-  if (appShell) appShell.style.display = user ? '' : 'none';
+  if (appShell) appShell.style.display = user || previewMode ? '' : 'none';
 
   if (profileAvatarBtn) profileAvatarBtn.classList.toggle('hidden', !user);
 
@@ -100,7 +102,10 @@ function setAuthenticated(user) {
   window.FluxApp?.onAuthChange?.(user);
 
   if (user) {
+    authUtils.clearPreviewMode?.();
     setMessage('Signed in successfully.', 'success');
+  } else if (previewMode) {
+    setMessage('Preview mode active. Sign in to unlock Stats, Challenges, and Leaderboard.', 'success');
   } else {
     setMessage('Continue with Google to enter Flux.');
   }
@@ -182,6 +187,7 @@ if (authUtils.normalizeDevHost()) {
     setBusy(false);
     
     if (user) {
+      authUtils.clearPreviewMode?.();
       setAuthenticated(user);
       emitAuthReady(user);
       if (typeof FluxProfile !== 'undefined') FluxProfile.init(user);

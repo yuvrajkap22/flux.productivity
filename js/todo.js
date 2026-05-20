@@ -6,6 +6,7 @@ const FluxTodo = {
   todos: [],
   filter: 'all',
   trackingId: null,
+  prioritySort: false,
 
   init() {
     this.todos = Flux.load('flux_todos', []);
@@ -35,6 +36,43 @@ const FluxTodo = {
       filters.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       this.filter = btn.dataset.filter;
+      this.render();
+    });
+
+    // Toolbar buttons in the new todo panel header
+    const focusInputBtn = document.getElementById('todo-focus-input-btn');
+    const focusActiveBtn = document.getElementById('todo-focus-active-btn');
+    const clearCompletedBtn = document.getElementById('todo-clear-completed-btn');
+    const prioritySortBtn = document.getElementById('todo-priority-sort-btn');
+
+    if (focusInputBtn) focusInputBtn.addEventListener('click', () => { input.focus(); });
+    if (focusActiveBtn) focusActiveBtn.addEventListener('click', () => {
+      const id = this.getActiveTaskId();
+      if (id) {
+        const el = document.querySelector(`[data-id="${id}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        this.startTimerForTask(id);
+      } else {
+        // no active task — focus input to create one
+        input.focus();
+      }
+    });
+    if (clearCompletedBtn) clearCompletedBtn.addEventListener('click', () => {
+      if (!confirm('Clear all completed tasks?')) return;
+      this.todos = this.todos.filter(t => !t.completed);
+      this.save();
+      this.render();
+    });
+    if (prioritySortBtn) prioritySortBtn.addEventListener('click', () => {
+      this.prioritySort = !this.prioritySort;
+      if (this.prioritySort) {
+        this.todos.sort((a, b) => (b.priority === a.priority) ? 0 : (b.priority ? 1 : -1));
+        prioritySortBtn.classList.add('active');
+      } else {
+        // no-op: keep current order
+        prioritySortBtn.classList.remove('active');
+      }
+      this.save();
       this.render();
     });
 
@@ -351,6 +389,7 @@ const FluxTodo = {
     container.replaceChildren(frag);
 
     // Drag/drop handled on container via delegated handlers
+    this.updateStats();
   },
 
   createTodoElement(todo) {
@@ -451,6 +490,7 @@ const FluxTodo = {
     const badge = document.querySelector(`[data-id="${this.trackingId}"] .todo-time-badge`);
     if (badge) badge.textContent = Flux.formatTrackedTime(todo.timeTracked);
     if (todo.timeTracked % 10 === 0) this.save();
+    this.updateStats();
   },
 
   catLabel(cat) {
@@ -461,9 +501,25 @@ const FluxTodo = {
   // setupDragDrop removed in favor of container-level handlers
 
   updateStats() {
-    // Update sidebar stats from live todo data
+    // Update todo panel + sidebar stats from live todo data
+    const total = this.todos.length;
+    const active = this.todos.filter(t => !t.completed).length;
     const totalTime = this.todos.reduce((sum, t) => sum + (t.timeTracked || 0), 0);
-    document.getElementById('sidebar-focus-time').textContent = Flux.formatTime(totalTime);
+
+    const elTotal = document.getElementById('todo-total-count');
+    const elActive = document.getElementById('todo-active-count');
+    const elTracked = document.getElementById('todo-tracked-time');
+    const elActiveLabel = document.getElementById('todo-active-label');
+    const elSidebarTime = document.getElementById('sidebar-focus-time');
+
+    if (elTotal) elTotal.textContent = total;
+    if (elActive) elActive.textContent = active;
+    if (elTracked) elTracked.textContent = Flux.formatTime(totalTime);
+    if (elActiveLabel) {
+      const activeTask = this.getActiveTask();
+      elActiveLabel.textContent = activeTask ? activeTask.text : 'No task selected';
+    }
+    if (elSidebarTime) elSidebarTime.textContent = Flux.formatTime(totalTime);
   },
 
   save() {

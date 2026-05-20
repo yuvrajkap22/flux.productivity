@@ -406,8 +406,69 @@
   sidebarCollapsed = Boolean(getCurrentSettings().sidebarCollapsed);
   updateSidebarState();
 
+  const previewRestrictedViews = new Set(['stats', 'challenges', 'leaderboard']);
+  const previewAllowedViews = new Set(['dashboard', 'tasks', 'pomodoro']);
+
+  function isPreviewMode() {
+    return Boolean(window.FluxAuthUtils?.isPreviewMode?.());
+  }
+
+  function isAuthenticatedUser() {
+    return Boolean(window.FluxAuthState?.user || window.FluxAuth?.user?.());
+  }
+
+  function ensurePreviewBanner(shouldShow) {
+    const mainContent = document.getElementById('main-content');
+    const quoteBar = document.getElementById('quote-bar');
+    let banner = document.getElementById('preview-banner');
+
+    if (!shouldShow) {
+      banner?.remove();
+      return;
+    }
+
+    if (banner || !mainContent) return;
+
+    banner = document.createElement('section');
+    banner.id = 'preview-banner';
+    banner.className = 'preview-banner glass-panel';
+    banner.innerHTML = `
+      <div class="preview-banner-copy">
+        <span class="preview-banner-kicker">Limited preview</span>
+        <h2>Pomodoro and Tasks are open.</h2>
+        <p>Sign in to unlock Stats, Challenges, and Leaderboard.</p>
+      </div>
+      <div class="preview-banner-actions">
+        <a class="preview-banner-btn" href="login.html">Sign in</a>
+      </div>
+    `;
+
+    if (quoteBar?.parentNode === mainContent) {
+      mainContent.insertBefore(banner, quoteBar);
+    } else {
+      mainContent.prepend(banner);
+    }
+  }
+
+  function syncPreviewAccessUI() {
+    const preview = !isAuthenticatedUser() && isPreviewMode();
+    document.body.classList.toggle('preview-mode', preview);
+    document.querySelectorAll('.nav-item[data-view]').forEach((item) => {
+      const locked = preview && previewRestrictedViews.has(item.dataset.view);
+      item.classList.toggle('hidden', locked);
+      item.setAttribute('aria-hidden', locked ? 'true' : 'false');
+    });
+    ensurePreviewBanner(preview);
+  }
+
   /* ─── Navigation ─── */
   function showView(view, options = {}) {
+      const preview = !isAuthenticatedUser() && isPreviewMode();
+      if (preview && previewRestrictedViews.has(view)) {
+        Flux.showToast('Sign in to unlock Stats, Challenges, and Leaderboard.');
+        view = 'dashboard';
+      }
+
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       const currentNav = document.querySelector(`.nav-item[data-view="${view}"]`);
       if (currentNav) currentNav.classList.add('active');
@@ -591,11 +652,15 @@
   function bootstrapModules(user) {
     if (window.__fluxModulesBootstrapped) {
       if (user && typeof FluxProfile !== 'undefined') FluxProfile.init(user);
+      syncPreviewAccessUI();
       return;
     }
 
     window.__fluxModulesBootstrapped = true;
-    FluxAudio.init();
+    // Avoid initializing audio on low-performance devices or when user requested reduced motion
+    if (!isLowPerformance) {
+      FluxAudio.init();
+    }
     FluxTodo.init();
     FluxPomo.init();
     FluxStats.init();
@@ -609,10 +674,13 @@
     if (!window.__fluxInitialViewApplied) {
       window.__fluxInitialViewApplied = true;
       const startView = getCurrentSettings().startView;
-      if (startView && settingsViewOptions.has(startView)) {
-        showView(startView, { playSound: false });
+      const nextView = !user && isPreviewMode() && !previewAllowedViews.has(startView) ? 'dashboard' : startView;
+      if (nextView && settingsViewOptions.has(nextView)) {
+        showView(nextView, { playSound: false });
       }
     }
+
+    syncPreviewAccessUI();
   }
 
   window.FluxApp = window.FluxApp || {};
@@ -620,19 +688,28 @@
   window.FluxApp.onAuthChange = (user) => {
     const appShell = document.getElementById('app-shell');
     const isLoginPage = location.pathname.endsWith('login.html');
+    const preview = !user && isPreviewMode();
 
     if (user) {
       document.body.classList.add('authenticated');
+      document.body.classList.remove('preview-mode');
       if (appShell) appShell.style.display = 'block';
       bootstrapModules(user);
+    } else if (preview) {
+      document.body.classList.add('authenticated', 'preview-mode');
+      if (appShell) appShell.style.display = 'block';
+      bootstrapModules(null);
     } else {
       document.body.classList.remove('authenticated');
+      document.body.classList.remove('preview-mode');
       if (appShell) appShell.style.display = 'none';
       if (!isLoginPage) {
         location.replace('login.html');
         return;
       }
     }
+
+    syncPreviewAccessUI();
   };
 
   const currentAuthUser = window.FluxAuthState?.user || window.FluxAuth?.user?.();
