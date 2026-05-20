@@ -658,6 +658,31 @@
 
   <div class="toast-stack" id="toast-stack" aria-live="polite" aria-relevant="additions"></div>
 
+  <script>
+    (function () {
+      function hideLoginLoader() {
+        var overlay = document.getElementById('loading-overlay');
+        if (!overlay) return;
+        overlay.classList.add('is-hidden');
+        window.setTimeout(function () {
+          if (overlay.parentNode) overlay.remove();
+          document.body.classList.add('ready');
+        }, 460);
+      }
+
+      function armFallback() {
+        window.setTimeout(hideLoginLoader, 3500);
+        window.setTimeout(hideLoginLoader, 9000);
+      }
+
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        armFallback();
+      } else {
+        window.addEventListener('DOMContentLoaded', armFallback, { once: true });
+      }
+    }());
+  </script>
+
   <script src="js/auth-shared.js?v=2.0.2"></script>
   <script type="module">
     import { firebaseConfig, isFirebaseConfigured } from './js/firebase-config.js?v=2.0.2';

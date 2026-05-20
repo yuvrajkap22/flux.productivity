@@ -153,16 +153,8 @@ function subscribeLeaderboard(metric, range, callback) {
   const user = window.FluxAuth?.user?.() || window.FluxAuthState?.user;
   const isGuest = !user || user.isGuest;
   
-  // Guest mode: show demo data
   if (isGuest || !db) {
-    const demoUsers = [
-      { id: 'user1', displayName: 'Alex Chen', focusMinutesTotal: 1240, sessionsTotal: 52, tasksDoneTotal: 128, photoURL: null },
-      { id: 'user2', displayName: 'Jordan Lee', focusMinutesTotal: 1120, sessionsTotal: 48, tasksDoneTotal: 115, photoURL: null },
-      { id: 'user3', displayName: 'Sam Taylor', focusMinutesTotal: 980, sessionsTotal: 42, tasksDoneTotal: 98, photoURL: null },
-      { id: 'user4', displayName: 'Casey Rivers', focusMinutesTotal: 850, sessionsTotal: 38, tasksDoneTotal: 87, photoURL: null },
-      { id: 'user5', displayName: 'Morgan Stone', focusMinutesTotal: 720, sessionsTotal: 35, tasksDoneTotal: 72, photoURL: null },
-    ];
-    setTimeout(() => callback(demoUsers, true), 100);
+    setTimeout(() => callback([], true), 100);
     return () => {};
   }
   
