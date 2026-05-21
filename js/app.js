@@ -120,7 +120,7 @@
   const settingsProfileNote = document.getElementById('settings-profile-note');
   const settingsResetBtn = document.getElementById('settings-reset-preferences');
 
-  const settingsViewOptions = new Set(['dashboard', 'tasks', 'pomodoro', 'stats', 'challenges', 'settings']);
+  const settingsViewOptions = new Set(['dashboard', 'tasks', 'pomodoro', 'stats', 'challenges', 'leaderboard', 'settings']);
 
   function getCurrentSettings() {
     return Flux.load('flux_settings', {});
@@ -146,6 +146,7 @@
       pomodoro: 'Pomodoro',
       stats: 'Stats',
       challenges: 'Challenges',
+      leaderboard: 'Leaderboard',
       settings: 'Settings',
     };
     return labels[view] || 'Dashboard';
