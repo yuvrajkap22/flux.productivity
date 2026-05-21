@@ -222,8 +222,8 @@
       z-index: 2;
       min-height: 100vh;
       display: grid;
-      align-items: center;
-      padding: 24px;
+      align-items: start;
+      padding: 40px 24px 56px;
       background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent 26%), var(--bg);
       opacity: 0;
       transform: translateY(8px);
@@ -236,7 +236,7 @@
       display: grid;
       gap: 24px;
       grid-template-columns: 1fr;
-      align-items: center;
+      align-items: start;
     }
     .hero, .card-shell { opacity: 0; transform: translateY(16px); }
     body.ready .hero { animation: riseIn 0.7s var(--ease-soft) forwards; }
@@ -557,8 +557,19 @@
 
     @media (min-width: 900px) {
       .layout { grid-template-columns: 1.1fr 0.9fr; gap: 40px; }
+      .breadcrumb,
+      .faq-panel {
+        grid-column: 1 / -1;
+      }
+      .hero {
+        grid-column: 1;
+      }
+      .card-shell {
+        grid-column: 2;
+        align-self: start;
+        justify-self: end;
+      }
       .hero { padding: 32px 16px 32px 12px; }
-      .card-shell { justify-self: end; }
     }
 
     @media (max-width: 899px) {
