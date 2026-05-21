@@ -122,6 +122,7 @@ const FluxPomo = {
     // clear leaderboard sync interval
     try { if (this._leaderboardSyncInterval) { clearInterval(this._leaderboardSyncInterval); this._leaderboardSyncInterval = null; } } catch (e) {}
     const t = document.getElementById('pomo-play'); t && t.classList.remove('playing');
+    try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) {}
   },
   stop() { this.pause(); this.remaining = this.duration; this.updateDisplay(); },
   reset() { this.stop(); FluxAudio.buttonClick(); },

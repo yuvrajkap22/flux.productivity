@@ -133,11 +133,29 @@ function _toMillis(value) {
   }
 }
 
-function _sortAndFilterUsers(users, metric, range) {
+function _isRenderableLeaderboardUser(user, currentUid = null) {
+  if (!user || typeof user !== 'object') return false;
+  if (currentUid && user.id === currentUid) return true;
+
+  const displayName = String(user.displayName || '').trim();
+  const username = String(user.username || '').trim();
+  const normalizedName = displayName.toLowerCase();
+  const placeholderNames = new Set(['', 'flux user', 'user', 'test user', 'demo user', 'sample user', 'anonymous']);
+  const totalActivity = ['focusMinutesTotal', 'sessionsTotal', 'tasksDoneTotal']
+    .reduce((sum, key) => sum + (Number(user?.[key]) || 0), 0);
+
+  if (placeholderNames.has(normalizedName)) return false;
+  if (/^(demo|test|sample)(\s|_|-)/i.test(displayName)) return false;
+  if (totalActivity <= 0 && !username && !user.photoURL) return false;
+
+  return true;
+}
+
+function _sortAndFilterUsers(users, metric, range, currentUid = null) {
   const start = _rangeStartTimestamp(range);
-  const filtered = start
+  const filtered = (start
     ? users.filter((u) => _toMillis(u.lastUpdated) >= start.getTime())
-    : users.slice();
+    : users.slice()).filter((u) => _isRenderableLeaderboardUser(u, currentUid));
   filtered.sort((a, b) => {
     const mv = (Number(b?.[metric]) || 0) - (Number(a?.[metric]) || 0);
     if (mv !== 0) return mv;
@@ -159,6 +177,8 @@ function subscribeLeaderboard(metric, range, callback) {
     setTimeout(() => callback([], true), 100);
     return () => {};
   }
+
+  const currentUid = user?.uid || null;
   
   const col = collection(db, 'leaderboard');
   const primaryQuery = query(col, where('showOnLeaderboard', '==', true), orderBy(metric, 'desc'), limit(200));
@@ -169,7 +189,7 @@ function subscribeLeaderboard(metric, range, callback) {
     const fallbackQuery = query(col, where('showOnLeaderboard', '==', true), limit(500));
     fallbackUnsub = onSnapshot(fallbackQuery, (snap) => {
       const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      callback(_sortAndFilterUsers(users, metric, range).slice(0, 50), snap.metadata.fromCache);
+      callback(_sortAndFilterUsers(users, metric, range, currentUid).slice(0, 50), snap.metadata.fromCache);
     }, (fallbackErr) => {
       console.warn('leaderboard fallback subscription error', fallbackErr);
     });
@@ -177,7 +197,7 @@ function subscribeLeaderboard(metric, range, callback) {
 
   const unsub = onSnapshot(primaryQuery, (snap) => {
     const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    callback(_sortAndFilterUsers(users, metric, range).slice(0, 50), snap.metadata.fromCache);
+    callback(_sortAndFilterUsers(users, metric, range, currentUid).slice(0, 50), snap.metadata.fromCache);
   }, (err) => {
     const code = err?.code || '';
     const isIndexIssue = code === 'failed-precondition' || code === 'invalid-argument';
@@ -228,7 +248,7 @@ async function getUserEntryAndRank(metric = 'focusMinutesTotal', range = 'week')
         const q = query(collection(db, 'leaderboard'), where('showOnLeaderboard', '==', true), limit(500));
         const snapAll = await getDocs(q);
         const users = snapAll.docs.map((d) => ({ id: d.id, ...d.data() }));
-        const ranked = _sortAndFilterUsers(users, metric, range);
+        const ranked = _sortAndFilterUsers(users, metric, range, user.uid);
         const idx = ranked.findIndex((u) => u.id === entry.id);
         rank = idx >= 0 ? idx + 1 : null;
       } catch (fallbackErr) {

@@ -214,6 +214,7 @@ const FluxPomo = {
     this.running = false;
     clearInterval(this.interval);
     const playBtn = document.getElementById('pomo-play'); if (playBtn) playBtn.classList.remove('playing');
+    try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
   },
 
   stop() {
