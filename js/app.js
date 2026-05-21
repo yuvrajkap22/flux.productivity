@@ -491,11 +491,15 @@
         document.getElementById('view-challenges').classList.add('active');
         FluxChallenges.render();
       } else if (view === 'leaderboard') {
-        document.getElementById('view-leaderboard').classList.add('active');
+        const leaderboardView = document.getElementById('view-leaderboard');
+        leaderboardView?.classList.add('active');
         const root = document.getElementById('leaderboard-root');
         if (root && window.LeaderboardUI) {
           window.LeaderboardUI.attach(root);
         }
+        requestAnimationFrame(() => {
+          leaderboardView?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
         try {
           if (window._fluxLeaderboardUnsub) {
             window._fluxLeaderboardUnsub();

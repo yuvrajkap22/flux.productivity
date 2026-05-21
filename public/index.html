@@ -1594,5 +1594,20 @@
       setInterval(()=>{const D=document.getElementById('todo-day');if(D&&D.textContent!==formatDay())setHeader();},30*60*1000);
     })();
   </script>
+  <script>
+    (function(){
+      function scrollLeaderboardIntoView(){
+        const view=document.getElementById('view-leaderboard');
+        if(!view||!view.classList.contains('active')) return;
+        requestAnimationFrame(()=>{ view.scrollIntoView({behavior:'smooth',block:'start'}); });
+      }
+      document.addEventListener('click',(event)=>{
+        if(event.target.closest('#nav-leaderboard')) setTimeout(scrollLeaderboardIntoView,0);
+      },true);
+      window.addEventListener('flux-leaderboard-range-change',scrollLeaderboardIntoView);
+      window.addEventListener('flux-leaderboard-metric-change',scrollLeaderboardIntoView);
+      document.addEventListener('DOMContentLoaded',scrollLeaderboardIntoView);
+    })();
+  </script>
 </body>
 </html>
