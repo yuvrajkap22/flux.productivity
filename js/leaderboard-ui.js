@@ -218,6 +218,8 @@
 
   function attach(container) {
     if (!container) return;
+    if (container.dataset.leaderboardBound === 'true') return;
+    container.dataset.leaderboardBound = 'true';
     container.addEventListener('click', (e) => {
       const metricBtn = e.target.closest('[data-leader-metric]');
       if (metricBtn) {

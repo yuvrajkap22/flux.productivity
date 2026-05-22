@@ -117,7 +117,7 @@ async function setLeaderboardVisibility(visible) {
     if (!visible) {
       await deleteDoc(ref).catch(()=>{});
     } else {
-      await syncLeaderboard();
+      await syncLeaderboard({ force: true });
     }
   } catch (err) {
     console.warn('setLeaderboardVisibility failed', err);
