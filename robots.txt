@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://yuvrajkap22.github.io/flux.productivity/sitemap.xml
-# Sitemap points to the GitHub Pages deployment. Replace with your production domain if different.
+Sitemap: https://flux-productivity-nine.vercel.app/sitemap.xml
+# Sitemap points to the Vercel deployment. Replace with your production domain if different.

@@ -7,7 +7,7 @@ The format follows Keep a Changelog principles and semantic versioning.
 ## Unreleased
 
 - Guard particle RAF loop on low-performance devices (`body.performance-lite`).
-- Added `public/performance-lite.css` with overrides to disable heavy visuals.
+- Added `performance-lite.css` and `share-stats.css` root assets with overrides for low-motion and share flows.
 - Avoid creating `AudioContext` when `performance-lite` is active.
 
 

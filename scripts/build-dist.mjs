@@ -32,16 +32,19 @@ async function copyDirRecursive(src, dst) {
 }
 
 async function copySourceFiles() {
-  const rootFiles = ['index.html', 'landing.html', 'login.html', 'style.css', 'favicon.ico'];
+  const rootFiles = [
+    'index.html',
+    'landing.html',
+    'login.html',
+    'style.css',
+    'performance-lite.css',
+    'share-stats.css',
+    'robots.txt',
+    'sitemap.xml',
+    'favicon.ico',
+  ];
   for (const file of rootFiles) {
     await copyFile(path.join(root, file), path.join(dist, file));
-  }
-
-  // Copy optional public root files (like performance-lite.css) into dist root
-  try {
-    await copyFile(path.join(root, 'public', 'performance-lite.css'), path.join(dist, 'performance-lite.css'));
-  } catch (e) {
-    // ignore if not present
   }
 
   const jsDir = path.join(root, 'js');
