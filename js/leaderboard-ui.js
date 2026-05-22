@@ -18,6 +18,29 @@
     return String(text);
   }
 
+  function toMillis(value) {
+    if (!value) return 0;
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    if (typeof value.seconds === 'number') return value.seconds * 1000;
+    const parsed = new Date(value).getTime();
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function presenceLabel(u) {
+    const lastPresenceMs = toMillis(u?.lastPresenceAt || u?.lastUpdated);
+    const isFresh = lastPresenceMs > 0 && (Date.now() - lastPresenceMs) < 90 * 1000;
+    const isLive = Boolean(u?.isLive) && isFresh;
+    return isLive ? 'Studying live' : 'Idle';
+  }
+
+  function secondaryLine(u) {
+    const parts = [];
+    const handle = displayHandle(u);
+    if (handle) parts.push(handle);
+    parts.push(presenceLabel(u));
+    return parts.join(' • ');
+  }
+
   function createAvatarEl(u) {
     const wrap = document.createElement('div');
     wrap.className = 'avatar-col';
@@ -124,12 +147,12 @@
       }
       const meta = document.createElement('div'); meta.className = 'meta';
       const name = document.createElement('div'); name.className = 'name'; name.textContent = safeText(u.displayName || 'User');
-      const handle = document.createElement('div'); handle.className = 'handle'; handle.textContent = displayHandle(u);
+      const handle = document.createElement('div'); handle.className = 'handle'; handle.textContent = secondaryLine(u);
       const val = document.createElement('div'); val.className = 'val';
       const metricKey = metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
       const metricVal = u[metricKey] || 0;
       val.textContent = metricText(metricKey, metricVal);
-      meta.appendChild(name); if (handle.textContent) meta.appendChild(handle); meta.appendChild(val);
+      meta.appendChild(name); meta.appendChild(handle); meta.appendChild(val);
 
       slot.appendChild(medal); slot.appendChild(rank); slot.appendChild(avatarWrap); slot.appendChild(meta);
       wrap.appendChild(slot);
@@ -154,9 +177,9 @@
       const avatarCol = createAvatarEl(u);
       const nameCol = document.createElement('div'); nameCol.className = 'name-col';
       const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = safeText(u.displayName || 'User');
-      const secondary = document.createElement('div'); secondary.className = 'secondary'; secondary.textContent = displayHandle(u);
+      const secondary = document.createElement('div'); secondary.className = 'secondary'; secondary.textContent = secondaryLine(u);
       nameCol.appendChild(primary);
-      if (secondary.textContent) nameCol.appendChild(secondary);
+      nameCol.appendChild(secondary);
       const statCol = document.createElement('div'); statCol.className = 'stat-col';
       const metricKey = metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
       const metricVal = u[metricKey] || 0;
@@ -181,9 +204,9 @@
       const avatarCol = createAvatarEl(info.entry);
       const nameCol = document.createElement('div'); nameCol.className = 'name-col';
       const primary = document.createElement('div'); primary.className = 'primary'; primary.textContent = safeText(info.entry.displayName || 'You');
-      const secondary = document.createElement('div'); secondary.className = 'secondary'; secondary.textContent = displayHandle(info.entry);
+      const secondary = document.createElement('div'); secondary.className = 'secondary'; secondary.textContent = secondaryLine(info.entry);
       nameCol.appendChild(primary);
-      if (secondary.textContent) nameCol.appendChild(secondary);
+      nameCol.appendChild(secondary);
       const statCol = document.createElement('div'); statCol.className = 'stat-col'; statCol.textContent = metricText(metric, info.entry[metric] || 0);
       row.appendChild(rankCol); row.appendChild(avatarCol); row.appendChild(nameCol); row.appendChild(statCol);
       // add separator

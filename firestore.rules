@@ -51,10 +51,10 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.uid);
     }
 
-    // Leaderboard data (aggregated stats)
-    match /leaderboard/{metric}/{document=**} {
+    // Leaderboard rows keyed by user uid
+    match /leaderboard/{uid} {
       allow read: if isAuthenticated();
-      allow write: if false; // Written by Cloud Functions only
+      allow create, update, delete: if isOwner(uid);
     }
 
     // Public profile data for leaderboard

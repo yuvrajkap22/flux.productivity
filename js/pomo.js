@@ -28,6 +28,8 @@ const FluxPomo = {
   // Ring
   circumference: 2 * Math.PI * 88, // r=88
   _wasRunningOnHide: false,
+  leaderboardPresenceInterval: null,
+  leaderboardPresenceHeartbeatMs: 20000,
 
   getTodoApi() {
     if (window.FluxTodo) return window.FluxTodo;
@@ -71,6 +73,10 @@ const FluxPomo = {
           this.start();
         }
       }
+    });
+    window.addEventListener('beforeunload', () => {
+      this.pushLeaderboardPresence(false);
+      this.stopLeaderboardPresenceHeartbeat();
     });
     this.syncActiveTask();
     this.updateDisplay();
@@ -192,6 +198,7 @@ const FluxPomo = {
     if (this.remaining <= 0) return;
     this.running = true;
     const playBtn = document.getElementById('pomo-play'); if (playBtn) playBtn.classList.add('playing');
+    this.startLeaderboardPresenceHeartbeat();
 
     if (this.mode === 'focus') FluxAudio.pomoStart();
 
@@ -214,7 +221,8 @@ const FluxPomo = {
     this.running = false;
     clearInterval(this.interval);
     const playBtn = document.getElementById('pomo-play'); if (playBtn) playBtn.classList.remove('playing');
-    try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
+    this.stopLeaderboardPresenceHeartbeat();
+    this.pushLeaderboardPresence(false);
   },
 
   stop() {
@@ -260,8 +268,8 @@ const FluxPomo = {
       setTimeout(() => document.getElementById('bloom-container').classList.remove('bloom-burst'), 600);
 
       this.saveStats(true);
-        // sync leaderboard after completed focus session
-        try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
+      // Force immediate leaderboard sync after stats are updated.
+      try { window.Leaderboard?.syncLeaderboard?.({ force: true, isLive: false }); } catch (e) { /* ignore */ }
 
       // Auto-switch to break
       if (this.consecutiveFocus >= this.settings.interval) {
@@ -286,6 +294,34 @@ const FluxPomo = {
     }
 
     this.updateStatsBar();
+  },
+
+  pushLeaderboardPresence(isLive) {
+    try {
+      window.Leaderboard?.syncLeaderboard?.({
+        force: true,
+        presenceOnly: true,
+        isLive: Boolean(isLive),
+      });
+    } catch (e) {
+      // ignore leaderboard sync errors in timer path
+    }
+  },
+
+  startLeaderboardPresenceHeartbeat() {
+    this.stopLeaderboardPresenceHeartbeat();
+    this.pushLeaderboardPresence(true);
+    this.leaderboardPresenceInterval = setInterval(() => {
+      if (!this.running) return;
+      this.pushLeaderboardPresence(true);
+    }, this.leaderboardPresenceHeartbeatMs);
+  },
+
+  stopLeaderboardPresenceHeartbeat() {
+    if (this.leaderboardPresenceInterval) {
+      clearInterval(this.leaderboardPresenceInterval);
+      this.leaderboardPresenceInterval = null;
+    }
   },
 
   updateDisplay() {
