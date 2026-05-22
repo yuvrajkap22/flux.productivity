@@ -6,27 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flux — Your Productivity Companion</title>
   <meta name="description"
-    content="Flux is a focused productivity workspace for Pomodoro timers, task tracking, ambient sounds, and daily progress stats." />
-  <link rel="canonical" href="https://yuvrajkap22.github.io/flux.productivity/" />
-  <!-- Open Graph -->
-  <meta property="og:title" content="Flux — Your Productivity Companion" />
-  <meta property="og:description" content="Flux is a focused productivity workspace for Pomodoro timers, task tracking, ambient sounds, and daily progress stats." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://yuvrajkap22.github.io/flux.productivity/" />
-  <meta property="og:image" content="https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg" />
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Flux — Your Productivity Companion" />
-  <meta name="twitter:description" content="Flux is a focused productivity workspace for Pomodoro timers, task tracking, ambient sounds, and daily progress stats." />
-  <meta name="twitter:image" content="https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg" />
+    content="Flux is a premium productivity companion featuring Pomodoro timer, task tracking, ambient sounds, and focus statistics." />
   <meta name="theme-color" content="#0a0905" />
+  <meta name="flux-version" content="2.0.2" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <link rel="icon" type="image/svg+xml" sizes="any" href="assets/flux-favicon.svg" />
   <link rel="shortcut icon" href="assets/flux-favicon.svg" />
   <link rel="mask-icon" href="assets/flux-mask-icon.svg" color="#f59e0b" />
-  <link rel="stylesheet" href="/performance-lite.css" />
   <style>
     body.flux-loading {
       margin: 0;
@@ -44,357 +32,372 @@
       background:
         radial-gradient(65% 45% at 25% 20%, rgba(245, 166, 35, 0.16), transparent 70%),
         radial-gradient(50% 35% at 80% 80%, rgba(245, 166, 35, 0.1), transparent 70%),
-        <style>
-          #view-leaderboard .panel-inner {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: calc(var(--header-h) + 20px) 20px 40px;
-          }
+        #090909;
+      color: #f4eadb;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.45s ease, visibility 0.45s ease;
+      pointer-events: all;
+    }
 
-          #leaderboard-root {
-            display: grid;
-            gap: 18px;
-            min-height: 600px;
-            color: var(--text);
-          }
+    #flux-page-loader.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
 
-          .leaderboard-header {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 20px;
-            align-items: end;
-            padding: 22px 22px 18px;
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            background:
-              radial-gradient(circle at top left, color-mix(in srgb, var(--accent-subtle) 80%, transparent), transparent 40%),
-              linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 64%),
-              var(--bg-panel);
-            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
-          }
+    .flux-loader-panel {
+      width: min(420px, calc(100vw - 40px));
+      padding: 24px;
+      border: 1px solid rgba(245, 166, 35, 0.2);
+      border-radius: 16px;
+      background: rgba(17, 16, 16, 0.78);
+      backdrop-filter: blur(12px);
+      text-align: center;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+    }
 
-          .leaderboard-title,
-          .leaderboard-heading {
-            display: grid;
-            gap: 10px;
-          }
+    .flux-loader-brand {
+      margin: 0;
+      font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+      font-size: clamp(32px, 6vw, 44px);
+      line-height: 1;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #f4eadb 0%, #f5a623 80%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-          .leaderboard-heading h1 {
-            margin: 0;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: clamp(30px, 4vw, 48px);
-            line-height: 1;
-            letter-spacing: -0.04em;
-          }
+    .flux-loader-copy {
+      margin: 10px 0 18px;
+      color: rgba(244, 234, 219, 0.72);
+      font: 500 14px/1.5 Inter, system-ui, sans-serif;
+      letter-spacing: 0.01em;
+    }
 
-          .leaderboard-subtitle {
-            max-width: 60ch;
-            color: var(--text-dim);
-            font-size: 14px;
-            line-height: 1.6;
-          }
+    .flux-loader-bar {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
 
-          .leaderboard-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            width: fit-content;
-            padding: 7px 12px;
-            border-radius: 999px;
-            border: 1px solid var(--accent-border);
-            background: var(--accent-subtle);
-            color: var(--accent-text);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-          }
+    .flux-loader-bar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: 40%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #f59e0b, #ffcf70);
+      box-shadow: 0 0 20px rgba(245, 166, 35, 0.45);
+      animation: fluxLoaderSweep 1.2s ease-in-out infinite;
+    }
 
-          .leaderboard-badge::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 0 6px rgba(34, 211, 160, 0.12);
-          }
+    .flux-loader-hint {
+      margin-top: 12px;
+      color: rgba(244, 234, 219, 0.6);
+      font: 500 12px/1.4 Inter, system-ui, sans-serif;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
 
-          .leaderboard-actions {
-            display: grid;
-            gap: 12px;
-            justify-items: end;
-            min-width: min(100%, 360px);
-          }
+    @keyframes fluxLoaderSweep {
+      0% { transform: translateX(-120%); }
+      100% { transform: translateX(360%); }
+    }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.classList.add('flux-loading');
+      var domReadyAt = Date.now();
+      var pageLoaded = false;
+      var authReady = false;
+      var hidden = false;
 
-          .leaderboard-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: flex-end;
-          }
+      var hideLoader = function () {
+        if (hidden) return;
+        hidden = true;
+        var loader = document.getElementById('flux-page-loader');
+        if (!loader) {
+          document.body.classList.remove('flux-loading');
+          return;
+        }
 
-          .leaderboard-tabs .tab,
-          .leaderboard-cta {
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            transition: all 180ms var(--ease);
-          }
+        loader.classList.add('is-hidden');
+        window.setTimeout(function () {
+          loader.remove();
+          document.body.classList.remove('flux-loading');
+        }, 460);
+      };
 
-          .leaderboard-tabs .tab {
-            min-height: 36px;
-            padding: 0 14px;
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-dim);
-            font-size: 12px;
-            font-weight: 600;
-          }
+      var maybeHide = function () {
+        if (!pageLoaded || !authReady) return;
 
-          .leaderboard-tabs .tab:hover {
-            color: var(--text);
-            border-color: var(--border-hover);
-            background: rgba(255, 255, 255, 0.06);
-          }
+        var minVisibleMs = 900;
+        var elapsed = Date.now() - domReadyAt;
+        var delay = Math.max(0, minVisibleMs - elapsed);
+        window.setTimeout(hideLoader, delay);
+      };
 
-          .leaderboard-tabs .tab.active,
-          .leaderboard-tabs .tab[aria-pressed="true"] {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--accent-subtle);
-            box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.04);
-          }
+      window.addEventListener('load', function () {
+        pageLoaded = true;
+        maybeHide();
 
-          .leaderboard-cta {
-            min-height: 40px;
-            padding: 0 16px;
-            background: linear-gradient(135deg, var(--accent-subtle), rgba(255, 255, 255, 0.03));
-            color: var(--text);
-            font-weight: 700;
-            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
-          }
+        // In case auth does not emit, fail open to keep the app accessible.
+        window.setTimeout(hideLoader, 3500);
+      }, { once: true });
 
-          .leaderboard-cta:hover {
-            transform: translateY(-1px);
-            border-color: var(--accent);
-            color: var(--accent-text);
-            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.16);
-          }
+      window.addEventListener('flux-auth-ready', function () {
+        authReady = true;
+        maybeHide();
+      });
 
-          .leaderboard-body {
-            display: grid;
-            gap: 18px;
-          }
+      window.setTimeout(hideLoader, 9000);
+    });
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=2.0.2" />
+</head>
 
-          .leaderboard-summary {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-          }
+<body>
+  <div id="flux-page-loader" role="status" aria-live="polite" aria-label="Loading Flux workspace">
+    <div class="flux-loader-panel">
+      <h1 class="flux-loader-brand">Flux</h1>
+      <p class="flux-loader-copy">Setting up your productivity workspace...</p>
+      <div class="flux-loader-bar" aria-hidden="true"></div>
+      <div class="flux-loader-hint">Loading modules and syncing UI</div>
+    </div>
+  </div>
 
-          .leaderboard-summary-card {
-            padding: 14px 16px;
-            border-radius: 18px;
-            border: 1px solid var(--border);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent), var(--bg-panel);
-            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.12);
-          }
+  <!-- Custom Cursor -->
+  <div id="cursor-dot" class="cursor-dot"></div>
+  <div id="cursor-ring" class="cursor-ring"></div>
 
-          .leaderboard-summary-label {
-            font-size: 11px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--text-dim);
-          }
+  <!-- Bloom Orbs -->
+  <div class="bloom-container" id="bloom-container">
+    <div class="bloom-orb orb-1"></div>
+    <div class="bloom-orb orb-2"></div>
+    <div class="bloom-orb orb-3"></div>
+    <div class="bloom-orb orb-4"></div>
+  </div>
 
-          .leaderboard-summary-value {
-            margin-top: 8px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            color: var(--accent);
-          }
+  <!-- Noise Overlay -->
+  <div class="noise-overlay"></div>
 
-          .leader-podium-wrap {
-            padding: 20px;
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            background:
-              radial-gradient(circle at top, rgba(245, 166, 35, 0.1), transparent 36%),
-              linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 70%),
-              var(--bg-panel);
-            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.14);
-          }
+  <div id="app-shell" class="app-shell">
+    <!-- Header -->
+    <header class="app-header" id="app-header">
+    <div class="header-left">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <div class="logo">
+        <img class="logo-icon" src="assets/flux-logo.svg" alt="Flux" width="28" height="28" />
+        <span class="logo-text">Flux</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="https://discord.gg/2xTpqYBuuw" target="_blank" rel="noopener noreferrer" class="header-btn discord-btn"
+        id="header-discord-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
+        </svg>
+        <span>Discord</span>
+      </a>
+      <a href="https://link.yeolpumta.com/P3R5cGU9..." target="_blank"
+        rel="noopener noreferrer" class="header-btn ypt-btn" id="header-ypt-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" /><text x="12" y="16"
+            text-anchor="middle" font-size="12" font-weight="bold" fill="currentColor">Y</text>
+        </svg>
+        <span>YPT</span>
+      </a>
+      <button class="header-icon-btn" id="theme-toggle" aria-label="Toggle theme">
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
+      <button class="header-icon-btn" id="sound-master-toggle" aria-label="Toggle sounds">
+        <svg class="icon-speaker-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+        </svg>
+        <svg class="icon-speaker-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <line x1="23" y1="9" x2="17" y2="15" />
+          <line x1="17" y1="9" x2="23" y2="15" />
+        </svg>
+      </button>
+      <button class="header-icon-btn" id="accent-menu-toggle" aria-label="Open accent colors">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v3" />
+          <path d="M12 19v3" />
+          <path d="M2 12h3" />
+          <path d="M19 12h3" />
+          <path d="m4.93 4.93 2.12 2.12" />
+          <path d="m16.95 16.95 2.12 2.12" />
+          <path d="m19.07 4.93-2.12 2.12" />
+          <path d="m7.05 16.95-2.12 2.12" />
+        </svg>
+      </button>
+      <div class="accent-menu hidden" id="accent-menu" aria-label="Accent color picker">
+        <div class="accent-dots" id="accent-dots">
+          <button class="accent-dot active" data-color="#8b5cf6" style="--dot-color:#8b5cf6" aria-label="Purple"></button>
+          <button class="accent-dot" data-color="#06b6d4" style="--dot-color:#06b6d4" aria-label="Cyan"></button>
+          <button class="accent-dot" data-color="#22d3a0" style="--dot-color:#22d3a0" aria-label="Teal"></button>
+          <button class="accent-dot" data-color="#f59e0b" style="--dot-color:#f59e0b" aria-label="Amber"></button>
+          <button class="accent-dot" data-color="#ec4899" style="--dot-color:#ec4899" aria-label="Pink"></button>
+          <button class="accent-dot" data-color="#ef4444" style="--dot-color:#ef4444" aria-label="Red"></button>
+          <button class="accent-dot" data-color="#f97316" style="--dot-color:#f97316" aria-label="Orange"></button>
+          <button class="accent-dot" data-color="#3b82f6" style="--dot-color:#3b82f6" aria-label="Blue"></button>
+          <input type="color" id="custom-accent-color" class="custom-color-input" value="#8b5cf6" title="Custom color" />
+        </div>
+      </div>
+      <button class="profile-avatar-btn" id="profile-avatar-btn" aria-label="Open profile">
+        <img class="profile-avatar-img" id="profile-avatar-img" src="assets/flux-logo.svg" alt="" />
+        <span class="profile-avatar-initials" id="profile-avatar-initials">?</span>
+        <span class="profile-avatar-ring"></span>
+      </button>
+      <div class="profile-avatar-menu hidden" id="profile-avatar-menu" role="menu" aria-label="Profile actions">
+        <button class="profile-menu-btn" id="profile-menu-open" type="button" role="menuitem">Edit profile</button>
+        <button class="profile-menu-btn" id="profile-menu-settings" type="button" role="menuitem">Settings</button>
+        <button class="profile-menu-btn signout" id="profile-menu-signout" type="button" role="menuitem">Sign out</button>
+      </div>
+    </div>
+  </header>
 
-          .leader-podium {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-            align-items: end;
-          }
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-hidden="true">
+    <div class="sidebar-shell">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <img class="sidebar-brand-logo" src="assets/flux-logo.svg" alt="Flux" width="32" height="32" />
+          <div class="sidebar-brand-copy">
+            <span class="sidebar-brand-name">Flux</span>
+            <span class="sidebar-brand-tag">Focus workspace</span>
+          </div>
+        </div>
+        <button class="sidebar-close-btn" id="sidebar-close" aria-label="Close sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="18" y1="6" x2="6" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="dashboard" id="nav-dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <rect x="3" y="3" width="7" height="7" rx="2" />
+          <rect x="14" y="3" width="7" height="7" rx="2" />
+          <rect x="3" y="14" width="7" height="7" rx="2" />
+          <rect x="14" y="14" width="7" height="7" rx="2" />
+        </svg>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-view="tasks" id="nav-tasks">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M9 11l3 3L22 4" />
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+        <span class="nav-label">Today's Tasks</span>
+      </button>
+      <button class="nav-item" data-view="pomodoro" id="nav-pomodoro">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span class="nav-label">Pomodoro</span>
+      </button>
+      <button class="nav-item" data-view="stats" id="nav-stats">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+        <span class="nav-label">Stats</span>
+      </button>
+      <button class="nav-item" data-view="challenges" id="nav-challenges">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M8 21h8M12 21v-4M12 17c-4 0-7-3-7-7V4h14v6c0 4-3 7-7 7z"/>
+          <path d="M5 8H2M22 8h-3"/>
+        </svg>
+        <span class="nav-label">Challenges</span>
+      </button>
+      <button class="nav-item" data-view="leaderboard" id="nav-leaderboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 2 L15 8 L22 9 L17 14 L18 21 L12 18 L6 21 L7 14 L2 9 L9 8 Z" />
+        </svg>
+        <span class="nav-label">Leaderboard</span>
+      </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-stats-card" id="sidebar-stats-card">
+          <div class="sidebar-stat-value" id="sidebar-focus-time">0h 0m</div>
+          <div class="sidebar-stat-label">Focus today</div>
+          <div class="sidebar-stat-sessions"><span id="sidebar-sessions">0</span> sessions</div>
+        </div>
+        <div class="sidebar-community">
+          <a href="https://discord.gg/2xTpqYBuuw" target="_blank" rel="noopener noreferrer"
+            class="community-link discord-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
+            </svg>
+            <span class="nav-label">Discord</span>
+          </a>
+          <a href="https://link.yeolpumta.com/P3R5cGU9..." target="_blank"
+            rel="noopener noreferrer" class="community-link ypt-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" /><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="bold"
+                fill="currentColor">Y</text>
+            </svg>
+            <span class="nav-label">YPT Group</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </aside>
 
-          .leader-podium .medal {
-            font-size: 22px;
-            line-height: 1;
-          }
+  <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
 
-          .leader-podium .podium-slot {
-            position: relative;
-            display: grid;
-            justify-items: center;
-            gap: 10px;
-            padding: 18px 16px 16px;
-            border-radius: 22px;
-            border: 1px solid var(--border);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)), var(--bg-panel);
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
-            transition: transform 240ms var(--ease), box-shadow 240ms var(--ease), border-color 240ms var(--ease);
-          }
-
-          .leader-podium .podium-slot::after {
-            content: '';
-            width: calc(100% - 28px);
-            height: 10px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
-            opacity: 0.8;
-          }
-
-          .leader-podium .podium-slot.rank-1 {
-            transform: translateY(-10px);
-            border-color: var(--accent-border);
-            background: linear-gradient(180deg, rgba(245, 166, 35, 0.14), rgba(255, 255, 255, 0.02)), var(--bg-panel);
-          }
-
-          .leader-podium .podium-slot.rank-2 {
-            transform: translateY(0);
-          }
-
-          .leader-podium .podium-slot.rank-3 {
-            transform: translateY(10px);
-          }
-
-          .leader-podium .podium-slot.rank-1:hover,
-          .leader-podium .podium-slot.rank-2:hover,
-          .leader-podium .podium-slot.rank-3:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 42px rgba(0, 0, 0, 0.16);
-            border-color: var(--border-hover);
-          }
-
-          @keyframes podiumFloat {
-            0%, 100% { transform: translateY(-10px); }
-            50% { transform: translateY(-16px); }
-          }
-
-          @keyframes podiumFloatStable {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-          }
-
-          .leader-podium .podium-slot.rank-1 {
-            animation: podiumFloat 4s ease-in-out infinite;
-          }
-
-          .leader-podium .podium-slot.rank-2,
-          .leader-podium .podium-slot.rank-3 {
-            animation: podiumFloatStable 4.4s ease-in-out infinite;
-          }
-
-          .leader-podium .podium-slot .avatar {
-            width: 104px;
-            height: 104px;
-            border-radius: 26px;
-            overflow: hidden;
-            display: grid;
-            place-items: center;
-            background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), var(--bg-panel-solid);
-            border: 1px solid var(--border);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-          }
-
-          .leader-podium .podium-slot .avatar img,
-          .leader-podium .podium-slot .avatar .initials {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: grid;
-            place-items: center;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 34px;
-            font-weight: 700;
-            color: #fff;
-          }
-
-          .leader-podium .podium-slot.rank-1 .avatar {
-            animation: podiumGlowGold 2.8s ease-in-out infinite;
-          }
-
-          .leader-podium .podium-slot.rank-2 .avatar {
-            animation: podiumGlowSilver 2.8s ease-in-out infinite;
-          }
-
-          .leader-podium .podium-slot.rank-3 .avatar {
-            animation: podiumGlowBronze 2.8s ease-in-out infinite;
-          }
-
-          @keyframes podiumGlowGold {
-            0%, 100% { box-shadow: 0 10px 24px rgba(255, 184, 56, 0.16); }
-            50% { box-shadow: 0 20px 44px rgba(255, 184, 56, 0.3); }
-          }
-
-          @keyframes podiumGlowSilver {
-            0%, 100% { box-shadow: 0 10px 22px rgba(192, 192, 192, 0.12); }
-            50% { box-shadow: 0 18px 40px rgba(192, 192, 192, 0.2); }
-          }
-
-          @keyframes podiumGlowBronze {
-            0%, 100% { box-shadow: 0 10px 22px rgba(205, 127, 50, 0.12); }
-            50% { box-shadow: 0 18px 36px rgba(205, 127, 50, 0.18); }
-          }
-
-          .leader-podium .meta {
-            display: grid;
-            gap: 4px;
-            justify-items: center;
-            text-align: center;
-          }
-
-          .leader-podium .rank {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--text-dim);
-          }
-
-          .leader-podium .name {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-          }
-
-          .leader-podium .handle {
-            font-size: 12px;
-            color: var(--text-dim);
-          }
-
-          .leader-podium .val {
-            margin-top: 2px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 26px;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            color: var(--accent);
-          }
-
-          .presence {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
+  <!-- Main Content -->
+  <main class="main-content" id="main-content">
             background: rgba(255, 255, 255, 0.03);
             color: var(--text-dim);
             font-size: 12px;
@@ -986,6 +989,7 @@
         <button class="profile-menu-btn" id="profile-menu-settings" type="button" role="menuitem">Settings</button>
         <button class="profile-menu-btn signout" id="profile-menu-signout" type="button" role="menuitem">Sign out</button>
       </div>
+      <div id="xp-bar"></div>
     </div>
   </header>
 
@@ -1009,6 +1013,9 @@
       </button>
       <button class="nav-item" data-view="leaderboard" id="nav-leaderboard">
         <span class="nav-label">Leaderboard</span>
+      </button>
+      <button class="nav-item" data-view="pets" id="nav-pets" style="position: relative;">
+        <span class="nav-label">Pets</span>
       </button>
     </div>
   </nav>
@@ -1596,6 +1603,82 @@
     </div>
   </div>
 
+  <!-- Pets view (panel) -->
+  <div id="view-pets" class="view-panel">
+    <div class="panel-inner">
+      <div class="pets-header">
+        <h1 class="pets-title">Your Companion 🐾</h1>
+        <p class="pets-subtitle">Train, upgrade, and care for your AI pet</p>
+      </div>
+      <div class="pets-container">
+        <!-- Panel A: Pet Display -->
+        <div class="pet-display-panel">
+          <div id="pet-display">🐱</div>
+          <div class="pet-stage-badge" id="pet-stage-badge">Baby Mochi 🐱</div>
+          <div class="pet-name-section">
+            <h2 class="pet-name" id="pet-name-display">Mochi</h2>
+            <input type="text" class="pet-name-edit" id="pet-name-edit" />
+          </div>
+          <div class="happiness-section">
+            <div class="happiness-label">
+              <span>Happiness</span>
+              <span class="happiness-emoji" id="happiness-emoji">💚</span>
+              <span class="happiness-value" id="happiness-value">100%</span>
+            </div>
+            <div class="happiness-bar">
+              <div class="happiness-fill" id="happiness-fill" style="width: 100%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel B: Upgrades Shop -->
+        <div class="upgrades-panel">
+          <h3 class="upgrades-title">Upgrade Shop</h3>
+          <div id="upgrades-container">
+            <!-- Upgrades will be rendered here -->
+          </div>
+        </div>
+
+        <!-- Panel C: Pet Stats -->
+        <div class="pet-stats-panel">
+          <h3 class="pet-stats-title">Stats</h3>
+          <div class="stat-item">
+            <div class="stat-label">Level</div>
+            <div class="stat-value" id="pet-level">1</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Stage</div>
+            <div class="stat-value" id="pet-stage">Baby</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Sessions Completed</div>
+            <div class="stat-value" id="pet-sessions">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Total XP Earned</div>
+            <div class="stat-value" id="pet-total-xp">0</div>
+          </div>
+          <div class="stat-item" style="margin-top: 16px;">
+            <div class="stat-label">7-Day Happiness Trend</div>
+            <div class="stat-sparkline" id="happiness-sparkline">
+              <div class="sparkline-bar" style="height: 80%"></div>
+              <div class="sparkline-bar" style="height: 85%"></div>
+              <div class="sparkline-bar" style="height: 90%"></div>
+              <div class="sparkline-bar" style="height: 88%"></div>
+              <div class="sparkline-bar" style="height: 92%"></div>
+              <div class="sparkline-bar" style="height: 95%"></div>
+              <div class="sparkline-bar" style="height: 100%"></div>
+            </div>
+          </div>
+          <div class="pet-actions">
+            <button class="pet-action-btn" id="rename-pet-btn">✏️ Rename</button>
+            <button class="pet-action-btn" id="pet-settings-btn" style="opacity: 0.5; cursor: not-allowed;">🔐 Change Pet (Lv. 30+)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/auth-shared.js?v=2.0.2"></script>
   <script type="module" src="js/firebase-auth.js?v=2.0.2"></script>
   <script src="js/utils.js?v=2.0.2"></script>
@@ -1607,6 +1690,37 @@
   <script src="js/profile.js?v=2.0.2"></script>
   <script src="js/stats.js?v=2.0.2"></script>
   <script src="js/challenges.js?v=2.0.2"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script>
+    try {
+      window.__FLUX_FIREBASE_CONFIG = {
+        apiKey: 'AIzaSyDu9AMuAlTk7cHVn99NNlXgaZq4wNoBfWo',
+        authDomain: 'flux-productivity-39c09.firebaseapp.com',
+        projectId: 'flux-productivity-39c09',
+        storageBucket: 'flux-productivity-39c09.appspot.com',
+        messagingSenderId: '652388421500',
+        appId: '1:652388421500:web:7900788548c47c86509ef9'
+      };
+      if (typeof firebase !== 'undefined' && (!firebase.apps || firebase.apps.length === 0)) {
+        firebase.initializeApp(window.__FLUX_FIREBASE_CONFIG);
+        console.log('Firebase compat initialized (index)');
+        try {
+          // If URL contains ?useEmulator=1, connect to local emulators for auth and firestore
+          if (window.location.search.indexOf('useEmulator=1') !== -1 || location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
+            if (firebase.auth && typeof firebase.auth === 'function' && firebase.auth().useEmulator) {
+              try { firebase.auth().useEmulator && firebase.auth().useEmulator('http://localhost:9099'); } catch(e) { console.warn('auth.useEmulator not available', e); }
+            }
+            if (firebase.firestore && typeof firebase.firestore === 'function' && firebase.firestore().settings) {
+              try { firebase.firestore().useEmulator && firebase.firestore().useEmulator('localhost', 8080); } catch(e) { console.warn('firestore.useEmulator not available', e); }
+            }
+            console.log('Attempted to connect to Firebase emulators');
+          }
+        } catch(e) { console.warn('Emulator connect error', e); }
+      }
+    } catch (e) { console.error('Firebase compat init failed', e); }
+  </script>
   <script src="js/app.js?v=2.0.2"></script>
   <script>
     (function(){

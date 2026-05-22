@@ -238,6 +238,17 @@ const FluxChallenges = {
     this.saveData(data);
     Flux.showToast('Challenge completed! 🏆');
     FluxAudio.taskComplete();
+    
+    // Award XP for challenge completion
+    try {
+      if (window.FluxXP) {
+        window.FluxXP.awardXP(200, 'Challenge Completed');
+        window.FluxXP.checkWeekBonus();
+      }
+    } catch (e) {
+      console.error('XP award error:', e);
+    }
+    
     const source = event?.currentTarget;
     if (source) {
       const rect = source.getBoundingClientRect();

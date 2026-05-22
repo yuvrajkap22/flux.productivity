@@ -512,6 +512,11 @@
             if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
           });
         } catch (e) { console.warn('leaderboard subscribe failed', e); }
+      } else if (view === 'pets') {
+        document.getElementById('view-pets')?.classList.add('active');
+        if (window.FluxPets?.renderPetPanel) {
+          window.FluxPets.renderPetPanel();
+        }
       } else if (view === 'settings') {
         document.getElementById('view-settings')?.classList.add('active');
       }

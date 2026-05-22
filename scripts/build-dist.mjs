@@ -13,13 +13,35 @@ const dist = path.join(root, 'dist');
 async function ensureCleanDist() {
   await rm(dist, { recursive: true, force: true });
   await mkdir(path.join(dist, 'js'), { recursive: true });
+  await mkdir(path.join(dist, 'css'), { recursive: true });
   await mkdir(path.join(dist, 'assets'), { recursive: true });
 }
 
+async function copyDirRecursive(src, dst) {
+  const entries = await readdir(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const dstPath = path.join(dst, entry.name);
+    if (entry.isDirectory()) {
+      await mkdir(dstPath, { recursive: true });
+      await copyDirRecursive(srcPath, dstPath);
+    } else {
+      await copyFile(srcPath, dstPath);
+    }
+  }
+}
+
 async function copySourceFiles() {
-  const rootFiles = ['index.html', 'login.html', 'style.css'];
+  const rootFiles = ['index.html', 'landing.html', 'login.html', 'style.css', 'favicon.ico'];
   for (const file of rootFiles) {
     await copyFile(path.join(root, file), path.join(dist, file));
+  }
+
+  // Copy optional public root files (like performance-lite.css) into dist root
+  try {
+    await copyFile(path.join(root, 'public', 'performance-lite.css'), path.join(dist, 'performance-lite.css'));
+  } catch (e) {
+    // ignore if not present
   }
 
   const jsDir = path.join(root, 'js');
@@ -28,11 +50,17 @@ async function copySourceFiles() {
     await copyFile(path.join(jsDir, file), path.join(dist, 'js', file));
   }
 
-  const assetsDir = path.join(root, 'assets');
-  const assetFiles = await readdir(assetsDir);
-  for (const file of assetFiles) {
-    await copyFile(path.join(assetsDir, file), path.join(dist, 'assets', file));
+  // Recursively copy css/ directory
+  const cssDir = path.join(root, 'css');
+  try {
+    await copyDirRecursive(cssDir, path.join(dist, 'css'));
+  } catch (e) {
+    // css directory may not exist, skip if it doesn't
   }
+
+  // Recursively copy assets/ directory
+  const assetsDir = path.join(root, 'assets');
+  await copyDirRecursive(assetsDir, path.join(dist, 'assets'));
 }
 
 async function getBuildVersion() {

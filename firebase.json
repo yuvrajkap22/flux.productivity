@@ -1,0 +1,8 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "projects": {
+    "default": "flux-productivity-39c09"
+  }
+}

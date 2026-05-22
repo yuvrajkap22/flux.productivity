@@ -244,6 +244,17 @@ const FluxPomo = {
       FluxAudio.pomoEnd();
       Flux.showToast('Session complete! Time for a break 🌿');
 
+      // Award XP for session completion
+      try {
+        if (window.FluxXP) {
+          window.FluxXP.awardXP(100, 'Session Complete');
+          window.FluxPets?.onSessionComplete?.(this.settings.focus);
+          window.FluxXP.checkStreakBonus();
+        }
+      } catch (e) {
+        console.error('XP award error:', e);
+      }
+
       // Bloom burst
       document.getElementById('bloom-container').classList.add('bloom-burst');
       setTimeout(() => document.getElementById('bloom-container').classList.remove('bloom-burst'), 600);

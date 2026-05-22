@@ -203,6 +203,16 @@ const FluxTodo = {
       // Stop tracking if this task was being tracked
       if (this.trackingId === id) this.stopTracking();
       FluxAudio.taskComplete();
+      
+      // Award XP for task completion
+      try {
+        if (window.FluxXP) {
+          window.FluxXP.awardXP(25, 'Task Completed');
+        }
+      } catch (e) {
+        console.error('XP award error:', e);
+      }
+      
       // Confetti from checkbox position
       const el = document.querySelector(`[data-id="${id}"] .todo-checkbox`);
       if (el) {
