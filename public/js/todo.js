@@ -1,1 +1,538 @@
-const FluxTodo={todos:[],filter:"all",trackingId:null,init(){this.todos=Flux.load("flux_todos",[]),this.bindEvents(),this.render();const t=this.todos.find(t=>t.tracking);t&&(this.trackingId=t.id),this.emitTrackingChange()},bindEvents(){const t=document.getElementById("todo-input"),e=document.getElementById("todo-add-btn"),i=document.getElementById("todo-filters");t.addEventListener("keydown",t=>{"Enter"===t.key&&this.addTodo()}),e.addEventListener("click",()=>this.addTodo()),i.addEventListener("click",t=>{const e=t.target.closest(".filter-btn");e&&(i.querySelectorAll(".filter-btn").forEach(t=>t.classList.remove("active")),e.classList.add("active"),this.filter=e.dataset.filter,this.render())});const o=document.getElementById("todo-list");o&&(o._draggingId=null,o.addEventListener("dragstart",t=>{const e=t.target.closest(".todo-item");e&&(e.classList.contains("is-editing")?t.preventDefault():(t.dataTransfer.setData("text/plain",e.dataset.id),e.style.opacity="0.4",o._draggingId=e.dataset.id))}),o.addEventListener("dragend",t=>{const e=t.target.closest(".todo-item");e&&(e.style.opacity="1"),o.querySelectorAll(".todo-item").forEach(t=>t.style.borderTop=""),o._draggingId=null}),o.addEventListener("dragover",t=>{t.preventDefault();const e=t.target.closest(".todo-item");o.querySelectorAll(".todo-item").forEach(t=>t.style.borderTop=""),e&&e.dataset.id!==o._draggingId&&(e.style.borderTop="2px solid var(--accent)")}),o.addEventListener("drop",t=>{t.preventDefault();const e=t.target.closest(".todo-item");if(!e)return;e.style.borderTop="";const i=t.dataTransfer.getData("text/plain")||o._draggingId,s=e.dataset.id;if(!i||i===s)return;const n=this.todos.findIndex(t=>t.id===i),r=this.todos.findIndex(t=>t.id===s);if(n<0||r<0)return;const[d]=this.todos.splice(n,1);this.todos.splice(r,0,d),this.save(),this.render()}),o.addEventListener("click",t=>{const e=t.target.closest(".todo-item");if(!e)return;const i=e.dataset.id;t.target.closest(".todo-checkbox")?this.toggleComplete(i):t.target.closest(".priority-btn")?this.togglePriority(i):t.target.closest(".timer-btn")?this.startTimerForTask(i):t.target.closest(".edit-btn")?this.startEditTodo(i):t.target.closest(".delete-btn")?this.deleteTodo(i):t.target.closest("button, .todo-action-btn, .todo-checkbox")||e.classList.contains("is-editing")||this.toggleTracking(i)}),o.addEventListener("dblclick",t=>{const e=t.target.closest(".todo-text");if(!e)return;const i=e.closest(".todo-item");i&&this.startEditTodo(i.dataset.id)}))},addTodo(){const t=document.getElementById("todo-input"),e=document.getElementById("todo-category"),i=Flux.cleanText(t.value,200);if(!i)return;const o={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),text:i,category:e.value,completed:!1,priority:!1,tracking:!1,timeTracked:0,createdAt:(new Date).toISOString()};this.todos.unshift(o),t.value="",this.save(),this.render(),FluxAudio.taskAdded()},toggleComplete(t){const e=this.todos.find(e=>e.id===t);if(e){if(e.completed=!e.completed,e.completed){this.trackingId===t&&this.stopTracking(),FluxAudio.taskComplete();const e=document.querySelector(`[data-id="${t}"] .todo-checkbox`);if(e){const t=e.getBoundingClientRect();Flux.confetti(t.left+t.width/2,t.top)}}Flux.saveNow("flux_todos",this.todos),this.render(),this.updateStats();try{window.Leaderboard?.syncLeaderboard?.()}catch(t){}}},togglePriority(t){const e=this.todos.find(e=>e.id===t);e&&(e.priority=!e.priority,e.priority&&(this.todos=this.todos.filter(e=>e.id!==t),this.todos.unshift(e)),this.save(),this.render())},deleteTodo(t){this.trackingId===t&&this.stopTracking();const e=document.querySelector(`[data-id="${t}"]`);e?(e.classList.add("removing"),setTimeout(()=>{this.todos=this.todos.filter(e=>e.id!==t),this.save(),this.render()},250)):(this.todos=this.todos.filter(e=>e.id!==t),this.save(),this.render())},startEditTodo(t){const e=this.todos.find(e=>e.id===t);if(!e)return;const i=document.querySelector(`[data-id="${t}"]`),o=i?i.querySelector(".todo-text"):null;if(!i||!o)return;if(i.classList.contains("is-editing"))return;i.classList.add("is-editing"),i.draggable=!1;const s=document.createElement("input");s.type="text",s.className="todo-edit-input",s.maxLength=200,s.value=e.text,s.setAttribute("aria-label","Edit task text"),o.replaceWith(s),s.focus(),s.select();const n=()=>this.commitEditTodo(t,s.value),r=()=>this.render();s.addEventListener("keydown",t=>{"Enter"===t.key&&(t.preventDefault(),n()),"Escape"===t.key&&(t.preventDefault(),r())}),s.addEventListener("blur",n,{once:!0})},commitEditTodo(t,e){const i=this.todos.find(e=>e.id===t);if(!i)return;const o=Flux.cleanText(e,200);o&&o!==i.text?(i.text=o,this.save(),this.render()):this.render()},toggleTracking(t){const e=this.todos.find(e=>e.id===t);if(e&&!e.completed){if(this.trackingId===t)return e.tracking=!1,this.trackingId=null,this.save(),this.render(),void this.emitTrackingChange();this.todos.forEach(t=>{t.tracking=!1}),e.tracking=!0,this.trackingId=t,this.save(),this.render(),this.emitTrackingChange()}},startTimerForTask(t){const e=this.todos.find(e=>e.id===t);if(!e||e.completed)return;this.trackingId!==t&&(this.todos.forEach(t=>{t.tracking=!1}),e.tracking=!0,this.trackingId=t,this.save(),this.render(),this.emitTrackingChange());const i=window.FluxPomo||("undefined"!=typeof FluxPomo?FluxPomo:null);i&&("focus"!==i.mode&&i.setMode("focus"),i.running||i.start(),FluxAudio.buttonClick())},stopTracking(){if(this.trackingId){const t=this.todos.find(t=>t.id===this.trackingId);t&&(t.tracking=!1)}clearInterval(this.trackingInterval),this.trackingId=null,this.save(),this.emitTrackingChange()},getFiltered(){let t=[...this.todos];return"active"===this.filter?t=t.filter(t=>!t.completed):"completed"===this.filter&&(t=t.filter(t=>t.completed)),t},render(){const t=document.getElementById("todo-list"),e=this.getFiltered();if(0===e.length){const e=document.createElement("div");return e.style.textAlign="center",e.style.padding="40px 0",e.style.color="var(--text-dim)",e.style.fontSize="14px",e.textContent="all"===this.filter?"No tasks yet. Add one below!":`No ${this.filter} tasks.`,void t.replaceChildren(e)}const i=document.createDocumentFragment();e.forEach(t=>i.appendChild(this.createTodoElement(t))),t.replaceChildren(i)},createTodoElement(t){const e=document.createElement("div");e.className=`todo-item ${t.completed?"completed":""} ${t.tracking?"tracking":""} ${t.priority?"priority":""}`,e.dataset.id=t.id,e.draggable=!0;const i=document.createElement("button");i.className="todo-checkbox",i.type="button",i.setAttribute("aria-label","Toggle complete"),i.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',i.addEventListener("click",()=>this.toggleComplete(t.id));const o=document.createElement("span");o.className="todo-tracking-dot";const s=document.createElement("span");s.className="todo-text",s.textContent=t.text,s.title="Select this task for Pomodoro";const n=document.createElement("span");n.className="todo-tag",n.dataset.cat=t.category,n.textContent=this.catLabel(t.category);const r=document.createElement("span");r.className="todo-time-badge",r.textContent=Flux.formatTrackedTime(t.timeTracked);const d=document.createElement("div");d.className="todo-actions";const a=document.createElement("button");a.className=("todo-action-btn priority-btn "+(t.priority?"is-active":"")).trim(),a.type="button",a.title=t.priority?"Remove priority":"Mark as priority",a.setAttribute("aria-label",t.priority?"Remove priority":"Mark as priority"),a.setAttribute("aria-pressed",t.priority?"true":"false"),a.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h11l-2 4 2 4H5"/></svg>';const c=document.createElement("button");c.className="todo-action-btn timer-btn",c.type="button",c.title="Start timer for this task",c.setAttribute("aria-label","Start timer for this task"),c.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>';const l=document.createElement("button");l.className="todo-action-btn edit-btn",l.type="button",l.title="Edit task",l.setAttribute("aria-label","Edit task"),l.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';const h=document.createElement("button");return h.className="todo-action-btn delete-btn",h.type="button",h.title="Delete",h.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',d.append(a,c,l,h),e.append(i,o,s,n,r,d),e},getActiveTaskId(){return this.trackingId},getActiveTask(){if(!this.trackingId)return null;const t=this.todos.find(t=>t.id===this.trackingId&&!t.completed);return t?{id:t.id,text:t.text,timeTracked:t.timeTracked||0}:null},emitTrackingChange(){const t=this.getActiveTask();window.dispatchEvent(new CustomEvent("flux-task-tracking-change",{detail:t}))},addTrackedTime(t=1){if(!this.trackingId)return;const e=this.todos.find(t=>t.id===this.trackingId);if(!e||e.completed)return;e.timeTracked=(e.timeTracked||0)+t;const i=document.querySelector(`[data-id="${this.trackingId}"] .todo-time-badge`);i&&(i.textContent=Flux.formatTrackedTime(e.timeTracked)),e.timeTracked%10==0&&this.save()},catLabel:t=>({work:"💼 Work",study:"📚 Study",personal:"🏠 Personal",health:"💪 Health",creative:"🎨 Creative"}[t]||t),updateStats(){const t=this.todos.reduce((t,e)=>t+(e.timeTracked||0),0);document.getElementById("sidebar-focus-time").textContent=Flux.formatTime(t)},save(){Flux.save("flux_todos",this.todos)}};
+/* ═══════════════════════════════════════
+   FLUX — Todo List Manager
+   ═══════════════════════════════════════ */
+
+const FluxTodo = {
+  todos: [],
+  filter: 'all',
+  trackingId: null,
+  prioritySort: false,
+
+  init() {
+    this.todos = Flux.load('flux_todos', []);
+    this.bindEvents();
+    this.render();
+    // Restore selected task for pomodoro targeting
+    const tracking = this.todos.find(t => t.tracking);
+    if (tracking) {
+      this.trackingId = tracking.id;
+    }
+    this.emitTrackingChange();
+  },
+
+  bindEvents() {
+    const input = document.getElementById('todo-input');
+    const addBtn = document.getElementById('todo-add-btn');
+    const filters = document.getElementById('todo-filters');
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.addTodo();
+    });
+    addBtn.addEventListener('click', () => this.addTodo());
+
+    filters.addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      filters.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      this.filter = btn.dataset.filter;
+      this.render();
+    });
+
+    // Toolbar buttons in the new todo panel header
+    const focusInputBtn = document.getElementById('todo-focus-input-btn');
+    const focusActiveBtn = document.getElementById('todo-focus-active-btn');
+    const clearCompletedBtn = document.getElementById('todo-clear-completed-btn');
+    const prioritySortBtn = document.getElementById('todo-priority-sort-btn');
+
+    if (focusInputBtn) focusInputBtn.addEventListener('click', () => { input.focus(); });
+    if (focusActiveBtn) focusActiveBtn.addEventListener('click', () => {
+      const id = this.getActiveTaskId();
+      if (id) {
+        const el = document.querySelector(`[data-id="${id}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        this.startTimerForTask(id);
+      } else {
+        // no active task — focus input to create one
+        input.focus();
+      }
+    });
+    if (clearCompletedBtn) clearCompletedBtn.addEventListener('click', () => {
+      if (!confirm('Clear all completed tasks?')) return;
+      this.todos = this.todos.filter(t => !t.completed);
+      this.save();
+      this.render();
+    });
+    if (prioritySortBtn) prioritySortBtn.addEventListener('click', () => {
+      this.prioritySort = !this.prioritySort;
+      if (this.prioritySort) {
+        this.todos.sort((a, b) => (b.priority === a.priority) ? 0 : (b.priority ? 1 : -1));
+        prioritySortBtn.classList.add('active');
+      } else {
+        // no-op: keep current order
+        prioritySortBtn.classList.remove('active');
+      }
+      this.save();
+      this.render();
+    });
+
+    // Event delegation for todo item actions (reduces per-item listeners)
+    const list = document.getElementById('todo-list');
+    if (list) {
+      // Drag & drop handled at container level to avoid per-item listeners
+      list._draggingId = null;
+      list.addEventListener('dragstart', (e) => {
+        const item = e.target.closest('.todo-item');
+        if (!item) return;
+        if (item.classList.contains('is-editing')) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.setData('text/plain', item.dataset.id);
+        item.style.opacity = '0.4';
+        list._draggingId = item.dataset.id;
+      });
+
+      list.addEventListener('dragend', (e) => {
+        const item = e.target.closest('.todo-item');
+        if (item) item.style.opacity = '1';
+        list.querySelectorAll('.todo-item').forEach(it => it.style.borderTop = '');
+        list._draggingId = null;
+      });
+
+      list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const over = e.target.closest('.todo-item');
+        list.querySelectorAll('.todo-item').forEach(it => it.style.borderTop = '');
+        if (!over || over.dataset.id === list._draggingId) return;
+        over.style.borderTop = '2px solid var(--accent)';
+      });
+
+      list.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const dropItem = e.target.closest('.todo-item');
+        if (!dropItem) return;
+        dropItem.style.borderTop = '';
+        const dragId = e.dataTransfer.getData('text/plain') || list._draggingId;
+        const dropId = dropItem.dataset.id;
+        if (!dragId || dragId === dropId) return;
+        const dragIdx = this.todos.findIndex(t => t.id === dragId);
+        const dropIdx = this.todos.findIndex(t => t.id === dropId);
+        if (dragIdx < 0 || dropIdx < 0) return;
+        const [moved] = this.todos.splice(dragIdx, 1);
+        this.todos.splice(dropIdx, 0, moved);
+        this.save();
+        this.render();
+      });
+      list.addEventListener('click', (e) => {
+        const item = e.target.closest('.todo-item');
+        if (!item) return;
+        const id = item.dataset.id;
+
+        if (e.target.closest('.todo-checkbox')) {
+          this.toggleComplete(id);
+          return;
+        }
+
+        if (e.target.closest('.priority-btn')) {
+          this.togglePriority(id);
+          return;
+        }
+
+        if (e.target.closest('.timer-btn')) {
+          this.startTimerForTask(id);
+          return;
+        }
+
+        if (e.target.closest('.edit-btn')) {
+          this.startEditTodo(id);
+          return;
+        }
+
+        if (e.target.closest('.delete-btn')) {
+          this.deleteTodo(id);
+          return;
+        }
+
+        // Click on the item area toggles tracking (ignore clicks on buttons)
+        if (e.target.closest('button, .todo-action-btn, .todo-checkbox')) return;
+        if (item.classList.contains('is-editing')) return;
+        this.toggleTracking(id);
+      });
+
+      list.addEventListener('dblclick', (e) => {
+        const text = e.target.closest('.todo-text');
+        if (!text) return;
+        const item = text.closest('.todo-item');
+        if (!item) return;
+        this.startEditTodo(item.dataset.id);
+      });
+    }
+  },
+
+  addTodo() {
+    const input = document.getElementById('todo-input');
+    const catSelect = document.getElementById('todo-category');
+    const text = Flux.cleanText(input.value, 200);
+    if (!text) return;
+
+    const todo = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      text,
+      category: catSelect.value,
+      completed: false,
+      priority: false,
+      tracking: false,
+      timeTracked: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    this.todos.unshift(todo);
+    input.value = '';
+    this.save();
+    this.render();
+    FluxAudio.taskAdded();
+  },
+
+  toggleComplete(id) {
+    const todo = this.todos.find(t => t.id === id);
+    if (!todo) return;
+    todo.completed = !todo.completed;
+
+    if (todo.completed) {
+      // Stop tracking if this task was being tracked
+      if (this.trackingId === id) this.stopTracking();
+      FluxAudio.taskComplete();
+      
+      // Award XP for task completion
+      try {
+        if (window.FluxXP) {
+          window.FluxXP.awardXP(25, 'Task Completed');
+        }
+      } catch (e) {
+        console.error('XP award error:', e);
+      }
+      
+      // Confetti from checkbox position
+      const el = document.querySelector(`[data-id="${id}"] .todo-checkbox`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        Flux.confetti(rect.left + rect.width / 2, rect.top);
+      }
+    }
+
+    Flux.saveNow('flux_todos', this.todos);
+    this.render();
+    this.updateStats();
+    try { window.Leaderboard?.syncLeaderboard?.(); } catch (e) { /* ignore */ }
+  },
+
+  togglePriority(id) {
+    const todo = this.todos.find(t => t.id === id);
+    if (!todo) return;
+    todo.priority = !todo.priority;
+    // Move priority items to top
+    if (todo.priority) {
+      this.todos = this.todos.filter(t => t.id !== id);
+      this.todos.unshift(todo);
+    }
+    this.save();
+    this.render();
+  },
+
+  deleteTodo(id) {
+    if (this.trackingId === id) this.stopTracking();
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el) {
+      el.classList.add('removing');
+      setTimeout(() => {
+        this.todos = this.todos.filter(t => t.id !== id);
+        this.save();
+        this.render();
+      }, 250);
+    } else {
+      this.todos = this.todos.filter(t => t.id !== id);
+      this.save();
+      this.render();
+    }
+  },
+
+  startEditTodo(id) {
+    const todo = this.todos.find(t => t.id === id);
+    if (!todo) return;
+
+    const item = document.querySelector(`[data-id="${id}"]`);
+    const textEl = item ? item.querySelector('.todo-text') : null;
+    if (!item || !textEl) return;
+
+    if (item.classList.contains('is-editing')) return;
+
+    item.classList.add('is-editing');
+    item.draggable = false;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'todo-edit-input';
+    input.maxLength = 200;
+    input.value = todo.text;
+    input.setAttribute('aria-label', 'Edit task text');
+
+    textEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const commit = () => this.commitEditTodo(id, input.value);
+    const cancel = () => this.render();
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        commit();
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        cancel();
+      }
+    });
+
+    input.addEventListener('blur', commit, { once: true });
+  },
+
+  commitEditTodo(id, rawText) {
+    const todo = this.todos.find(t => t.id === id);
+    if (!todo) return;
+
+    const nextText = Flux.cleanText(rawText, 200);
+    if (!nextText || nextText === todo.text) {
+      this.render();
+      return;
+    }
+
+    todo.text = nextText;
+    this.save();
+    this.render();
+  },
+
+  toggleTracking(id) {
+    const todo = this.todos.find(t => t.id === id);
+    if (!todo || todo.completed) return;
+
+    if (this.trackingId === id) {
+      todo.tracking = false;
+      this.trackingId = null;
+      this.save();
+      this.render();
+      this.emitTrackingChange();
+      return;
+    } else {
+      // Set selected task for task-specific pomodoro
+      this.todos.forEach(t => { t.tracking = false; });
+      todo.tracking = true;
+      this.trackingId = id;
+    }
+    this.save();
+    this.render();
+    this.emitTrackingChange();
+  },
+
+  startTimerForTask(id) {
+    const todo = this.todos.find(t => t.id === id);
+    if (!todo || todo.completed) return;
+
+    if (this.trackingId !== id) {
+      this.todos.forEach(t => { t.tracking = false; });
+      todo.tracking = true;
+      this.trackingId = id;
+      this.save();
+      this.render();
+      this.emitTrackingChange();
+    }
+
+    const pomo = window.FluxPomo || (typeof FluxPomo !== 'undefined' ? FluxPomo : null);
+    if (!pomo) return;
+
+    if (pomo.mode !== 'focus') {
+      pomo.setMode('focus');
+    }
+    if (!pomo.running) {
+      pomo.start();
+    }
+
+    FluxAudio.buttonClick();
+  },
+
+  stopTracking() {
+    if (this.trackingId) {
+      const todo = this.todos.find(t => t.id === this.trackingId);
+      if (todo) todo.tracking = false;
+    }
+    clearInterval(this.trackingInterval);
+    this.trackingId = null;
+    this.save();
+    this.emitTrackingChange();
+  },
+
+  getFiltered() {
+    let list = [...this.todos];
+    if (this.filter === 'active') list = list.filter(t => !t.completed);
+    else if (this.filter === 'completed') list = list.filter(t => t.completed);
+    return list;
+  },
+
+  render() {
+    const container = document.getElementById('todo-list');
+    const filtered = this.getFiltered();
+
+    if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.textAlign = 'center';
+      empty.style.padding = '40px 0';
+      empty.style.color = 'var(--text-dim)';
+      empty.style.fontSize = '14px';
+      empty.textContent = this.filter === 'all' ? 'No tasks yet. Add one below!' : `No ${this.filter} tasks.`;
+      container.replaceChildren(empty);
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    filtered.forEach((todo) => frag.appendChild(this.createTodoElement(todo)));
+    container.replaceChildren(frag);
+
+    // Drag/drop handled on container via delegated handlers
+    this.updateStats();
+  },
+
+  createTodoElement(todo) {
+    const item = document.createElement('div');
+    item.className = `todo-item ${todo.completed ? 'completed' : ''} ${todo.tracking ? 'tracking' : ''} ${todo.priority ? 'priority' : ''}`;
+    item.dataset.id = todo.id;
+    item.draggable = true;
+
+    const checkbox = document.createElement('button');
+    checkbox.className = 'todo-checkbox';
+    checkbox.type = 'button';
+    checkbox.setAttribute('aria-label', 'Toggle complete');
+    checkbox.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    checkbox.addEventListener('click', () => this.toggleComplete(todo.id));
+
+    const trackingDot = document.createElement('span');
+    trackingDot.className = 'todo-tracking-dot';
+
+    const text = document.createElement('span');
+    text.className = 'todo-text';
+    text.textContent = todo.text;
+    text.title = 'Select this task for Pomodoro';
+
+    const tag = document.createElement('span');
+    tag.className = 'todo-tag';
+    tag.dataset.cat = todo.category;
+    tag.textContent = this.catLabel(todo.category);
+
+    const badge = document.createElement('span');
+    badge.className = 'todo-time-badge';
+    badge.textContent = Flux.formatTrackedTime(todo.timeTracked);
+
+    const actions = document.createElement('div');
+    actions.className = 'todo-actions';
+
+    const priorityBtn = document.createElement('button');
+    priorityBtn.className = `todo-action-btn priority-btn ${todo.priority ? 'is-active' : ''}`.trim();
+    priorityBtn.type = 'button';
+    priorityBtn.title = todo.priority ? 'Remove priority' : 'Mark as priority';
+    priorityBtn.setAttribute('aria-label', todo.priority ? 'Remove priority' : 'Mark as priority');
+    priorityBtn.setAttribute('aria-pressed', todo.priority ? 'true' : 'false');
+    priorityBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h11l-2 4 2 4H5"/></svg>';
+    // Handled via event delegation on the list container
+
+    const timerBtn = document.createElement('button');
+    timerBtn.className = 'todo-action-btn timer-btn';
+    timerBtn.type = 'button';
+    timerBtn.title = 'Start timer for this task';
+    timerBtn.setAttribute('aria-label', 'Start timer for this task');
+    timerBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg>';
+    // Handled via event delegation on the list container
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'todo-action-btn edit-btn';
+    editBtn.type = 'button';
+    editBtn.title = 'Edit task';
+    editBtn.setAttribute('aria-label', 'Edit task');
+    editBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+    // Handled via event delegation on the list container
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'todo-action-btn delete-btn';
+    deleteBtn.type = 'button';
+    deleteBtn.title = 'Delete';
+    deleteBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    // Handled via event delegation on the list container
+
+    actions.append(priorityBtn, timerBtn, editBtn, deleteBtn);
+    item.append(checkbox, trackingDot, text, tag, badge, actions);
+
+    // dblclick and item clicks handled via event delegation
+
+    return item;
+  },
+
+  getActiveTaskId() {
+    return this.trackingId;
+  },
+
+  getActiveTask() {
+    if (!this.trackingId) return null;
+    const todo = this.todos.find(t => t.id === this.trackingId && !t.completed);
+    if (!todo) return null;
+    return { id: todo.id, text: todo.text, timeTracked: todo.timeTracked || 0 };
+  },
+
+  emitTrackingChange() {
+    const detail = this.getActiveTask();
+    window.dispatchEvent(new CustomEvent('flux-task-tracking-change', { detail }));
+  },
+
+  addTrackedTime(seconds = 1) {
+    if (!this.trackingId) return;
+    const todo = this.todos.find(t => t.id === this.trackingId);
+    if (!todo || todo.completed) return;
+
+    todo.timeTracked = (todo.timeTracked || 0) + seconds;
+    const badge = document.querySelector(`[data-id="${this.trackingId}"] .todo-time-badge`);
+    if (badge) badge.textContent = Flux.formatTrackedTime(todo.timeTracked);
+    if (todo.timeTracked % 10 === 0) this.save();
+    this.updateStats();
+  },
+
+  catLabel(cat) {
+    const labels = { work: '💼 Work', study: '📚 Study', personal: '🏠 Personal', health: '💪 Health', creative: '🎨 Creative' };
+    return labels[cat] || cat;
+  },
+
+  // setupDragDrop removed in favor of container-level handlers
+
+  updateStats() {
+    // Update todo panel + sidebar stats from live todo data
+    const total = this.todos.length;
+    const active = this.todos.filter(t => !t.completed).length;
+    const totalTime = this.todos.reduce((sum, t) => sum + (t.timeTracked || 0), 0);
+
+    const elTotal = document.getElementById('todo-total-count');
+    const elActive = document.getElementById('todo-active-count');
+    const elTracked = document.getElementById('todo-tracked-time');
+    const elActiveLabel = document.getElementById('todo-active-label');
+    const elSidebarTime = document.getElementById('sidebar-focus-time');
+
+    if (elTotal) elTotal.textContent = total;
+    if (elActive) elActive.textContent = active;
+    if (elTracked) elTracked.textContent = Flux.formatTime(totalTime);
+    if (elActiveLabel) {
+      const activeTask = this.getActiveTask();
+      elActiveLabel.textContent = activeTask ? activeTask.text : 'No task selected';
+    }
+    if (elSidebarTime) elSidebarTime.textContent = Flux.formatTime(totalTime);
+  },
+
+  save() {
+    Flux.save('flux_todos', this.todos);
+  }
+};

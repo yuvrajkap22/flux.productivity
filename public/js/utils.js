@@ -1,1 +1,262 @@
-const Flux={_saveTimers:{},isLowPerformanceDevice(){let t=!1;try{const e=JSON.parse(localStorage.getItem("flux_settings"));e&&void 0!==e.reducedMotion&&(t=e.reducedMotion)}catch(t){}if(t)return!0;const e=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches,a=Number(navigator.hardwareConcurrency||8)<=4,o=Number(navigator.deviceMemory||8)<=4,r=window.matchMedia?.("(max-width: 900px)")?.matches,n=navigator.connection||navigator.mozConnection||navigator.webkitConnection,i=Boolean(n?.saveData),s=/(^2g$|^slow-2g$|^3g$)/i.test(String(n?.effectiveType||""));return Boolean(e||a||o||r||i||s)},applyPerformanceClass(){return!!this.isLowPerformanceDevice()&&(document.body.classList.add("performance-lite"),!0)},load(t,e){try{const a=localStorage.getItem(t);return a?JSON.parse(a):e}catch{return e}},save(t,e,a=300){clearTimeout(this._saveTimers[t]),this._saveTimers[t]=setTimeout(()=>{try{localStorage.setItem(t,JSON.stringify(e))}catch{}},a)},saveNow(t,e){try{localStorage.setItem(t,JSON.stringify(e))}catch{}},getSettings:()=>Flux.load("flux_settings",{}),updateSettings(t,e={}){const a={...Flux.load("flux_settings",{}),...t};return!1!==e.persist&&Flux.saveNow("flux_settings",a),a},parseHexColor(t){const e=String(t||"").trim().replace(/^#/,"");return/^[0-9a-f]{6}$/i.test(e)?{hex:`#${e.toLowerCase()}`,r:parseInt(e.slice(0,2),16),g:parseInt(e.slice(2,4),16),b:parseInt(e.slice(4,6),16)}:null},mixHexColors(t,e,a=.5){const o=this.parseHexColor(t),r=this.parseHexColor(e);if(!o||!r)return t;const n=Math.max(0,Math.min(1,a)),i=(t,e)=>Math.round(t+(e-t)*n);return`#${[i(o.r,r.r),i(o.g,r.g),i(o.b,r.b)].map(t=>t.toString(16).padStart(2,"0")).join("")}`},getAccentPalette(t,e=document.documentElement.getAttribute("data-theme")||"dark"){const a=this.parseHexColor(t)||this.parseHexColor("#8b5cf6"),o=a.hex;return{primary:o,secondary:this.mixHexColors(o,"light"===e?"#ffffff":"#111111","light"===e?.28:.16),tertiary:this.mixHexColors(o,"light"===e?"#1a1a2e":"#ffffff","light"===e?.58:.72),rgb:`${a.r}, ${a.g}, ${a.b}`}},applyTheme(t,e={}){const a="light"===t?"light":"dark",o=document.documentElement;o.setAttribute("data-theme",a),o.style.colorScheme=a,document.body?.setAttribute("data-theme",a);const r=document.querySelector('meta[name="theme-color"]');return r&&r.setAttribute("content","light"===a?"#f2f0ff":"#0a0a0f"),!1!==e.persist&&Flux.updateSettings({theme:a}),window.dispatchEvent(new CustomEvent("flux-theme-change",{detail:{theme:a}})),a},applyAccent(t,e={}){const a=this.getAccentPalette(t),o=document.documentElement.style;return o.setProperty("--accent",a.primary),o.setProperty("--accent-secondary",a.secondary),o.setProperty("--accent-glow",`rgba(${a.rgb}, 0.35)`),o.setProperty("--accent-subtle",`rgba(${a.rgb}, 0.08)`),o.setProperty("--accent-border",`rgba(${a.rgb}, 0.18)`),o.setProperty("--accent-text",a.tertiary),!1!==e.persist&&Flux.updateSettings({accent:a.primary}),window.dispatchEvent(new CustomEvent("flux-accent-change",{detail:{accent:a.primary,palette:a}})),a},quotes:[{text:"The secret of getting ahead is getting started.",author:"Mark Twain"},{text:"Your time is limited, don't waste it living someone else's life.",author:"Steve Jobs"},{text:"You don't have to be great to start, but you have to start to be great.",author:"Zig Ziglar"},{text:"Don't wish it were easier. Wish you were better.",author:"Jim Rohn"},{text:"The only way to do great work is to love what you do.",author:"Steve Jobs"},{text:"Discipline is the bridge between goals and accomplishment.",author:"Jim Rohn"},{text:"The mind is everything. What you think you become.",author:"Buddha"},{text:"It is not that we have a short time to live, but that we waste a good deal of it.",author:"Seneca"},{text:"Focus on being productive instead of busy.",author:"Tim Ferriss"},{text:"A year from now you may wish you had started today.",author:"Karen Lamb"},{text:"The impediment to action advances action. What stands in the way becomes the way.",author:"Marcus Aurelius"},{text:"Deep work is the ability to focus without distraction on a cognitively demanding task.",author:"Cal Newport"},{text:"Bird by bird, buddy. Just take it bird by bird.",author:"Anne Lamott"},{text:"Free education is abundant, all over the internet. It's the desire to learn that's scarce.",author:"Naval Ravikant"},{text:"Don't count the days, make the days count.",author:"Muhammad Ali"},{text:"Success is the sum of small efforts repeated day in and day out.",author:"Robert Collier"},{text:"The harder you work for something, the greater you'll feel when you achieve it.",author:"Robin Sharma"},{text:"Start where you are. Use what you have. Do what you can.",author:"Arthur Ashe"},{text:"Waste no more time arguing about what a good person should be. Be one.",author:"Marcus Aurelius"},{text:"Action is the foundational key to all success.",author:"Pablo Picasso"},{text:"Either you run the day or the day runs you.",author:"Jim Rohn"},{text:"Productivity is never an accident. It is the result of intelligent effort.",author:"Paul J. Meyer"}],showToast(t){const e=document.getElementById("toast-container"),a=document.createElement("div");a.className="toast",a.textContent=t,e.appendChild(a),setTimeout(()=>{a.classList.add("removing"),setTimeout(()=>a.remove(),300)},3e3)},confetti(t,e){if(this.isLowPerformanceDevice())return;const a=document.createElement("div");a.className="confetti-container",document.body.appendChild(a);const o=["#8b5cf6","#06b6d4","#22d3a0","#f59e0b","#ec4899","#ef4444","#f97316","#3b82f6"];for(let r=0;r<20;r++){const r=document.createElement("div");r.className="confetti-piece",r.style.left=t+"px",r.style.top=e+"px",r.style.background=o[Math.floor(Math.random()*o.length)],r.style.animationDuration=.8+.6*Math.random()+"s",r.style.animationDelay=.15*Math.random()+"s";const n=120*(Math.random()-.5);r.style.setProperty("--x",Math.sin(n*Math.PI/180)*(80+100*Math.random())+"px"),a.appendChild(r)}setTimeout(()=>a.remove(),1500)},formatTime(t){if(t>0&&t<60)return`${t}s`;const e=Math.floor(t/3600),a=Math.floor(t%3600/60);return e>0?`${e}h ${a}m`:`${a}m`},formatTimeShort(t){const e=Math.floor(t/60),a=t%60;return`${String(e).padStart(2,"0")}:${String(a).padStart(2,"0")}`},formatTrackedTime(t){const e=Math.max(0,Number(t)||0);if(e<3600){const t=Math.floor(e/60),a=e%60;return`${String(t).padStart(2,"0")}:${String(a).padStart(2,"0")}`}return this.formatTime(e)},todayKey:()=>(new Date).toISOString().split("T")[0],sanitize(t){const e=document.createElement("div");return e.textContent=t,e.innerHTML},cleanText:(t,e=200)=>String(t||"").replace(/[<>]/g,"").replace(/\s+/g," ").trim().slice(0,e)};window.FluxTheme=Flux;
+/* ═══════════════════════════════════════
+   FLUX — Shared Utilities
+   ═══════════════════════════════════════ */
+
+// localStorage helpers with debounce
+const Flux = {
+  _saveTimers: {},
+
+  isLowPerformanceDevice() {
+    let manualOverride = false;
+    try {
+      const settings = JSON.parse(localStorage.getItem('flux_settings'));
+      if (settings && typeof settings.reducedMotion !== 'undefined') {
+        manualOverride = settings.reducedMotion;
+      }
+    } catch (e) {}
+
+    if (manualOverride) return true;
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    const lowCpu = Number(navigator.hardwareConcurrency || 8) <= 4;
+    const lowMemory = Number(navigator.deviceMemory || 8) <= 4;
+    const smallScreen = window.matchMedia?.('(max-width: 900px)')?.matches;
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const saveData = Boolean(connection?.saveData);
+    const slowNetwork = /(^2g$|^slow-2g$|^3g$)/i.test(String(connection?.effectiveType || ''));
+
+    return Boolean(reducedMotion || lowCpu || lowMemory || smallScreen || saveData || slowNetwork);
+  },
+
+  applyPerformanceClass() {
+    if (this.isLowPerformanceDevice()) {
+      document.body.classList.add('performance-lite');
+      return true;
+    }
+    return false;
+  },
+
+  load(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch { return fallback; }
+  },
+
+  save(key, data, delay = 300) {
+    clearTimeout(this._saveTimers[key]);
+    this._saveTimers[key] = setTimeout(() => {
+      try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
+    }, delay);
+  },
+
+  saveNow(key, data) {
+    try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
+  },
+
+  getSettings() {
+    return Flux.load('flux_settings', {});
+  },
+
+  updateSettings(patch, options = {}) {
+    const current = Flux.load('flux_settings', {});
+    const next = { ...current, ...patch };
+
+    if (options.persist !== false) {
+      Flux.saveNow('flux_settings', next);
+    }
+
+    return next;
+  },
+
+  parseHexColor(color) {
+    const hex = String(color || '').trim().replace(/^#/, '');
+    if (!/^[0-9a-f]{6}$/i.test(hex)) return null;
+
+    return {
+      hex: `#${hex.toLowerCase()}`,
+      r: parseInt(hex.slice(0, 2), 16),
+      g: parseInt(hex.slice(2, 4), 16),
+      b: parseInt(hex.slice(4, 6), 16),
+    };
+  },
+
+  mixHexColors(primary, secondary, weight = 0.5) {
+    const a = this.parseHexColor(primary);
+    const b = this.parseHexColor(secondary);
+    if (!a || !b) return primary;
+
+    const ratio = Math.max(0, Math.min(1, weight));
+    const mix = (x, y) => Math.round(x + (y - x) * ratio);
+    return `#${[mix(a.r, b.r), mix(a.g, b.g), mix(a.b, b.b)]
+      .map((value) => value.toString(16).padStart(2, '0'))
+      .join('')}`;
+  },
+
+  getAccentPalette(color, theme = document.documentElement.getAttribute('data-theme') || 'dark') {
+    const parsed = this.parseHexColor(color) || this.parseHexColor('#8b5cf6');
+    const primary = parsed.hex;
+    const secondary = this.mixHexColors(primary, theme === 'light' ? '#ffffff' : '#111111', theme === 'light' ? 0.28 : 0.16);
+    const tertiary = this.mixHexColors(primary, theme === 'light' ? '#1a1a2e' : '#ffffff', theme === 'light' ? 0.58 : 0.72);
+
+    return {
+      primary,
+      secondary,
+      tertiary,
+      rgb: `${parsed.r}, ${parsed.g}, ${parsed.b}`,
+    };
+  },
+
+  applyTheme(theme, options = {}) {
+    const resolved = theme === 'light' ? 'light' : 'dark';
+    const root = document.documentElement;
+    root.setAttribute('data-theme', resolved);
+    root.style.colorScheme = resolved;
+    document.body?.setAttribute('data-theme', resolved);
+
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', resolved === 'light' ? '#f2f0ff' : '#0a0a0f');
+    }
+
+    if (options.persist !== false) {
+      Flux.updateSettings({ theme: resolved });
+    }
+
+    window.dispatchEvent(new CustomEvent('flux-theme-change', {
+      detail: { theme: resolved },
+    }));
+
+    return resolved;
+  },
+
+  applyAccent(color, options = {}) {
+    const palette = this.getAccentPalette(color);
+    const root = document.documentElement.style;
+    root.setProperty('--accent', palette.primary);
+    root.setProperty('--accent-secondary', palette.secondary);
+    root.setProperty('--accent-glow', `rgba(${palette.rgb}, 0.35)`);
+    root.setProperty('--accent-subtle', `rgba(${palette.rgb}, 0.08)`);
+    root.setProperty('--accent-border', `rgba(${palette.rgb}, 0.18)`);
+    root.setProperty('--accent-text', palette.tertiary);
+
+    if (options.persist !== false) {
+      Flux.updateSettings({ accent: palette.primary });
+    }
+
+    window.dispatchEvent(new CustomEvent('flux-accent-change', {
+      detail: { accent: palette.primary, palette },
+    }));
+
+    return palette;
+  },
+
+  // Quotes data
+  quotes: [
+    { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+    { text: "Your time is limited, don't waste it living someone else's life.", author: "Steve Jobs" },
+    { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+    { text: "Don't wish it were easier. Wish you were better.", author: "Jim Rohn" },
+    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "Discipline is the bridge between goals and accomplishment.", author: "Jim Rohn" },
+    { text: "The mind is everything. What you think you become.", author: "Buddha" },
+    { text: "It is not that we have a short time to live, but that we waste a good deal of it.", author: "Seneca" },
+    { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+    { text: "A year from now you may wish you had started today.", author: "Karen Lamb" },
+    { text: "The impediment to action advances action. What stands in the way becomes the way.", author: "Marcus Aurelius" },
+    { text: "Deep work is the ability to focus without distraction on a cognitively demanding task.", author: "Cal Newport" },
+    { text: "Bird by bird, buddy. Just take it bird by bird.", author: "Anne Lamott" },
+    { text: "Free education is abundant, all over the internet. It's the desire to learn that's scarce.", author: "Naval Ravikant" },
+    { text: "Don't count the days, make the days count.", author: "Muhammad Ali" },
+    { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+    { text: "The harder you work for something, the greater you'll feel when you achieve it.", author: "Robin Sharma" },
+    { text: "Start where you are. Use what you have. Do what you can.", author: "Arthur Ashe" },
+    { text: "Waste no more time arguing about what a good person should be. Be one.", author: "Marcus Aurelius" },
+    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+    { text: "Either you run the day or the day runs you.", author: "Jim Rohn" },
+    { text: "Productivity is never an accident. It is the result of intelligent effort.", author: "Paul J. Meyer" },
+  ],
+
+  // Toast notification
+  showToast(msg) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add('removing');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  },
+
+  // Confetti burst
+  confetti(x, y) {
+    if (this.isLowPerformanceDevice()) return;
+
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+    const colors = ['#8b5cf6','#06b6d4','#22d3a0','#f59e0b','#ec4899','#ef4444','#f97316','#3b82f6'];
+    for (let i = 0; i < 20; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = x + 'px';
+      piece.style.top = y + 'px';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDuration = (0.8 + Math.random() * 0.6) + 's';
+      piece.style.animationDelay = (Math.random() * 0.15) + 's';
+      const angle = (Math.random() - 0.5) * 120;
+      piece.style.setProperty('--x', (Math.sin(angle * Math.PI / 180) * (80 + Math.random() * 100)) + 'px');
+      container.appendChild(piece);
+    }
+    setTimeout(() => container.remove(), 1500);
+  },
+
+  // Format seconds to display string
+  formatTime(seconds) {
+    if (seconds > 0 && seconds < 60) return `${seconds}s`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  },
+
+  formatTimeShort(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  },
+
+  formatTrackedTime(seconds) {
+    const total = Math.max(0, Number(seconds) || 0);
+    if (total < 3600) {
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+    return this.formatTime(total);
+  },
+
+  // Get today's date key
+  todayKey() {
+    return new Date().toISOString().split('T')[0];
+  },
+
+  // Sanitize text
+  sanitize(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  },
+
+  cleanText(value, maxLen = 200) {
+    const text = String(value || '')
+      .replace(/[<>]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return text.slice(0, maxLen);
+  }
+};
+
+window.FluxTheme = Flux;

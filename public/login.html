@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flux — Login</title>
   <meta name="description" content="Flux is a premium productivity companion for focused work, task tracking, and ambient sound." />
-  <link rel="canonical" href="https://flux-productivity-nine.vercel.app/login.html" />
+  <link rel="canonical" href="https://yuvrajkap22.github.io/flux.productivity/login.html" />
   <meta property="og:title" content="Flux — Login" />
   <meta property="og:description" content="Sign in to Flux to access your Pomodoro timers, tasks, and focus stats." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://flux-productivity-nine.vercel.app/login.html" />
-  <meta property="og:image" content="https://flux-productivity-nine.vercel.app/assets/social-preview.svg" />
+  <meta property="og:url" content="https://yuvrajkap22.github.io/flux.productivity/login.html" />
+  <meta property="og:image" content="https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Flux — Login" />
   <meta name="twitter:description" content="Sign in to Flux to access your Pomodoro timers, tasks, and focus stats." />
@@ -18,9 +18,9 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/flux-favicon.svg?v=2.0.0+8fe7edc" />
-  <link rel="shortcut icon" href="assets/flux-favicon.svg?v=2.0.0+8fe7edc" />
-  <link rel="mask-icon" href="assets/flux-mask-icon.svg?v=2.0.0+8fe7edc" color="#f59e0b" />
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/flux-favicon.svg" />
+  <link rel="shortcut icon" href="assets/flux-favicon.svg" />
+  <link rel="mask-icon" href="assets/flux-mask-icon.svg" color="#f59e0b" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -29,10 +29,10 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Flux",
-      "url": "https://flux-productivity-nine.vercel.app/",
-      "logo": "https://flux-productivity-nine.vercel.app/assets/flux-logo.svg",
-      "image": "https://flux-productivity-nine.vercel.app/assets/social-preview.svg",
-      "sameAs": ["https://yuvrajkap22.github.io/flux.productivity/"]
+      "url": "https://yuvrajkap22.github.io/flux.productivity/",
+      "logo": "https://yuvrajkap22.github.io/flux.productivity/assets/flux-logo.svg",
+      "image": "https://yuvrajkap22.github.io/flux.productivity/assets/social-preview.svg",
+      "sameAs": ["https://flux-productivity-nine.vercel.app/"]
     }
   </script>
   <script type="application/ld+json">
@@ -44,13 +44,13 @@
           "@type": "ListItem",
           "position": 1,
           "name": "Home",
-          "item": "https://flux-productivity-nine.vercel.app/"
+          "item": "https://yuvrajkap22.github.io/flux.productivity/"
         },
         {
           "@type": "ListItem",
           "position": 2,
           "name": "Login",
-          "item": "https://flux-productivity-nine.vercel.app/login.html"
+          "item": "https://yuvrajkap22.github.io/flux.productivity/login.html"
         }
       ]
     }
@@ -631,13 +631,13 @@
   <main class="page" id="page">
     <div class="layout">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="https://flux-productivity-nine.vercel.app/">Home</a>
+        <a href="https://yuvrajkap22.github.io/flux.productivity/">Home</a>
         <span aria-hidden="true">/</span>
         <span>Login</span>
       </nav>
       <section class="hero" aria-label="Flux overview">
         <div class="brand-row">
-          <img class="brand-mark" src="assets/flux-logo.svg?v=2.0.0+8fe7edc" alt="Flux" width="32" height="32" />
+          <img class="brand-mark" src="assets/flux-logo.svg" alt="Flux" width="32" height="32" />
           <div class="brand-wordmark">flux</div>
         </div>
         <div class="hero-kicker">Pomodoro productivity workspace</div>
@@ -787,9 +787,9 @@
     }());
   </script>
 
-  <script src="js/auth-shared.js?v=2.0.0+8fe7edc"></script>
+  <script src="js/auth-shared.js?v=2.0.2"></script>
   <script type="module">
-    import { firebaseConfig, isFirebaseConfigured } from './js/firebase-config.js?v=2.0.0+8fe7edc';
+    import { firebaseConfig, isFirebaseConfigured } from './js/firebase-config.js?v=2.0.2';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
     import {
       browserLocalPersistence,
@@ -1185,29 +1185,27 @@
 
     function setupCursorLoop() {
       if (state.disableCursor) return;
-      if (state.lowPerf || document.body.classList.contains('performance-lite')) return;
 
       const dot = el.cursorDot;
       const ring = el.cursorRing;
       const tick = () => {
-        if (state.lowPerf || document.body.classList.contains('performance-lite')) return;
         state.ringX += (state.mouseX - state.ringX) * 0.11;
         state.ringY += (state.mouseY - state.ringY) * 0.11;
         dot.style.setProperty('--x', `${state.mouseX}px`);
         dot.style.setProperty('--y', `${state.mouseY}px`);
         ring.style.setProperty('--x', `${state.ringX}px`);
         ring.style.setProperty('--y', `${state.ringY}px`);
-        state.cursorRaf = requestAnimationFrame(tick);
+        requestAnimationFrame(tick);
       };
       state.ringX = state.mouseX;
       state.ringY = state.mouseY;
       dot.style.opacity = '1';
       ring.style.opacity = '1';
-      state.cursorRaf = requestAnimationFrame(tick);
+      requestAnimationFrame(tick);
     }
 
     function setupParticles() {
-      if (state.lowPerf || document.body.classList.contains('performance-lite')) {
+      if (state.lowPerf) {
         el.canvas.style.display = 'none';
         return;
       }
@@ -1237,11 +1235,8 @@
       }
 
       function draw() {
-        if (document.hidden || document.body.classList.contains('performance-lite')) {
-          if (state.particleRaf) {
-            cancelAnimationFrame(state.particleRaf);
-            state.particleRaf = 0;
-          }
+        if (document.hidden) {
+          state.particleRaf = 0;
           return;
         }
 

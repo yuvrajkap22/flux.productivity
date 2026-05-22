@@ -1,1 +1,732 @@
-!function(){"use strict";const e="undefined"!=typeof Flux&&Flux.applyPerformanceClass(),t=document.getElementById("cursor-dot"),n=document.getElementById("cursor-ring");t&&(t.style.display="none"),n&&(n.style.display="none"),document.body.style.cursor="auto",document.body.classList.remove("custom-cursor-enabled");const o=document.getElementById("theme-toggle");function d(e,t=!0){window.FluxTheme?.applyTheme(e,{persist:t})}o?.addEventListener("click",()=>{d("dark"===document.documentElement.getAttribute("data-theme")?"light":"dark"),FluxAudio.buttonClick()});const a=Flux.load("flux_settings",{}),s=Flux.load("flux_sounds",{volume:30,muted:!1,active:{}});function l(e,t=!0){const n=window.FluxTheme?.applyAccent(e,{persist:t})||null,o=n?.primary||e,d=document.getElementById("custom-accent-color");d&&(d.value=o),document.querySelectorAll(".accent-dot").forEach(e=>{e.classList.toggle("active",e.dataset.color===o)})}a.theme&&d(a.theme,!1),document.getElementById("accent-dots")?.addEventListener("click",e=>{const t=e.target.closest(".accent-dot");t&&(l(t.dataset.color),FluxAudio.buttonClick())}),document.getElementById("custom-accent-color")?.addEventListener("input",e=>{l(e.target.value)}),a.accent&&l(a.accent,!1),window.addEventListener("storage",e=>{if("flux_settings"===e.key&&e.newValue)try{const t=JSON.parse(e.newValue);t.theme&&d(t.theme,!1),t.accent&&l(t.accent,!1)}catch{}}),window.addEventListener("flux-accent-change",()=>{const e=document.getElementById("custom-accent-color");e&&(e.value=Flux.load("flux_settings",{}).accent||"#8b5cf6"),document.getElementById("view-challenges")?.classList.contains("active")&&"function"==typeof FluxChallenges?.render&&FluxChallenges.render()});const i=document.getElementById("accent-menu-toggle"),c=document.getElementById("accent-menu");i?.addEventListener("click",e=>{e.stopPropagation(),c?.classList.toggle("hidden"),FluxAudio.buttonClick()}),document.addEventListener("click",e=>{c&&i&&(c.contains(e.target)||i.contains(e.target)||c.classList.add("hidden"))});const u=document.getElementById("settings-theme-select"),r=document.getElementById("settings-accent-picker"),m=document.getElementById("settings-accent-presets"),g=document.getElementById("settings-start-view"),w=document.getElementById("settings-sidebar-mode"),b=document.getElementById("settings-quote-toggle"),h=document.getElementById("settings-compact-toggle"),v=document.getElementById("settings-volume-range"),p=document.getElementById("settings-volume-value"),f=document.getElementById("settings-mute-toggle"),x=document.getElementById("settings-motion-toggle"),y=document.getElementById("settings-theme-chip"),L=document.getElementById("settings-accent-chip"),E=document.getElementById("settings-view-chip"),F=document.getElementById("settings-sound-chip"),I=document.getElementById("settings-profile-avatar"),k=document.getElementById("settings-profile-summary"),B=document.getElementById("settings-profile-note"),A=document.getElementById("settings-reset-preferences"),C=new Set(["dashboard","tasks","pomodoro","stats","challenges","settings"]);function _(){return Flux.load("flux_settings",{})}function S(e){return{dashboard:"Dashboard",tasks:"Tasks",pomodoro:"Pomodoro",stats:"Stats",challenges:"Challenges",settings:"Settings"}[e]||"Dashboard"}function U(){const e=_(),t=Flux.load("flux_sounds",{volume:30,muted:!1,active:{}}),n=e.accent||"#8b5cf6",o=Number.isFinite(Number(t.volume))?Number(t.volume):30,d=Boolean(t.muted),a=e.theme||document.documentElement.getAttribute("data-theme")||"dark";var s;u&&(u.value=a),r&&(r.value=n),g&&(g.value=e.startView&&C.has(e.startView)?e.startView:"dashboard"),w&&(w.value=e.sidebarCollapsed?"collapsed":"expanded"),b&&(b.checked=Boolean(e.hideQuotes)),h&&(h.checked=Boolean(e.compactMode)),v&&(v.value=String(o)),p&&(p.textContent=`${o}%`),f&&(f.checked=d),x&&(x.checked=Boolean(e.reducedMotion)),y&&(y.textContent="Theme: "+("light"===a?"Light":"Dark")),L&&(L.textContent=`Accent: ${s=n,FluxTheme.getAccentPalette(s||"#8b5cf6").primary.toUpperCase()}`),E&&(E.textContent=`Start: ${S(e.startView||"dashboard")}`),F&&(F.textContent=d?"Sound: Muted":`Sound: ${o}%`);const l=function(){const e=window.FluxProfile||null,t=e?.data||{},n=e?.activeUser||window.FluxAuthState?.user||null;return{name:t.displayName||n?.displayName||n?.email||"Flux User",username:t.username?`@${t.username}`:"",bio:t.bio||"Open your Flux profile editor to update your name, bio, photo, and banner.",photoURL:t.photoURL||n?.photoURL||""}}();I&&(I.alt=l.name,I.src=l.photoURL||window.FluxProfile?.getFallbackAvatar?.(l.name)||"assets/flux-logo.svg"),k&&(k.textContent=l.bio),B&&(B.textContent=l.username||"Quick access"),document.querySelectorAll(".settings-accent-dot").forEach(e=>{e.classList.toggle("active",e.dataset.accent===n)}),function(e=_()){document.body.classList.toggle("hide-quote-bar",Boolean(e.hideQuotes)),document.body.classList.toggle("compact-mode",Boolean(e.compactMode)),document.body.classList.toggle("performance-lite",Boolean(e.reducedMotion))}(e)}function M(e){const t=Flux.updateSettings(e);return U(),t}u?.addEventListener("change",e=>{d("light"===e.target.value?"light":"dark"),U(),FluxAudio.buttonClick()}),r?.addEventListener("input",e=>{l(e.target.value),U()}),m?.addEventListener("click",e=>{const t=e.target.closest(".settings-accent-dot");t&&(l(t.dataset.accent),U(),FluxAudio.buttonClick())}),g?.addEventListener("change",e=>{const t=C.has(e.target.value)?e.target.value:"dashboard";M({startView:t}),Flux.showToast(`Start page set to ${S(t)}`)}),w?.addEventListener("change",e=>{const t="collapsed"===e.target.value;$=t,M({sidebarCollapsed:t}),D(),FluxAudio.buttonClick()}),b?.addEventListener("change",e=>{M({hideQuotes:e.target.checked})}),h?.addEventListener("change",e=>{M({compactMode:e.target.checked})}),v?.addEventListener("input",e=>{const t=parseInt(e.target.value,10);FluxAudio.setVolume(t),p&&(p.textContent=`${t}%`),U()}),f?.addEventListener("change",e=>{const t=Boolean(e.target.checked);FluxAudio.muted!==t&&FluxAudio.toggleMute(),U()}),x?.addEventListener("change",e=>{M({reducedMotion:e.target.checked}),document.body.classList.toggle("performance-lite",e.target.checked),Flux.showToast(e.target.checked?"Reduced motion enabled":"Motion effects restored"),FluxAudio.buttonClick()}),document.getElementById("settings-open-profile")?.addEventListener("click",()=>{const e=window.FluxProfile||("undefined"!=typeof FluxProfile?FluxProfile:null);e?.openModal?.(),FluxAudio.buttonClick()}),document.getElementById("settings-open-accent")?.addEventListener("click",()=>{c?.classList.remove("hidden"),r?.focus(),FluxAudio.buttonClick()}),A?.addEventListener("click",()=>{if(window.confirm("Reset Flux preferences back to defaults? This keeps your tasks and profile data.")){try{localStorage.removeItem("flux_settings"),localStorage.removeItem("flux_sounds")}catch{}Flux.showToast("Preferences reset"),window.location.reload()}}),window.addEventListener("flux-theme-change",U),window.addEventListener("flux-accent-change",U),window.addEventListener("flux-sound-change",U),window.addEventListener("flux-profile-change",U),window.addEventListener("storage",e=>{"flux_settings"!==e.key&&"flux_sounds"!==e.key&&"flux_profile"!==e.key||U()}),U();const T=document.getElementById("sidebar"),q=document.getElementById("sidebar-toggle"),P=document.getElementById("sidebar-backdrop"),V=document.getElementById("sidebar-close");let $=!1,R=!1;const N=window.matchMedia("(max-width: 768px)");function Q(){return N.matches}function D(){if(!T)return;if(Q())return T.classList.remove("collapsed"),document.body.classList.remove("sidebar-collapsed"),T.classList.toggle("open",R),document.body.classList.toggle("sidebar-open",R),P?.classList.toggle("visible",R),T.setAttribute("aria-hidden",R?"false":"true"),void q?.setAttribute("aria-expanded",R?"true":"false");R=!1,T.classList.remove("open"),document.body.classList.remove("sidebar-open"),P?.classList.remove("visible"),T.setAttribute("aria-hidden","false"),q?.setAttribute("aria-expanded",$?"true":"false"),T.classList.toggle("collapsed",$),document.body.classList.toggle("sidebar-collapsed",$)}function O(){Q()&&(R=!1,D())}q?.addEventListener("click",()=>{Q()?R?O():Q()&&(R=!0,D()):($=!$,M({sidebarCollapsed:$}),D()),FluxAudio.buttonClick()}),P?.addEventListener("click",()=>{O()}),V?.addEventListener("click",()=>{Q()?O():($||($=!0,M({sidebarCollapsed:$})),D()),FluxAudio.buttonClick()}),window.addEventListener("resize",D),window.addEventListener("keydown",e=>{"Escape"===e.key&&Q()&&R&&O()}),$=Boolean(_().sidebarCollapsed),D();const z=new Set(["stats","challenges","leaderboard"]),H=new Set(["dashboard","tasks","pomodoro"]);function J(){return Boolean(window.FluxAuthUtils?.isPreviewMode?.())}function W(){return Boolean(window.FluxAuthState?.user||window.FluxAuth?.user?.())}function j(){const e=!W()&&J();document.body.classList.toggle("preview-mode",e),document.querySelectorAll(".nav-item[data-view]").forEach(t=>{const n=e&&z.has(t.dataset.view);t.classList.toggle("hidden",n),t.setAttribute("aria-hidden",n?"true":"false")}),function(e){const t=document.getElementById("main-content"),n=document.getElementById("quote-bar");let o=document.getElementById("preview-banner");e?!o&&t&&(o=document.createElement("section"),o.id="preview-banner",o.className="preview-banner glass-panel",o.innerHTML='\n      <div class="preview-banner-copy">\n        <span class="preview-banner-kicker">Limited preview</span>\n        <h2>Pomodoro and Tasks are open.</h2>\n        <p>Sign in to unlock Stats, Challenges, and Leaderboard.</p>\n      </div>\n      <div class="preview-banner-actions">\n        <a class="preview-banner-btn" href="login.html">Sign in</a>\n      </div>\n    ',n?.parentNode===t?t.insertBefore(o,n):t.prepend(o)):o?.remove()}(e)}function G(e,t={}){!W()&&J()&&z.has(e)&&(Flux.showToast("Sign in to unlock Stats, Challenges, and Leaderboard."),e="dashboard"),document.querySelectorAll(".nav-item").forEach(e=>e.classList.remove("active"));const n=document.querySelector(`.nav-item[data-view="${e}"]`);if(n&&n.classList.add("active"),document.querySelectorAll(".view-panel").forEach(e=>e.classList.remove("active")),"dashboard"===e)document.getElementById("view-dashboard").classList.add("active");else if("tasks"===e)document.getElementById("view-dashboard").classList.add("active"),document.getElementById("todo-panel")?.scrollIntoView({behavior:"smooth",block:"start"});else if("pomodoro"===e)document.getElementById("view-dashboard").classList.add("active"),document.getElementById("pomo-panel")?.scrollIntoView({behavior:"smooth",block:"center"});else if("stats"===e)document.getElementById("view-stats").classList.add("active"),FluxStats.render();else if("challenges"===e)document.getElementById("view-challenges").classList.add("active"),FluxChallenges.render();else if("leaderboard"===e){document.getElementById("view-leaderboard").classList.add("active");const e=document.getElementById("leaderboard-root");e&&window.LeaderboardUI&&window.LeaderboardUI.attach(e);try{window._fluxLeaderboardUnsub&&(window._fluxLeaderboardUnsub(),window._fluxLeaderboardUnsub=null);const e=window._fluxLeaderboardMetric||"focusMinutesTotal",t=window._fluxLeaderboardRange||"week";window._fluxLeaderboardUnsub=window.Leaderboard?.subscribeLeaderboard(e,t,e=>{const t=document.getElementById("leaderboard-root");t&&window.LeaderboardUI&&window.LeaderboardUI.renderLeaderboard(t,e)})}catch(e){console.warn("leaderboard subscribe failed",e)}}else"settings"===e&&document.getElementById("view-settings")?.classList.add("active");Q()&&O(),!1!==t.playSound&&"function"==typeof FluxAudio?.buttonClick&&FluxAudio.buttonClick()}document.querySelectorAll(".nav-item[data-view]").forEach(e=>{e.addEventListener("click",()=>{G(e.dataset.view)})}),window.addEventListener("flux-leaderboard-metric-change",e=>{const t=e?.detail?.metric||window._fluxLeaderboardMetric||"focusMinutesTotal";if(document.getElementById("view-leaderboard")?.classList.contains("active"))try{const e=window._fluxLeaderboardRange||"week";window._fluxLeaderboardUnsub&&(window._fluxLeaderboardUnsub(),window._fluxLeaderboardUnsub=null),window._fluxLeaderboardUnsub=window.Leaderboard?.subscribeLeaderboard(t,e,e=>{const t=document.getElementById("leaderboard-root");t&&window.LeaderboardUI&&window.LeaderboardUI.renderLeaderboard(t,e)})}catch(e){console.warn("leaderboard re-subscribe failed",e)}}),window.addEventListener("flux-leaderboard-range-change",e=>{const t=e?.detail?.range||window._fluxLeaderboardRange||"week";if(document.getElementById("view-leaderboard")?.classList.contains("active"))try{const e=window._fluxLeaderboardMetric||"focusMinutesTotal";window._fluxLeaderboardUnsub&&(window._fluxLeaderboardUnsub(),window._fluxLeaderboardUnsub=null),window._fluxLeaderboardUnsub=window.Leaderboard?.subscribeLeaderboard(e,t,e=>{const t=document.getElementById("leaderboard-root");t&&window.LeaderboardUI&&window.LeaderboardUI.renderLeaderboard(t,e)})}catch(e){console.warn("leaderboard re-subscribe failed",e)}});let K=Flux.load("flux_quoteIndex",0),X=[];const Y=document.getElementById("quote-text"),Z=document.getElementById("quote-author");function ee(){X=Flux.quotes.map((e,t)=>t);for(let e=X.length-1;e>0;e--){const t=Math.floor(Math.random()*(e+1));[X[e],X[t]]=[X[t],X[e]]}K=0}function te(e=!0){const t=Flux.quotes[X[K%X.length]];e?(Y.style.opacity="0",Z.style.opacity="0",setTimeout(()=>{Y.textContent=`"${t.text}"`,Z.textContent=`— ${t.author}`,Y.style.opacity="1",Z.style.opacity="1"},400)):(Y.textContent=`"${t.text}"`,Z.textContent=`— ${t.author}`),Flux.save("flux_quoteIndex",K)}function ne(){K=(K+1)%X.length,0===K&&ee(),te()}ee(),te(!1);let oe=null;const de=e?12e3:8e3;function ae(){oe&&(clearTimeout(oe),oe=null),document.hidden||(oe=window.setTimeout(()=>{ne(),ae()},de))}document.addEventListener("visibilitychange",ae),ae(),document.getElementById("quote-next-btn")?.addEventListener("click",()=>{ne(),ae(),FluxAudio.buttonClick()});const se=document.querySelectorAll(".sound-btn"),le=document.getElementById("sound-volume-slider"),ie=document.getElementById("sound-volume-value"),ce=document.getElementById("sound-wave-bars");function ue(e){if(window.__fluxModulesBootstrapped)return e&&"undefined"!=typeof FluxProfile&&FluxProfile.init(e),void j();if(window.__fluxModulesBootstrapped=!0,FluxAudio.init(),FluxTodo.init(),FluxPomo.init(),FluxStats.init(),FluxChallenges.init(),se.forEach(e=>{e.classList.toggle("active",FluxAudio.isActive(e.dataset.sound))}),ce.classList.toggle("hidden",!FluxAudio.hasAnySoundActive()),e&&"undefined"!=typeof FluxProfile&&FluxProfile.init(e),!window.__fluxInitialViewApplied){window.__fluxInitialViewApplied=!0;const t=_().startView,n=e||!J()||H.has(t)?t:"dashboard";n&&C.has(n)&&G(n,{playSound:!1})}j()}se.forEach(e=>{e.addEventListener("click",()=>{const t=e.dataset.sound,n=FluxAudio.toggleAmbient(t);e.classList.toggle("active",n),ce.classList.toggle("hidden",!FluxAudio.hasAnySoundActive()),FluxAudio.buttonClick()})}),le?.addEventListener("input",e=>{const t=parseInt(e.target.value);FluxAudio.setVolume(t),ie&&(ie.textContent=t+"%")}),document.getElementById("sound-master-toggle")?.addEventListener("click",()=>{FluxAudio.toggleMute()}),void 0!==s.volume&&(le&&(le.value=s.volume),ie&&(ie.textContent=s.volume+"%")),window.FluxApp=window.FluxApp||{},window.FluxApp.showView=G,window.FluxApp.onAuthChange=e=>{const t=document.getElementById("app-shell"),n=location.pathname.endsWith("login.html"),o=!e&&J();if(e)document.body.classList.add("authenticated"),document.body.classList.remove("preview-mode"),t&&(t.style.display="block"),ue(e);else if(o)document.body.classList.add("authenticated","preview-mode"),t&&(t.style.display="block"),ue(null);else if(document.body.classList.remove("authenticated"),document.body.classList.remove("preview-mode"),t&&(t.style.display="none"),!n)return void location.replace("login.html");j()};const re=window.FluxAuthState?.user||window.FluxAuth?.user?.();re?window.FluxApp.onAuthChange(re):window.FluxAuthState?.ready&&!re&&window.FluxApp.onAuthChange(null)}();
+/* ═══════════════════════════════════════
+   FLUX — Main App Controller
+   ═══════════════════════════════════════ */
+
+(function() {
+  'use strict';
+
+  const isLowPerformance = typeof Flux !== 'undefined' && Flux.applyPerformanceClass();
+
+  /* ─── Custom Cursor — Magnetic with Trail ─── */
+  const cursorDot  = document.getElementById('cursor-dot');
+  const cursorRing = document.getElementById('cursor-ring');
+  let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+  let cursorRaf = 0;
+
+  // Simplified cursor: hide custom elements, use standard pointer
+  if (cursorDot) cursorDot.style.display = 'none';
+  if (cursorRing) cursorRing.style.display = 'none';
+  document.body.style.cursor = 'auto';
+  document.body.classList.remove('custom-cursor-enabled');
+
+  /* ─── Theme Toggle ─── */
+  const themeToggle = document.getElementById('theme-toggle');
+  function setTheme(theme, persist = true) {
+    window.FluxTheme?.applyTheme(theme, { persist });
+  }
+
+  themeToggle?.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    setTheme(current === 'dark' ? 'light' : 'dark');
+    FluxAudio.buttonClick();
+  });
+
+  // Load saved theme
+  const savedSettings = Flux.load('flux_settings', {});
+  const savedSounds = Flux.load('flux_sounds', { volume: 30, muted: false, active: {} });
+  if (savedSettings.theme) setTheme(savedSettings.theme, false);
+
+  /* ─── Accent Color ─── */
+  function setAccent(color, persist = true) {
+    const palette = window.FluxTheme?.applyAccent(color, { persist }) || null;
+    const resolvedColor = palette?.primary || color;
+
+    const accentInput = document.getElementById('custom-accent-color');
+    if (accentInput) accentInput.value = resolvedColor;
+
+    // Update active dot
+    document.querySelectorAll('.accent-dot').forEach(d => {
+      d.classList.toggle('active', d.dataset.color === resolvedColor);
+    });
+  }
+
+  document.getElementById('accent-dots')?.addEventListener('click', (e) => {
+    const dot = e.target.closest('.accent-dot');
+    if (dot) {
+      setAccent(dot.dataset.color);
+      FluxAudio.buttonClick();
+    }
+  });
+
+  document.getElementById('custom-accent-color')?.addEventListener('input', (e) => {
+    setAccent(e.target.value);
+  });
+
+  // Load saved accent
+  if (savedSettings.accent) setAccent(savedSettings.accent, false);
+
+  window.addEventListener('storage', (event) => {
+    if (event.key !== 'flux_settings' || !event.newValue) return;
+
+    try {
+      const next = JSON.parse(event.newValue);
+      if (next.theme) setTheme(next.theme, false);
+      if (next.accent) setAccent(next.accent, false);
+    } catch {}
+  });
+
+  window.addEventListener('flux-accent-change', () => {
+    const accentInput = document.getElementById('custom-accent-color');
+    if (accentInput) accentInput.value = Flux.load('flux_settings', {}).accent || '#8b5cf6';
+    if (document.getElementById('view-challenges')?.classList.contains('active') && typeof FluxChallenges?.render === 'function') {
+      FluxChallenges.render();
+    }
+  });
+
+  const accentMenuToggle = document.getElementById('accent-menu-toggle');
+  const accentMenu = document.getElementById('accent-menu');
+
+  accentMenuToggle?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    accentMenu?.classList.toggle('hidden');
+    FluxAudio.buttonClick();
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!accentMenu || !accentMenuToggle) return;
+    if (!accentMenu.contains(event.target) && !accentMenuToggle.contains(event.target)) {
+      accentMenu.classList.add('hidden');
+    }
+  });
+
+  /* ─── Settings Panel ─── */
+  const settingsThemeSelect = document.getElementById('settings-theme-select');
+  const settingsAccentPicker = document.getElementById('settings-accent-picker');
+  const settingsAccentPresets = document.getElementById('settings-accent-presets');
+  const settingsStartView = document.getElementById('settings-start-view');
+  const settingsSidebarMode = document.getElementById('settings-sidebar-mode');
+  const settingsQuoteToggle = document.getElementById('settings-quote-toggle');
+  const settingsCompactToggle = document.getElementById('settings-compact-toggle');
+  const settingsVolumeRange = document.getElementById('settings-volume-range');
+  const settingsVolumeValue = document.getElementById('settings-volume-value');
+  const settingsMuteToggle = document.getElementById('settings-mute-toggle');
+  const settingsMotionToggle = document.getElementById('settings-motion-toggle');
+  const settingsThemeChip = document.getElementById('settings-theme-chip');
+  const settingsAccentChip = document.getElementById('settings-accent-chip');
+  const settingsViewChip = document.getElementById('settings-view-chip');
+  const settingsSoundChip = document.getElementById('settings-sound-chip');
+  const settingsProfileAvatar = document.getElementById('settings-profile-avatar');
+  const settingsProfileSummary = document.getElementById('settings-profile-summary');
+  const settingsProfileNote = document.getElementById('settings-profile-note');
+  const settingsResetBtn = document.getElementById('settings-reset-preferences');
+
+  const settingsViewOptions = new Set(['dashboard', 'tasks', 'pomodoro', 'stats', 'challenges', 'leaderboard', 'settings']);
+
+  function getCurrentSettings() {
+    return Flux.load('flux_settings', {});
+  }
+
+  function getCurrentSoundSettings() {
+    return Flux.load('flux_sounds', { volume: 30, muted: false, active: {} });
+  }
+
+  function getThemeLabel(value) {
+    return value === 'light' ? 'Light' : 'Dark';
+  }
+
+  function getAccentLabel(color) {
+    const palette = FluxTheme.getAccentPalette(color || '#8b5cf6');
+    return palette.primary.toUpperCase();
+  }
+
+  function getStartViewLabel(view) {
+    const labels = {
+      dashboard: 'Dashboard',
+      tasks: 'Tasks',
+      pomodoro: 'Pomodoro',
+      stats: 'Stats',
+      challenges: 'Challenges',
+      leaderboard: 'Leaderboard',
+      settings: 'Settings',
+    };
+    return labels[view] || 'Dashboard';
+  }
+
+  function getProfileShortcutData() {
+    const profileApi = window.FluxProfile || null;
+    const profile = profileApi?.data || {};
+    const user = profileApi?.activeUser || window.FluxAuthState?.user || null;
+    const name = profile.displayName || user?.displayName || user?.email || 'Flux User';
+    const username = profile.username ? `@${profile.username}` : '';
+    const bio = profile.bio || 'Open your Flux profile editor to update your name, bio, photo, and banner.';
+    const photoURL = profile.photoURL || user?.photoURL || '';
+
+    return { name, username, bio, photoURL };
+  }
+
+  function applyWorkspacePreferences(settings = getCurrentSettings()) {
+    document.body.classList.toggle('hide-quote-bar', Boolean(settings.hideQuotes));
+    document.body.classList.toggle('compact-mode', Boolean(settings.compactMode));
+    document.body.classList.toggle('performance-lite', Boolean(settings.reducedMotion));
+  }
+
+  function syncSettingsPanel() {
+    const settings = getCurrentSettings();
+    const sounds = getCurrentSoundSettings();
+    const accent = settings.accent || '#8b5cf6';
+    const volume = Number.isFinite(Number(sounds.volume)) ? Number(sounds.volume) : 30;
+    const muted = Boolean(sounds.muted);
+    const theme = settings.theme || document.documentElement.getAttribute('data-theme') || 'dark';
+
+    if (settingsThemeSelect) settingsThemeSelect.value = theme;
+    if (settingsAccentPicker) settingsAccentPicker.value = accent;
+    if (settingsStartView) settingsStartView.value = settings.startView && settingsViewOptions.has(settings.startView) ? settings.startView : 'dashboard';
+    if (settingsSidebarMode) settingsSidebarMode.value = settings.sidebarCollapsed ? 'collapsed' : 'expanded';
+    if (settingsQuoteToggle) settingsQuoteToggle.checked = Boolean(settings.hideQuotes);
+    if (settingsCompactToggle) settingsCompactToggle.checked = Boolean(settings.compactMode);
+    if (settingsVolumeRange) settingsVolumeRange.value = String(volume);
+    if (settingsVolumeValue) settingsVolumeValue.textContent = `${volume}%`;
+    if (settingsMuteToggle) settingsMuteToggle.checked = muted;
+    if (settingsMotionToggle) settingsMotionToggle.checked = Boolean(settings.reducedMotion);
+
+    if (settingsThemeChip) settingsThemeChip.textContent = `Theme: ${getThemeLabel(theme)}`;
+    if (settingsAccentChip) settingsAccentChip.textContent = `Accent: ${getAccentLabel(accent)}`;
+    if (settingsViewChip) settingsViewChip.textContent = `Start: ${getStartViewLabel(settings.startView || 'dashboard')}`;
+    if (settingsSoundChip) settingsSoundChip.textContent = muted ? 'Sound: Muted' : `Sound: ${volume}%`;
+
+    const profile = getProfileShortcutData();
+    if (settingsProfileAvatar) {
+      settingsProfileAvatar.alt = profile.name;
+      settingsProfileAvatar.src = profile.photoURL || window.FluxProfile?.getFallbackAvatar?.(profile.name) || 'assets/flux-logo.svg';
+    }
+    if (settingsProfileSummary) settingsProfileSummary.textContent = profile.bio;
+    if (settingsProfileNote) settingsProfileNote.textContent = profile.username || 'Quick access';
+
+    document.querySelectorAll('.settings-accent-dot').forEach((dot) => {
+      dot.classList.toggle('active', dot.dataset.accent === accent);
+    });
+
+    applyWorkspacePreferences(settings);
+  }
+
+  function saveSettingsPatch(patch) {
+    const next = Flux.updateSettings(patch);
+    syncSettingsPanel();
+    return next;
+  }
+
+  settingsThemeSelect?.addEventListener('change', (event) => {
+    const theme = event.target.value === 'light' ? 'light' : 'dark';
+    setTheme(theme);
+    syncSettingsPanel();
+    FluxAudio.buttonClick();
+  });
+
+  settingsAccentPicker?.addEventListener('input', (event) => {
+    setAccent(event.target.value);
+    syncSettingsPanel();
+  });
+
+  settingsAccentPresets?.addEventListener('click', (event) => {
+    const preset = event.target.closest('.settings-accent-dot');
+    if (!preset) return;
+    setAccent(preset.dataset.accent);
+    syncSettingsPanel();
+    FluxAudio.buttonClick();
+  });
+
+  settingsStartView?.addEventListener('change', (event) => {
+    const nextView = settingsViewOptions.has(event.target.value) ? event.target.value : 'dashboard';
+    saveSettingsPatch({ startView: nextView });
+    Flux.showToast(`Start page set to ${getStartViewLabel(nextView)}`);
+  });
+
+  settingsSidebarMode?.addEventListener('change', (event) => {
+    const collapsed = event.target.value === 'collapsed';
+    sidebarCollapsed = collapsed;
+    saveSettingsPatch({ sidebarCollapsed: collapsed });
+    updateSidebarState();
+    FluxAudio.buttonClick();
+  });
+
+  settingsQuoteToggle?.addEventListener('change', (event) => {
+    saveSettingsPatch({ hideQuotes: event.target.checked });
+  });
+
+  settingsCompactToggle?.addEventListener('change', (event) => {
+    saveSettingsPatch({ compactMode: event.target.checked });
+  });
+
+  settingsVolumeRange?.addEventListener('input', (event) => {
+    const volume = parseInt(event.target.value, 10);
+    FluxAudio.setVolume(volume);
+    if (settingsVolumeValue) settingsVolumeValue.textContent = `${volume}%`;
+    syncSettingsPanel();
+  });
+
+  settingsMuteToggle?.addEventListener('change', (event) => {
+    const shouldMute = Boolean(event.target.checked);
+    if (FluxAudio.muted !== shouldMute) {
+      FluxAudio.toggleMute();
+    }
+    syncSettingsPanel();
+  });
+
+  settingsMotionToggle?.addEventListener('change', (event) => {
+    saveSettingsPatch({ reducedMotion: event.target.checked });
+    document.body.classList.toggle('performance-lite', event.target.checked);
+    Flux.showToast(event.target.checked ? 'Reduced motion enabled' : 'Motion effects restored');
+    FluxAudio.buttonClick();
+  });
+
+  document.getElementById('settings-open-profile')?.addEventListener('click', () => {
+    const profileApi = window.FluxProfile || (typeof FluxProfile !== 'undefined' ? FluxProfile : null);
+    profileApi?.openModal?.();
+    FluxAudio.buttonClick();
+  });
+
+  document.getElementById('settings-open-accent')?.addEventListener('click', () => {
+    accentMenu?.classList.remove('hidden');
+    settingsAccentPicker?.focus();
+    FluxAudio.buttonClick();
+  });
+
+  settingsResetBtn?.addEventListener('click', () => {
+    const confirmed = window.confirm('Reset Flux preferences back to defaults? This keeps your tasks and profile data.');
+    if (!confirmed) return;
+
+    try {
+      localStorage.removeItem('flux_settings');
+      localStorage.removeItem('flux_sounds');
+    } catch {}
+
+    Flux.showToast('Preferences reset');
+    window.location.reload();
+  });
+
+  window.addEventListener('flux-theme-change', syncSettingsPanel);
+  window.addEventListener('flux-accent-change', syncSettingsPanel);
+  window.addEventListener('flux-sound-change', syncSettingsPanel);
+  window.addEventListener('flux-profile-change', syncSettingsPanel);
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'flux_settings' || event.key === 'flux_sounds' || event.key === 'flux_profile') {
+      syncSettingsPanel();
+    }
+  });
+
+  syncSettingsPanel();
+
+  /* ─── Sidebar ─── */
+  const sidebar = document.getElementById('sidebar');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+  const sidebarClose = document.getElementById('sidebar-close');
+  let sidebarCollapsed = false;
+  let sidebarOpen = false;
+
+  const mobileSidebarQuery = window.matchMedia('(max-width: 768px)');
+
+  function isMobileSidebar() {
+    return mobileSidebarQuery.matches;
+  }
+
+  function updateSidebarState() {
+    if (!sidebar) return;
+
+    const mobile = isMobileSidebar();
+
+    if (mobile) {
+      sidebar.classList.remove('collapsed');
+      document.body.classList.remove('sidebar-collapsed');
+      sidebar.classList.toggle('open', sidebarOpen);
+      document.body.classList.toggle('sidebar-open', sidebarOpen);
+      sidebarBackdrop?.classList.toggle('visible', sidebarOpen);
+      sidebar.setAttribute('aria-hidden', sidebarOpen ? 'false' : 'true');
+      sidebarToggle?.setAttribute('aria-expanded', sidebarOpen ? 'true' : 'false');
+      return;
+    }
+
+    sidebarOpen = false;
+    sidebar.classList.remove('open');
+    document.body.classList.remove('sidebar-open');
+    sidebarBackdrop?.classList.remove('visible');
+    sidebar.setAttribute('aria-hidden', 'false');
+    sidebarToggle?.setAttribute('aria-expanded', sidebarCollapsed ? 'true' : 'false');
+    sidebar.classList.toggle('collapsed', sidebarCollapsed);
+    document.body.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+  }
+
+  function openMobileSidebar() {
+    if (!isMobileSidebar()) return;
+    sidebarOpen = true;
+    updateSidebarState();
+  }
+
+  function closeMobileSidebar() {
+    if (!isMobileSidebar()) return;
+    sidebarOpen = false;
+    updateSidebarState();
+  }
+
+  sidebarToggle?.addEventListener('click', () => {
+    if (isMobileSidebar()) {
+      sidebarOpen ? closeMobileSidebar() : openMobileSidebar();
+    } else {
+      sidebarCollapsed = !sidebarCollapsed;
+      saveSettingsPatch({ sidebarCollapsed });
+      updateSidebarState();
+    }
+    FluxAudio.buttonClick();
+  });
+
+  sidebarBackdrop?.addEventListener('click', () => {
+    closeMobileSidebar();
+  });
+
+  sidebarClose?.addEventListener('click', () => {
+    if (isMobileSidebar()) {
+      closeMobileSidebar();
+    } else {
+      if (!sidebarCollapsed) {
+        sidebarCollapsed = true;
+        saveSettingsPatch({ sidebarCollapsed });
+      }
+      updateSidebarState();
+    }
+    FluxAudio.buttonClick();
+  });
+
+  window.addEventListener('resize', updateSidebarState);
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isMobileSidebar() && sidebarOpen) {
+      closeMobileSidebar();
+    }
+  });
+
+  sidebarCollapsed = Boolean(getCurrentSettings().sidebarCollapsed);
+  updateSidebarState();
+
+  const previewRestrictedViews = new Set(['stats', 'challenges', 'leaderboard']);
+  const previewAllowedViews = new Set(['dashboard', 'tasks', 'pomodoro']);
+
+  function isPreviewMode() {
+    return Boolean(window.FluxAuthUtils?.isPreviewMode?.());
+  }
+
+  function isAuthenticatedUser() {
+    return Boolean(window.FluxAuthState?.user || window.FluxAuth?.user?.());
+  }
+
+  function ensurePreviewBanner(shouldShow) {
+    const mainContent = document.getElementById('main-content');
+    const quoteBar = document.getElementById('quote-bar');
+    let banner = document.getElementById('preview-banner');
+
+    if (!shouldShow) {
+      banner?.remove();
+      return;
+    }
+
+    if (banner || !mainContent) return;
+
+    banner = document.createElement('section');
+    banner.id = 'preview-banner';
+    banner.className = 'preview-banner glass-panel';
+    banner.innerHTML = `
+      <div class="preview-banner-copy">
+        <span class="preview-banner-kicker">Limited preview</span>
+        <h2>Pomodoro and Tasks are open.</h2>
+        <p>Sign in to unlock Stats, Challenges, and Leaderboard.</p>
+      </div>
+      <div class="preview-banner-actions">
+        <a class="preview-banner-btn" href="login.html">Sign in</a>
+      </div>
+    `;
+
+    if (quoteBar?.parentNode === mainContent) {
+      mainContent.insertBefore(banner, quoteBar);
+    } else {
+      mainContent.prepend(banner);
+    }
+  }
+
+  function syncPreviewAccessUI() {
+    const preview = !isAuthenticatedUser() && isPreviewMode();
+    document.body.classList.toggle('preview-mode', preview);
+    document.querySelectorAll('.nav-item[data-view]').forEach((item) => {
+      const locked = preview && previewRestrictedViews.has(item.dataset.view);
+      item.classList.toggle('hidden', locked);
+      item.setAttribute('aria-hidden', locked ? 'true' : 'false');
+    });
+    ensurePreviewBanner(preview);
+  }
+
+  /* ─── Navigation ─── */
+  function showView(view, options = {}) {
+      const preview = !isAuthenticatedUser() && isPreviewMode();
+      if (preview && previewRestrictedViews.has(view)) {
+        Flux.showToast('Sign in to unlock Stats, Challenges, and Leaderboard.');
+        view = 'dashboard';
+      }
+
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const currentNav = document.querySelector(`.nav-item[data-view="${view}"]`);
+      if (currentNav) currentNav.classList.add('active');
+
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+
+      if (view === 'dashboard') {
+        document.getElementById('view-dashboard').classList.add('active');
+      } else if (view === 'tasks') {
+        document.getElementById('view-dashboard').classList.add('active');
+        document.getElementById('todo-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (view === 'pomodoro') {
+        document.getElementById('view-dashboard').classList.add('active');
+        document.getElementById('pomo-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (view === 'stats') {
+        document.getElementById('view-stats').classList.add('active');
+        FluxStats.render();
+      } else if (view === 'challenges') {
+        document.getElementById('view-challenges').classList.add('active');
+        FluxChallenges.render();
+      } else if (view === 'leaderboard') {
+        const leaderboardView = document.getElementById('view-leaderboard');
+        leaderboardView?.classList.add('active');
+        const root = document.getElementById('leaderboard-root');
+        if (root && window.LeaderboardUI) {
+          window.LeaderboardUI.attach(root);
+        }
+        requestAnimationFrame(() => {
+          leaderboardView?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        try {
+          if (window._fluxLeaderboardUnsub) {
+            window._fluxLeaderboardUnsub();
+            window._fluxLeaderboardUnsub = null;
+          }
+          const metric = window._fluxLeaderboardMetric || 'focusMinutesTotal';
+          const range = window._fluxLeaderboardRange || 'week';
+          window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
+            const r = document.getElementById('leaderboard-root');
+            if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
+          });
+        } catch (e) { console.warn('leaderboard subscribe failed', e); }
+      } else if (view === 'pets') {
+        document.getElementById('view-pets')?.classList.add('active');
+        if (window.FluxPets?.renderPetPanel) {
+          window.FluxPets.renderPetPanel();
+        }
+      } else if (view === 'settings') {
+        document.getElementById('view-settings')?.classList.add('active');
+      }
+
+      if (isMobileSidebar()) closeMobileSidebar();
+      if (options.playSound !== false && typeof FluxAudio?.buttonClick === 'function') FluxAudio.buttonClick();
+  }
+
+  document.querySelectorAll('.nav-item[data-view]').forEach(item => {
+    item.addEventListener('click', () => {
+      showView(item.dataset.view);
+    });
+  });
+
+  // Re-subscribe leaderboard when metric changes from the UI
+  window.addEventListener('flux-leaderboard-metric-change', (e) => {
+    const metric = e?.detail?.metric || window._fluxLeaderboardMetric || 'focusMinutesTotal';
+    if (!document.getElementById('view-leaderboard')?.classList.contains('active')) return;
+    try {
+      const range = window._fluxLeaderboardRange || 'week';
+      if (window._fluxLeaderboardUnsub) { window._fluxLeaderboardUnsub(); window._fluxLeaderboardUnsub = null; }
+      window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
+        const r = document.getElementById('leaderboard-root');
+        if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
+      });
+    } catch (err) { console.warn('leaderboard re-subscribe failed', err); }
+  });
+
+  window.addEventListener('flux-leaderboard-range-change', (e) => {
+    const range = e?.detail?.range || window._fluxLeaderboardRange || 'week';
+    if (!document.getElementById('view-leaderboard')?.classList.contains('active')) return;
+    try {
+      const metric = window._fluxLeaderboardMetric || 'focusMinutesTotal';
+      if (window._fluxLeaderboardUnsub) { window._fluxLeaderboardUnsub(); window._fluxLeaderboardUnsub = null; }
+      window._fluxLeaderboardUnsub = window.Leaderboard?.subscribeLeaderboard(metric, range, (users) => {
+        const r = document.getElementById('leaderboard-root');
+        if (r && window.LeaderboardUI) window.LeaderboardUI.renderLeaderboard(r, users);
+      });
+    } catch (err) { console.warn('leaderboard re-subscribe failed', err); }
+  });
+
+  /* ─── Quotes ─── */
+  let quoteIndex = Flux.load('flux_quoteIndex', 0);
+  let quoteOrder = [];
+  const quoteText = document.getElementById('quote-text');
+  const quoteAuthor = document.getElementById('quote-author');
+
+  function shuffleQuotes() {
+    quoteOrder = Flux.quotes.map((_, i) => i);
+    for (let i = quoteOrder.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [quoteOrder[i], quoteOrder[j]] = [quoteOrder[j], quoteOrder[i]];
+    }
+    quoteIndex = 0;
+  }
+  shuffleQuotes();
+
+  function showQuote(animate = true) {
+    const q = Flux.quotes[quoteOrder[quoteIndex % quoteOrder.length]];
+    if (animate) {
+      quoteText.style.opacity = '0';
+      quoteAuthor.style.opacity = '0';
+      setTimeout(() => {
+        quoteText.textContent = `"${q.text}"`;
+        quoteAuthor.textContent = `— ${q.author}`;
+        quoteText.style.opacity = '1';
+        quoteAuthor.style.opacity = '1';
+      }, 400);
+    } else {
+      quoteText.textContent = `"${q.text}"`;
+      quoteAuthor.textContent = `— ${q.author}`;
+    }
+    Flux.save('flux_quoteIndex', quoteIndex);
+  }
+
+  function nextQuote() {
+    quoteIndex = (quoteIndex + 1) % quoteOrder.length;
+    if (quoteIndex === 0) shuffleQuotes();
+    showQuote();
+  }
+
+  showQuote(false);
+
+  let quoteTimer = null;
+  const quoteIntervalMs = isLowPerformance ? 12000 : 8000;
+
+  function scheduleQuoteCycle() {
+    if (quoteTimer) {
+      clearTimeout(quoteTimer);
+      quoteTimer = null;
+    }
+
+    if (document.hidden) return;
+
+    quoteTimer = window.setTimeout(() => {
+      nextQuote();
+      scheduleQuoteCycle();
+    }, quoteIntervalMs);
+  }
+
+  document.addEventListener('visibilitychange', scheduleQuoteCycle);
+  scheduleQuoteCycle();
+
+  document.getElementById('quote-next-btn')?.addEventListener('click', () => {
+    nextQuote();
+    scheduleQuoteCycle();
+    FluxAudio.buttonClick();
+  });
+
+  /* ─── Sound Mixer UI ─── */
+  const soundBtns = document.querySelectorAll('.sound-btn');
+  const volumeSlider = document.getElementById('sound-volume-slider');
+  const volumeValue = document.getElementById('sound-volume-value');
+  const waveBars = document.getElementById('sound-wave-bars');
+
+  soundBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.sound;
+      const active = FluxAudio.toggleAmbient(type);
+      btn.classList.toggle('active', active);
+      waveBars.classList.toggle('hidden', !FluxAudio.hasAnySoundActive());
+      FluxAudio.buttonClick();
+    });
+  });
+
+  volumeSlider?.addEventListener('input', (e) => {
+    const v = parseInt(e.target.value);
+    FluxAudio.setVolume(v);
+    if (volumeValue) volumeValue.textContent = v + '%';
+  });
+
+  // Sound master toggle
+  document.getElementById('sound-master-toggle')?.addEventListener('click', () => {
+    FluxAudio.toggleMute();
+  });
+
+  // Restore saved sound state
+  if (savedSounds.volume !== undefined) {
+    if (volumeSlider) volumeSlider.value = savedSounds.volume;
+    if (volumeValue) volumeValue.textContent = savedSounds.volume + '%';
+  }
+
+  function bootstrapModules(user) {
+    if (window.__fluxModulesBootstrapped) {
+      if (user && typeof FluxProfile !== 'undefined') FluxProfile.init(user);
+      syncPreviewAccessUI();
+      return;
+    }
+
+    window.__fluxModulesBootstrapped = true;
+    // Avoid initializing audio on low-performance devices or when user requested reduced motion
+    if (!isLowPerformance) {
+      FluxAudio.init();
+    }
+    FluxTodo.init();
+    FluxPomo.init();
+    FluxStats.init();
+    FluxChallenges.init();
+    soundBtns.forEach((btn) => {
+      btn.classList.toggle('active', FluxAudio.isActive(btn.dataset.sound));
+    });
+    waveBars.classList.toggle('hidden', !FluxAudio.hasAnySoundActive());
+    if (user && typeof FluxProfile !== 'undefined') FluxProfile.init(user);
+
+    if (!window.__fluxInitialViewApplied) {
+      window.__fluxInitialViewApplied = true;
+      const startView = getCurrentSettings().startView;
+      const nextView = !user && isPreviewMode() && !previewAllowedViews.has(startView) ? 'dashboard' : startView;
+      if (nextView && settingsViewOptions.has(nextView)) {
+        showView(nextView, { playSound: false });
+      }
+    }
+
+    syncPreviewAccessUI();
+  }
+
+  window.FluxApp = window.FluxApp || {};
+  window.FluxApp.showView = showView;
+  window.FluxApp.onAuthChange = (user) => {
+    const appShell = document.getElementById('app-shell');
+    const isLoginPage = location.pathname.endsWith('login.html');
+    const preview = !user && isPreviewMode();
+
+    if (user) {
+      document.body.classList.add('authenticated');
+      document.body.classList.remove('preview-mode');
+      if (appShell) appShell.style.display = 'block';
+      bootstrapModules(user);
+    } else if (preview) {
+      document.body.classList.add('authenticated', 'preview-mode');
+      if (appShell) appShell.style.display = 'block';
+      bootstrapModules(null);
+    } else {
+      document.body.classList.remove('authenticated');
+      document.body.classList.remove('preview-mode');
+      if (appShell) appShell.style.display = 'none';
+      if (!isLoginPage) {
+        location.replace('login.html');
+        return;
+      }
+    }
+
+    syncPreviewAccessUI();
+  };
+
+  const currentAuthUser = window.FluxAuthState?.user || window.FluxAuth?.user?.();
+  if (currentAuthUser) {
+    window.FluxApp.onAuthChange(currentAuthUser);
+  } else if (window.FluxAuthState?.ready && !currentAuthUser) {
+    window.FluxApp.onAuthChange(null);
+  }
+
+})();

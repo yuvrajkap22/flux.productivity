@@ -4,11 +4,12 @@ import {
   GoogleAuthProvider,
   browserLocalPersistence,
   onAuthStateChanged,
+  connectAuthEmulator,
   setPersistence,
   signInWithPopup,
   signOut,
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
-import { firebaseConfig, isFirebaseConfigured } from './firebase-config.js';
+import { firebaseConfig, isFirebaseConfigured, shouldUseFirebaseEmulators } from './firebase-config.js';
 
 const appShell = document.getElementById('app-shell');
 const authMessage = document.getElementById('auth-message');
@@ -156,6 +157,13 @@ if (authUtils.normalizeDevHost()) {
 } else {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  if (shouldUseFirebaseEmulators()) {
+    try {
+      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    } catch (error) {
+      console.warn('Auth emulator connection skipped or failed', error);
+    }
+  }
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
 

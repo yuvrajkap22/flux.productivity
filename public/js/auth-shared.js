@@ -1,1 +1,88 @@
-!function(){"use strict";function t(t){try{t?localStorage.setItem("flux_preview_mode","true"):localStorage.removeItem("flux_preview_mode")}catch(t){}return window.dispatchEvent(new CustomEvent("flux-preview-mode-change",{detail:{enabled:Boolean(t)}})),Boolean(t)}function e(t){const e=function(t){return String(t||"").replace(/[<>]/g,"").replace(/\s+/g," ").trim()}(t);if(!e)return"FU";const o=e.split(" ").filter(Boolean);return o.length>=2?`${o[0][0]}${o[1][0]}`.toUpperCase():e.slice(0,2).toUpperCase()}function o(t="Flux User"){const o=e(t),n=window.FluxTheme?.getAccentPalette?.(window.Flux?.load?.("flux_settings",{})?.accent)?.primary||"#8b5cf6",r=window.FluxTheme?.getAccentPalette?.(window.Flux?.load?.("flux_settings",{})?.accent)?.secondary||"#06b6d4";return`data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${n}"/><stop offset="1" stop-color="${r}"/></linearGradient></defs><rect width="200" height="200" rx="100" fill="url(#g)"/><text x="100" y="118" font-size="72" font-family="Arial,sans-serif" text-anchor="middle" fill="#fff">${o}</text></svg>`)}`}window.FluxAuthUtils=Object.freeze({normalizeDevHost:function(){if("http:"!==location.protocol||"127.0.0.1"!==location.hostname)return!1;const t=`http://localhost${location.port?`:${location.port}`:""}${location.pathname}${location.search}${location.hash}`;return location.replace(t),!0},isLoginPage:function(t=location.pathname){return t.endsWith("login.html")},isPreviewMode:function(){try{const t=localStorage.getItem("flux_preview_mode");return"true"===t||"1"===t}catch(t){return!1}},setPreviewMode:t,clearPreviewMode:function(){return t(!1)},getInitials:e,fallbackAvatarDataUri:o,resolveAvatarSource:function(t,e="Flux User"){return String(t||"").trim()||o(e)}})}();
+(function () {
+  'use strict';
+
+  function normalizeDevHost() {
+    if (location.protocol !== 'http:' || location.hostname !== '127.0.0.1') return false;
+    const target = `http://localhost${location.port ? `:${location.port}` : ''}${location.pathname}${location.search}${location.hash}`;
+    location.replace(target);
+    return true;
+  }
+
+  function isLoginPage(pathname = location.pathname) {
+    return pathname.endsWith('login.html');
+  }
+
+  function isPreviewMode() {
+    try {
+      const raw = localStorage.getItem('flux_preview_mode');
+      return raw === 'true' || raw === '1';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function setPreviewMode(enabled) {
+    try {
+      if (enabled) {
+        localStorage.setItem('flux_preview_mode', 'true');
+      } else {
+        localStorage.removeItem('flux_preview_mode');
+      }
+    } catch (error) {
+      // Ignore storage failures and continue with the in-memory state.
+    }
+
+    window.dispatchEvent(new CustomEvent('flux-preview-mode-change', {
+      detail: { enabled: Boolean(enabled) },
+    }));
+
+    return Boolean(enabled);
+  }
+
+  function clearPreviewMode() {
+    return setPreviewMode(false);
+  }
+
+  function cleanLabel(label) {
+    return String(label || '')
+      .replace(/[<>]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function getInitials(label) {
+    const safe = cleanLabel(label);
+    if (!safe) return 'FU';
+
+    const words = safe.split(' ').filter(Boolean);
+    if (words.length >= 2) {
+      return `${words[0][0]}${words[1][0]}`.toUpperCase();
+    }
+
+    return safe.slice(0, 2).toUpperCase();
+  }
+
+  function fallbackAvatarDataUri(label = 'Flux User') {
+    const initials = getInitials(label);
+    const accent = window.FluxTheme?.getAccentPalette?.(window.Flux?.load?.('flux_settings', {})?.accent)?.primary || '#8b5cf6';
+    const secondary = window.FluxTheme?.getAccentPalette?.(window.Flux?.load?.('flux_settings', {})?.accent)?.secondary || '#06b6d4';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${accent}"/><stop offset="1" stop-color="${secondary}"/></linearGradient></defs><rect width="200" height="200" rx="100" fill="url(#g)"/><text x="100" y="118" font-size="72" font-family="Arial,sans-serif" text-anchor="middle" fill="#fff">${initials}</text></svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  }
+
+  function resolveAvatarSource(photoURL, label = 'Flux User') {
+    const trimmed = String(photoURL || '').trim();
+    return trimmed || fallbackAvatarDataUri(label);
+  }
+
+  window.FluxAuthUtils = Object.freeze({
+    normalizeDevHost,
+    isLoginPage,
+    isPreviewMode,
+    setPreviewMode,
+    clearPreviewMode,
+    getInitials,
+    fallbackAvatarDataUri,
+    resolveAvatarSource,
+  });
+})();

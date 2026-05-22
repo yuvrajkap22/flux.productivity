@@ -14,3 +14,11 @@ export function isFirebaseConfigured(config = firebaseConfig) {
   // Treat template placeholders as non-configured values.
   return required.every((value) => !String(value).startsWith('YOUR_'));
 }
+
+export function isLocalDevHost(hostname = window.location.hostname) {
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+export function shouldUseFirebaseEmulators() {
+  return isLocalDevHost();
+}

@@ -1,1 +1,394 @@
-const FluxProfile={isBound:!1,activeUser:null,storageKey:"flux_profile",data:{displayName:"",username:"",bio:"",goalHours:4,banner:"linear-gradient(135deg,#8b5cf6,#06b6d4)",photoURL:""},usesDefaultBanner:!0,init(e){if(this.activeUser=e||null,this.storageKey=this.getStorageKey(e),!e)return this.data.displayName="",this.data.username="",this.data.bio="",this.data.goalHours=4,this.data.banner="linear-gradient(135deg,#8b5cf6,#06b6d4)",this.data.photoURL="",this.usesDefaultBanner=!0,this.renderHeader(null),void(this.isBound||this.bindEvents());const t=Flux.load("flux_profile",null),a=Flux.load(this.storageKey,null),o=a||t||{};if(t&&!a&&Flux.saveNow(this.storageKey,t),e){this.data.displayName=Flux.cleanText(o.displayName||e.displayName||"",40),this.data.username=Flux.cleanText(o.username||"",24),this.data.bio=Flux.cleanText(o.bio||"",120),this.data.goalHours=o.goalHours||4;const t=window.FluxTheme?.getAccentPalette?.(o.accent||o.themeAccent||Flux.load("flux_settings",{})?.accent);this.data.banner=o.banner||`linear-gradient(135deg,${t?.primary||"#8b5cf6"},${t?.secondary||"#06b6d4"})`,this.usesDefaultBanner=!o.banner,this.data.photoURL=o.photoURL||e.photoURL||""}this.renderHeader(e),this.isBound||this.bindEvents()},getStorageKey:e=>`flux_profile_${Flux.cleanText(e?.uid||"guest",64)}`,getFallbackAvatar(e){const t=window.FluxAuthUtils?.fallbackAvatarDataUri;if("function"==typeof t)return t(e);const a=(Flux.cleanText(e||"Flux User",40)||"Flux User").slice(0,2).toUpperCase(),o=window.FluxTheme?.getAccentPalette?.(Flux.load("flux_settings",{})?.accent)||{primary:"#8b5cf6",secondary:"#06b6d4"},l=`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${o.primary}"/><stop offset="1" stop-color="${o.secondary}"/></linearGradient></defs><rect width="200" height="200" rx="100" fill="url(#g)"/><text x="100" y="118" font-size="72" font-family="Arial,sans-serif" text-anchor="middle" fill="#fff">${a}</text></svg>`;return`data:image/svg+xml;utf8,${encodeURIComponent(l)}`},getAvatarSource(e){return this.data.photoURL?this.data.photoURL:this.getFallbackAvatar(this.data.displayName||e?.displayName||e?.email||"Flux User")},optimizeAvatarFile:e=>new Promise((t,a)=>{const o=URL.createObjectURL(e),l=new Image;l.onload=()=>{try{const e=320,n=document.createElement("canvas");n.width=e,n.height=e;const i=n.getContext("2d");if(!i)return URL.revokeObjectURL(o),void a(new Error("Canvas not supported"));const s=Math.min(l.naturalWidth,l.naturalHeight),d=Math.floor((l.naturalWidth-s)/2),r=Math.floor((l.naturalHeight-s)/2);i.drawImage(l,d,r,s,s,0,0,e,e);const c=n.toDataURL("image/jpeg",.82);URL.revokeObjectURL(o),t(c)}catch(e){URL.revokeObjectURL(o),a(e)}},l.onerror=()=>{URL.revokeObjectURL(o),a(new Error("Failed to load selected image"))},l.src=o}),renderHeader(e){const t=document.getElementById("profile-avatar-btn"),a=document.getElementById("profile-avatar-img"),o=document.getElementById("profile-avatar-initials"),l=document.getElementById("profile-menu-signout");if(!t||!a)return;if(!e)return t.classList.add("hidden"),l&&l.classList.add("hidden"),a.src="",a.alt="Profile",a.style.display="none",void(o&&(o.style.display="block"));t.classList.remove("hidden"),l&&l.classList.toggle("hidden",!this.activeUser);const n=this.data.displayName||e?.displayName||e?.email||"Flux User";a.src=this.getAvatarSource(e),a.alt=this.data.displayName||e?.displayName||e?.email||"Profile photo",a.style.display="block",a.onerror=()=>{this.data.photoURL="",a.src=this.getFallbackAvatar(n),this.persist()},o&&(o.style.display="none")},openMenu(){const e=document.getElementById("profile-avatar-menu");e&&e.classList.remove("hidden")},closeMenu(){const e=document.getElementById("profile-avatar-menu");e&&e.classList.add("hidden")},toggleMenu(){const e=document.getElementById("profile-avatar-menu");e&&e.classList.toggle("hidden")},openModal(){const e=document.getElementById("profile-modal-overlay");e.classList.remove("hidden"),this.populateModal(),requestAnimationFrame(()=>e.classList.add("open"))},closeModal(){const e=document.getElementById("profile-modal-overlay");e.classList.remove("open"),setTimeout(()=>e.classList.add("hidden"),300)},populateModal(){document.getElementById("profile-banner").style.background=this.data.banner,document.querySelectorAll(".banner-color-opt").forEach(e=>{e.classList.toggle("active",e.dataset.color===this.data.banner)});const e=document.getElementById("profile-modal-avatar-img"),t=document.getElementById("profile-modal-avatar-initials");e.src=this.getAvatarSource(this.activeUser),e.style.display="block",e.onerror=()=>{e.src=this.getFallbackAvatar(this.data.displayName||this.activeUser?.displayName||this.activeUser?.email||"Flux User")},t&&(t.style.display="none");const a=document.getElementById("profile-photo-remove-btn");a&&(a.disabled=!this.data.photoURL),document.getElementById("profile-display-name").value=this.data.displayName,document.getElementById("profile-username").value=this.data.username,document.getElementById("profile-bio").value=this.data.bio,document.getElementById("profile-goal-slider").value=this.data.goalHours,document.getElementById("profile-goal-val").textContent=this.data.goalHours+"h";const o=Flux.load("flux_stats",{}),l=Flux.load("flux_todos",[]);document.getElementById("pstrip-streak").textContent=o.streak||0,document.getElementById("pstrip-sessions").textContent=Object.values(o.sessions||{}).reduce((e,t)=>e+t,0),document.getElementById("pstrip-tasks").textContent=l.filter(e=>e.completed).length},bindEvents(){this.isBound=!0,window.addEventListener("flux-accent-change",e=>{if(!this.activeUser)return;const t=e.detail?.palette||window.FluxTheme?.getAccentPalette?.(Flux.load("flux_settings",{})?.accent);if(this.usesDefaultBanner&&t){this.data.banner=`linear-gradient(135deg,${t.primary},${t.secondary})`;const e=document.getElementById("profile-banner");e&&(e.style.background=this.data.banner)}this.renderHeader(this.activeUser),document.getElementById("profile-modal-overlay")?.classList.contains("hidden")||this.populateModal()}),document.getElementById("profile-avatar-btn")?.addEventListener("click",()=>{this.toggleMenu(),FluxAudio.buttonClick()}),document.getElementById("profile-menu-open")?.addEventListener("click",()=>{this.closeMenu(),this.openModal(),FluxAudio.buttonClick()}),document.getElementById("profile-menu-settings")?.addEventListener("click",()=>{this.closeMenu(),window.FluxApp?.showView?.("settings"),FluxAudio.buttonClick()}),document.getElementById("profile-menu-signout")?.addEventListener("click",()=>{this.closeMenu(),Promise.resolve(window.FluxAuth?.signOut?.()).finally(()=>{location.pathname.endsWith("login.html")||location.replace("login.html")}),FluxAudio.buttonClick()}),document.addEventListener("click",e=>{const t=document.getElementById("profile-avatar-btn"),a=document.getElementById("profile-avatar-menu");t&&a&&(t.contains(e.target)||a.contains(e.target)||this.closeMenu())}),document.getElementById("profile-modal-close")?.addEventListener("click",()=>{this.closeModal()}),document.getElementById("profile-modal-overlay")?.addEventListener("click",e=>{e.target===document.getElementById("profile-modal-overlay")&&this.closeModal()}),document.getElementById("profile-banner")?.addEventListener("click",e=>{const t=e.target.closest(".banner-color-opt");t&&(this.data.banner=t.dataset.color,document.getElementById("profile-banner").style.background=this.data.banner,document.querySelectorAll(".banner-color-opt").forEach(e=>e.classList.remove("active")),t.classList.add("active"))}),document.getElementById("profile-goal-slider")?.addEventListener("input",e=>{this.data.goalHours=parseInt(e.target.value),document.getElementById("profile-goal-val").textContent=this.data.goalHours+"h"}),document.getElementById("profile-photo-upload-btn")?.addEventListener("click",()=>{document.getElementById("profile-photo-input")?.click(),FluxAudio.buttonClick()}),document.getElementById("profile-photo-input")?.addEventListener("change",async e=>{const t=e.target.files?.[0];if(!t)return;if(t.size>2097152)return Flux.showToast("Image too large (max 2MB)."),void(e.target.value="");if(!t.type.startsWith("image/"))return Flux.showToast("Please select a valid image file."),void(e.target.value="");try{const e=await this.optimizeAvatarFile(t);this.data.photoURL=e,this.renderHeader(),this.populateModal(),this.persist(),Flux.showToast("Profile photo updated and optimized.")}catch{Flux.showToast("Could not process image. Try another file.")}e.target.value=""}),document.getElementById("profile-photo-remove-btn")?.addEventListener("click",()=>{this.data.photoURL="",this.renderHeader(),this.populateModal(),this.persist(),Flux.showToast("Profile photo removed."),FluxAudio.buttonClick()}),document.getElementById("profile-save-btn")?.addEventListener("click",()=>{this.data.displayName=Flux.cleanText(document.getElementById("profile-display-name").value,40),this.data.username=Flux.cleanText(document.getElementById("profile-username").value.replace(/\s/g,""),24),this.data.bio=Flux.cleanText(document.getElementById("profile-bio").value,120),this.persist(),this.renderHeader(),document.getElementById("pstrip-streak").textContent=Flux.load("flux_stats",{}).streak||0,Flux.showToast("Profile saved ✨"),FluxAudio.taskComplete(),this.closeModal()}),document.getElementById("profile-signout-btn")?.addEventListener("click",()=>{Promise.resolve(window.FluxAuth?.signOut?.()).finally(()=>{location.pathname.endsWith("login.html")||location.replace("login.html")}),this.closeModal()}),document.addEventListener("keydown",e=>{"Escape"===e.key&&this.closeMenu()})},persist(){Flux.saveNow(this.storageKey,this.data),window.dispatchEvent(new CustomEvent("flux-profile-change",{detail:{profile:this.data,user:this.activeUser}}))}};FluxProfile.init(window.FluxAuthState?.user||null),window.addEventListener("flux-auth-ready",e=>{FluxProfile.init(e.detail?.user||null)});
+/* ═══════════════════════════════════════
+   FLUX — User Profile Manager
+   ═══════════════════════════════════════ */
+
+const FluxProfile = {
+  isBound: false,
+  activeUser: null,
+  storageKey: 'flux_profile',
+  data: {
+    displayName: '',
+    username: '',
+    bio: '',
+    goalHours: 4,
+    banner: 'linear-gradient(135deg,#8b5cf6,#06b6d4)',
+    photoURL: '',
+  },
+  usesDefaultBanner: true,
+
+  init(user) {
+    this.activeUser = user || null;
+    this.storageKey = this.getStorageKey(user);
+
+    if (!user) {
+      this.data.displayName = '';
+      this.data.username = '';
+      this.data.bio = '';
+      this.data.goalHours = 4;
+      this.data.banner = 'linear-gradient(135deg,#8b5cf6,#06b6d4)';
+      this.data.photoURL = '';
+      this.usesDefaultBanner = true;
+      this.renderHeader(null);
+      if (!this.isBound) this.bindEvents();
+      return;
+    }
+
+    // Migrate legacy profile key to user-scoped key once.
+    const legacy = Flux.load('flux_profile', null);
+    const current = Flux.load(this.storageKey, null);
+    const saved = current || legacy || {};
+    if (legacy && !current) {
+      Flux.saveNow(this.storageKey, legacy);
+    }
+
+    // Merge auth provider data with saved profile
+    if (user) {
+      this.data.displayName = Flux.cleanText(saved.displayName || user.displayName || '', 40);
+      this.data.username    = Flux.cleanText(saved.username || '', 24);
+      this.data.bio         = Flux.cleanText(saved.bio || '', 120);
+      this.data.goalHours   = saved.goalHours || 4;
+      const palette = window.FluxTheme?.getAccentPalette?.(saved.accent || saved.themeAccent || Flux.load('flux_settings', {})?.accent);
+      this.data.banner      = saved.banner || `linear-gradient(135deg,${palette?.primary || '#8b5cf6'},${palette?.secondary || '#06b6d4'})`;
+      this.usesDefaultBanner = !saved.banner;
+      this.data.photoURL    = saved.photoURL || user.photoURL || '';
+    }
+
+    this.renderHeader(user);
+    if (!this.isBound) this.bindEvents();
+  },
+
+  getStorageKey(user) {
+    const uid = Flux.cleanText(user?.uid || 'guest', 64);
+    return `flux_profile_${uid}`;
+  },
+
+  getFallbackAvatar(name) {
+    const fallback = window.FluxAuthUtils?.fallbackAvatarDataUri;
+    if (typeof fallback === 'function') {
+      return fallback(name);
+    }
+
+    const safeName = Flux.cleanText(name || 'Flux User', 40) || 'Flux User';
+    const initials = safeName.slice(0, 2).toUpperCase();
+    const palette = window.FluxTheme?.getAccentPalette?.(Flux.load('flux_settings', {})?.accent) || { primary: '#8b5cf6', secondary: '#06b6d4' };
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${palette.primary}"/><stop offset="1" stop-color="${palette.secondary}"/></linearGradient></defs><rect width="200" height="200" rx="100" fill="url(#g)"/><text x="100" y="118" font-size="72" font-family="Arial,sans-serif" text-anchor="middle" fill="#fff">${initials}</text></svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  },
+
+  getAvatarSource(user) {
+    if (this.data.photoURL) return this.data.photoURL;
+    return this.getFallbackAvatar(this.data.displayName || user?.displayName || user?.email || 'Flux User');
+  },
+
+  optimizeAvatarFile(file) {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+
+      image.onload = () => {
+        try {
+          const targetSize = 320;
+          const canvas = document.createElement('canvas');
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          const ctx = canvas.getContext('2d');
+
+          if (!ctx) {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Canvas not supported'));
+            return;
+          }
+
+          const cropSize = Math.min(image.naturalWidth, image.naturalHeight);
+          const sx = Math.floor((image.naturalWidth - cropSize) / 2);
+          const sy = Math.floor((image.naturalHeight - cropSize) / 2);
+
+          ctx.drawImage(image, sx, sy, cropSize, cropSize, 0, 0, targetSize, targetSize);
+
+          const optimized = canvas.toDataURL('image/jpeg', 0.82);
+          URL.revokeObjectURL(objectUrl);
+          resolve(optimized);
+        } catch (error) {
+          URL.revokeObjectURL(objectUrl);
+          reject(error);
+        }
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Failed to load selected image'));
+      };
+
+      image.src = objectUrl;
+    });
+  },
+
+  renderHeader(user) {
+    const btn = document.getElementById('profile-avatar-btn');
+    const img = document.getElementById('profile-avatar-img');
+    const initials = document.getElementById('profile-avatar-initials');
+    const signOutBtn = document.getElementById('profile-menu-signout');
+
+    if (!btn || !img) return;
+    if (!user) {
+      btn.classList.add('hidden');
+      if (signOutBtn) signOutBtn.classList.add('hidden');
+      img.src = '';
+      img.alt = 'Profile';
+      img.style.display = 'none';
+      if (initials) initials.style.display = 'block';
+      return;
+    }
+
+    btn.classList.remove('hidden');
+    if (signOutBtn) signOutBtn.classList.toggle('hidden', !this.activeUser);
+
+    const fallbackName = this.data.displayName || user?.displayName || user?.email || 'Flux User';
+    img.src = this.getAvatarSource(user);
+    img.alt = this.data.displayName || user?.displayName || user?.email || 'Profile photo';
+    img.style.display = 'block';
+    img.onerror = () => {
+      this.data.photoURL = '';
+      img.src = this.getFallbackAvatar(fallbackName);
+      this.persist();
+    };
+    if (initials) initials.style.display = 'none';
+  },
+
+  openMenu() {
+    const menu = document.getElementById('profile-avatar-menu');
+    if (!menu) return;
+    menu.classList.remove('hidden');
+  },
+
+  closeMenu() {
+    const menu = document.getElementById('profile-avatar-menu');
+    if (!menu) return;
+    menu.classList.add('hidden');
+  },
+
+  toggleMenu() {
+    const menu = document.getElementById('profile-avatar-menu');
+    if (!menu) return;
+    menu.classList.toggle('hidden');
+  },
+
+  openModal() {
+    const overlay = document.getElementById('profile-modal-overlay');
+    overlay.classList.remove('hidden');
+    this.populateModal();
+    requestAnimationFrame(() => overlay.classList.add('open'));
+  },
+
+  closeModal() {
+    const overlay = document.getElementById('profile-modal-overlay');
+    overlay.classList.remove('open');
+    setTimeout(() => overlay.classList.add('hidden'), 300);
+  },
+
+  populateModal() {
+    // Banner
+    document.getElementById('profile-banner').style.background = this.data.banner;
+    document.querySelectorAll('.banner-color-opt').forEach(el => {
+      el.classList.toggle('active', el.dataset.color === this.data.banner);
+    });
+
+    // Avatar
+    const mImg = document.getElementById('profile-modal-avatar-img');
+    const mInit = document.getElementById('profile-modal-avatar-initials');
+    mImg.src = this.getAvatarSource(this.activeUser);
+    mImg.style.display = 'block';
+    mImg.onerror = () => {
+      mImg.src = this.getFallbackAvatar(this.data.displayName || this.activeUser?.displayName || this.activeUser?.email || 'Flux User');
+    };
+    if (mInit) mInit.style.display = 'none';
+
+    const removeBtn = document.getElementById('profile-photo-remove-btn');
+    if (removeBtn) removeBtn.disabled = !this.data.photoURL;
+
+    // Fields
+    document.getElementById('profile-display-name').value = this.data.displayName;
+    document.getElementById('profile-username').value = this.data.username;
+    document.getElementById('profile-bio').value = this.data.bio;
+    document.getElementById('profile-goal-slider').value = this.data.goalHours;
+    document.getElementById('profile-goal-val').textContent = this.data.goalHours + 'h';
+
+    // Stats strip
+    const stats = Flux.load('flux_stats', {});
+    const todos = Flux.load('flux_todos', []);
+    document.getElementById('pstrip-streak').textContent = stats.streak || 0;
+    document.getElementById('pstrip-sessions').textContent =
+      Object.values(stats.sessions || {}).reduce((a, b) => a + b, 0);
+    document.getElementById('pstrip-tasks').textContent =
+      todos.filter(t => t.completed).length;
+  },
+
+  bindEvents() {
+    this.isBound = true;
+
+    window.addEventListener('flux-accent-change', (event) => {
+      if (!this.activeUser) return;
+
+      const palette = event.detail?.palette || window.FluxTheme?.getAccentPalette?.(Flux.load('flux_settings', {})?.accent);
+      if (this.usesDefaultBanner && palette) {
+        this.data.banner = `linear-gradient(135deg,${palette.primary},${palette.secondary})`;
+        const banner = document.getElementById('profile-banner');
+        if (banner) banner.style.background = this.data.banner;
+      }
+
+      this.renderHeader(this.activeUser);
+      if (!document.getElementById('profile-modal-overlay')?.classList.contains('hidden')) {
+        this.populateModal();
+      }
+    });
+
+    document.getElementById('profile-avatar-btn')?.addEventListener('click', () => {
+      this.toggleMenu();
+      FluxAudio.buttonClick();
+    });
+
+    document.getElementById('profile-menu-open')?.addEventListener('click', () => {
+      this.closeMenu();
+      this.openModal();
+      FluxAudio.buttonClick();
+    });
+
+    document.getElementById('profile-menu-settings')?.addEventListener('click', () => {
+      this.closeMenu();
+      window.FluxApp?.showView?.('settings');
+      FluxAudio.buttonClick();
+    });
+
+    document.getElementById('profile-menu-signout')?.addEventListener('click', () => {
+      this.closeMenu();
+      Promise.resolve(window.FluxAuth?.signOut?.()).finally(() => {
+        if (!location.pathname.endsWith('login.html')) {
+          location.replace('login.html');
+        }
+      });
+      FluxAudio.buttonClick();
+    });
+
+    document.addEventListener('click', (e) => {
+      const btn = document.getElementById('profile-avatar-btn');
+      const menu = document.getElementById('profile-avatar-menu');
+      if (!btn || !menu) return;
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        this.closeMenu();
+      }
+    });
+
+    document.getElementById('profile-modal-close')?.addEventListener('click', () => {
+      this.closeModal();
+    });
+
+    document.getElementById('profile-modal-overlay')?.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('profile-modal-overlay')) this.closeModal();
+    });
+
+    // Banner color picks
+    document.getElementById('profile-banner')?.addEventListener('click', (e) => {
+      const opt = e.target.closest('.banner-color-opt');
+      if (!opt) return;
+      this.data.banner = opt.dataset.color;
+      document.getElementById('profile-banner').style.background = this.data.banner;
+      document.querySelectorAll('.banner-color-opt').forEach(el => el.classList.remove('active'));
+      opt.classList.add('active');
+    });
+
+    // Goal slider
+    document.getElementById('profile-goal-slider')?.addEventListener('input', (e) => {
+      this.data.goalHours = parseInt(e.target.value);
+      document.getElementById('profile-goal-val').textContent = this.data.goalHours + 'h';
+    });
+
+    document.getElementById('profile-photo-upload-btn')?.addEventListener('click', () => {
+      document.getElementById('profile-photo-input')?.click();
+      FluxAudio.buttonClick();
+    });
+
+    document.getElementById('profile-photo-input')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const maxSizeBytes = 2 * 1024 * 1024;
+      if (file.size > maxSizeBytes) {
+        Flux.showToast('Image too large (max 2MB).');
+        e.target.value = '';
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        Flux.showToast('Please select a valid image file.');
+        e.target.value = '';
+        return;
+      }
+
+      try {
+        const optimizedUrl = await this.optimizeAvatarFile(file);
+        this.data.photoURL = optimizedUrl;
+        this.renderHeader();
+        this.populateModal();
+        this.persist();
+        Flux.showToast('Profile photo updated and optimized.');
+      } catch {
+        Flux.showToast('Could not process image. Try another file.');
+      }
+
+      e.target.value = '';
+    });
+
+    document.getElementById('profile-photo-remove-btn')?.addEventListener('click', () => {
+      this.data.photoURL = '';
+      this.renderHeader();
+      this.populateModal();
+      this.persist();
+      Flux.showToast('Profile photo removed.');
+      FluxAudio.buttonClick();
+    });
+
+    // Save
+    document.getElementById('profile-save-btn')?.addEventListener('click', () => {
+      this.data.displayName = Flux.cleanText(document.getElementById('profile-display-name').value, 40);
+      this.data.username = Flux.cleanText(document.getElementById('profile-username').value.replace(/\s/g, ''), 24);
+      this.data.bio = Flux.cleanText(document.getElementById('profile-bio').value, 120);
+      this.persist();
+
+      this.renderHeader();
+
+      // Refresh stats strip
+      document.getElementById('pstrip-streak').textContent = Flux.load('flux_stats', {}).streak || 0;
+
+      Flux.showToast('Profile saved ✨');
+      FluxAudio.taskComplete();
+      this.closeModal();
+    });
+
+    // Sign out from modal
+    document.getElementById('profile-signout-btn')?.addEventListener('click', () => {
+      Promise.resolve(window.FluxAuth?.signOut?.()).finally(() => {
+        if (!location.pathname.endsWith('login.html')) {
+          location.replace('login.html');
+        }
+      });
+      this.closeModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') this.closeMenu();
+    });
+  },
+
+  persist() {
+    Flux.saveNow(this.storageKey, this.data);
+    window.dispatchEvent(new CustomEvent('flux-profile-change', {
+      detail: { profile: this.data, user: this.activeUser },
+    }));
+  }
+};
+
+FluxProfile.init(window.FluxAuthState?.user || null);
+
+window.addEventListener('flux-auth-ready', (event) => {
+  FluxProfile.init(event.detail?.user || null);
+});

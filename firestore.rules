@@ -14,6 +14,48 @@ service cloud.firestore {
       return username.matches('[a-z0-9_]{3,20}');
     }
 
+    function isString(value) {
+      return value is string;
+    }
+
+    function isNumberValue(value) {
+      return value is int || value is float;
+    }
+
+    function isValidPresenceState(state) {
+      return state == 'studying' || state == 'idle';
+    }
+
+    function isValidLeaderboardPresenceWrite(uid) {
+      return request.resource.data.keys().hasOnly(['uid', 'isLive', 'presenceState', 'lastPresenceAt', 'lastUpdated']) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.isLive is bool &&
+        isValidPresenceState(request.resource.data.presenceState) &&
+        request.resource.data.lastPresenceAt is timestamp &&
+        request.resource.data.lastUpdated is timestamp;
+    }
+
+    function isValidLeaderboardStatsWrite(uid) {
+      return request.resource.data.keys().hasOnly([
+          'uid', 'displayName', 'username', 'photoURL', 'focusMinutesTotal',
+          'sessionsTotal', 'currentStreak', 'tasksDoneTotal', 'showOnLeaderboard',
+          'isLive', 'presenceState', 'lastPresenceAt', 'lastUpdated'
+        ]) &&
+        request.resource.data.uid == uid &&
+        isString(request.resource.data.displayName) && request.resource.data.displayName.size() > 0 && request.resource.data.displayName.size() <= 80 &&
+        (request.resource.data.username == null || (isString(request.resource.data.username) && request.resource.data.username.size() <= 24)) &&
+        (request.resource.data.photoURL == null || (isString(request.resource.data.photoURL) && request.resource.data.photoURL.size() <= 2048)) &&
+        isNumberValue(request.resource.data.focusMinutesTotal) && request.resource.data.focusMinutesTotal >= 0 &&
+        isNumberValue(request.resource.data.sessionsTotal) && request.resource.data.sessionsTotal >= 0 &&
+        isNumberValue(request.resource.data.currentStreak) && request.resource.data.currentStreak >= 0 &&
+        isNumberValue(request.resource.data.tasksDoneTotal) && request.resource.data.tasksDoneTotal >= 0 &&
+        request.resource.data.showOnLeaderboard is bool &&
+        request.resource.data.isLive is bool &&
+        isValidPresenceState(request.resource.data.presenceState) &&
+        request.resource.data.lastPresenceAt is timestamp &&
+        request.resource.data.lastUpdated is timestamp;
+    }
+
     // Users collection - profile and pet data
     match /users/{uid} {
       allow read: if isAuthenticated() && (isOwner(uid) || resource.data.isPublic == true);
@@ -54,7 +96,11 @@ service cloud.firestore {
     // Leaderboard rows keyed by user uid
     match /leaderboard/{uid} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && (
+        isValidLeaderboardPresenceWrite(uid) ||
+        isValidLeaderboardStatsWrite(uid)
+      );
+      allow delete: if isOwner(uid);
     }
 
     // Public profile data for leaderboard
@@ -72,7 +118,7 @@ service cloud.firestore {
     }
 
     // User challenges progress
-    match /userChallenges/{uid}/{challengeId} {
+    match /userChallenges/{uid}/{document=**} {
       allow read: if isOwner(uid);
       allow write: if isOwner(uid);
     }

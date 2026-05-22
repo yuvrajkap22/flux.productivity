@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
-import { firebaseConfig } from './firebase-config.js';
+import { firebaseConfig, shouldUseFirebaseEmulators } from './firebase-config.js';
 import {
-  getFirestore, doc, setDoc, deleteDoc, serverTimestamp, getDoc, collection,
+  getFirestore, connectFirestoreEmulator, doc, setDoc, deleteDoc, serverTimestamp, getDoc, collection,
   query, where, orderBy, limit, onSnapshot, getCountFromServer, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 
@@ -14,6 +14,13 @@ try {
   app = null;
 }
 const db = app ? getFirestore(app) : null;
+if (db && shouldUseFirebaseEmulators()) {
+  try {
+    connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  } catch (error) {
+    console.warn('Firestore emulator connection skipped or failed', error);
+  }
+}
 
 function _getVisibilitySetting() {
   try {
@@ -23,12 +30,13 @@ function _getVisibilitySetting() {
   } catch (e) { return true; }
 }
 
-async function syncLeaderboard() {
-  // debounced wrapper defined below delegates to _syncImmediate
-  return _syncLeaderboardDebounced();
+async function syncLeaderboard(options = {}) {
+  // Debounced by default; force can be used for session boundary and presence writes.
+  if (options && options.force) return _syncLeaderboardImmediate(options);
+  return _syncLeaderboardDebounced(options);
 }
 
-async function _syncLeaderboardImmediate() {
+async function _syncLeaderboardImmediate(options = {}) {
   if (!db) return;
   try {
     const user = window.FluxAuth?.user?.();
@@ -36,6 +44,20 @@ async function _syncLeaderboardImmediate() {
     if (!_getVisibilitySetting()) return;
 
     const uid = user.uid;
+    const liveNow = typeof options.isLive === 'boolean' ? options.isLive : Boolean(window.FluxPomo?.running);
+
+    if (options && options.presenceOnly) {
+      const presencePayload = {
+        uid,
+        isLive: liveNow,
+        presenceState: liveNow ? 'studying' : 'idle',
+        lastPresenceAt: serverTimestamp(),
+        lastUpdated: serverTimestamp(),
+      };
+      await setDoc(doc(db, 'leaderboard', uid), presencePayload, { merge: true });
+      return;
+    }
+
     const stats = Flux.load('flux_stats', { sessions: {}, totalTime: {}, streak: 0 });
     const todos = Flux.load('flux_todos', []);
 
@@ -51,6 +73,7 @@ async function _syncLeaderboardImmediate() {
     const photoURL = user.photoURL || profileApi?.data?.photoURL || null;
 
     const payload = {
+      uid,
       displayName,
       username,
       photoURL,
@@ -59,8 +82,10 @@ async function _syncLeaderboardImmediate() {
       currentStreak,
       tasksDoneTotal,
       showOnLeaderboard: true,
-      // presence: treat Pomodoro running as "live" for leaderboard UI
-      isLive: Boolean(window.FluxPomo?.running),
+      // Presence state is refreshed during session heartbeat.
+      isLive: liveNow,
+      presenceState: liveNow ? 'studying' : 'idle',
+      lastPresenceAt: serverTimestamp(),
       lastUpdated: serverTimestamp(),
     };
 
@@ -73,18 +98,18 @@ async function _syncLeaderboardImmediate() {
 // Simple debounce/throttle: ensure at most one write every 30s; coalesce calls
 let _lastSyncAt = 0;
 let _syncTimer = null;
-function _syncLeaderboardDebounced() {
+function _syncLeaderboardDebounced(options = {}) {
   const now = Date.now();
   const minGap = 30 * 1000;
   if (now - _lastSyncAt >= minGap) {
     _lastSyncAt = now;
-    return _syncLeaderboardImmediate();
+    return _syncLeaderboardImmediate(options);
   }
   if (_syncTimer) clearTimeout(_syncTimer);
   return new Promise((resolve) => {
     _syncTimer = setTimeout(() => {
       _lastSyncAt = Date.now();
-      _syncLeaderboardImmediate().then(resolve).catch(resolve);
+      _syncLeaderboardImmediate(options).then(resolve).catch(resolve);
       _syncTimer = null;
     }, minGap - (now - _lastSyncAt));
   });
@@ -99,7 +124,7 @@ async function setLeaderboardVisibility(visible) {
     if (!visible) {
       await deleteDoc(ref).catch(()=>{});
     } else {
-      await syncLeaderboard();
+      await syncLeaderboard({ force: true });
     }
   } catch (err) {
     console.warn('setLeaderboardVisibility failed', err);

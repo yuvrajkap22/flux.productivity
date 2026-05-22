@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════
+   FLUX — Web Audio Sound Engine
+   ═══════════════════════════════════════ */
+
 const FluxAudio = {
   ctx: null,
   masterGain: null,
@@ -7,14 +11,16 @@ const FluxAudio = {
   noiseBuffers: {},
 
   init() {
-    // Respect performance-lite preference and avoid creating AudioContext when performance constrained
-    if (typeof document !== 'undefined' && document.body && document.body.classList.contains('performance-lite')) return;
-
-    const t = Flux.load('flux_sounds', { volume: 30, muted: false, active: {} });
-    this.volume = t.volume || 30;
-    this.muted = t.muted || false;
+    const saved = Flux.load('flux_sounds', { volume: 30, muted: false, active: {} });
+    this.volume = saved.volume || 30;
+    this.muted = saved.muted || false;
     if (this.muted) document.body.classList.add('sounds-muted');
-    if (t.active) Object.keys(t.active).forEach((k) => { if (t.active[k]) this.startAmbient(k); });
+
+    if (saved.active) {
+      Object.keys(saved.active).forEach((type) => {
+        if (saved.active[type]) this.startAmbient(type);
+      });
+    }
   },
 
   ensureCtx() {
@@ -31,7 +37,9 @@ const FluxAudio = {
     this.volume = v;
     if (this.masterGain) this.masterGain.gain.value = this.muted ? 0 : v / 100;
     this.saveState();
-    window.dispatchEvent(new CustomEvent('flux-sound-change', { detail: { volume: this.volume, muted: this.muted } }));
+    window.dispatchEvent(new CustomEvent('flux-sound-change', {
+      detail: { volume: this.volume, muted: this.muted },
+    }));
   },
 
   toggleMute() {
@@ -39,27 +47,30 @@ const FluxAudio = {
     document.body.classList.toggle('sounds-muted', this.muted);
     if (this.masterGain) this.masterGain.gain.value = this.muted ? 0 : this.volume / 100;
     this.saveState();
-    window.dispatchEvent(new CustomEvent('flux-sound-change', { detail: { volume: this.volume, muted: this.muted } }));
+    window.dispatchEvent(new CustomEvent('flux-sound-change', {
+      detail: { volume: this.volume, muted: this.muted },
+    }));
   },
 
   saveState() {
-    const out = {};
-    for (const k in this.activeSounds) out[k] = true;
-    Flux.save('flux_sounds', { volume: this.volume, muted: this.muted, active: out });
+    const active = {};
+    for (const k in this.activeSounds) active[k] = true;
+    Flux.save('flux_sounds', { volume: this.volume, muted: this.muted, active });
   },
 
-  playTone(freq, dur, type = 'sine', gain = 0.15) {
+  // Short sound effects
+  playTone(freq, duration, type = 'sine', gain = 0.15) {
     this.ensureCtx();
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     osc.type = type;
     osc.frequency.value = freq;
     g.gain.value = gain;
-    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
     osc.connect(g);
     g.connect(this.masterGain);
     osc.start();
-    osc.stop(this.ctx.currentTime + dur);
+    osc.stop(this.ctx.currentTime + duration);
   },
 
   taskComplete() {
@@ -72,116 +83,134 @@ const FluxAudio = {
     osc.frequency.exponentialRampToValueAtTime(880, t + 0.3);
     g.gain.setValueAtTime(0.12, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-    osc.connect(g);
-    g.connect(this.masterGain);
-    osc.start(t);
-    osc.stop(t + 0.4);
+    osc.connect(g); g.connect(this.masterGain);
+    osc.start(t); osc.stop(t + 0.4);
   },
 
-  pomoStart() { this.playTone(220, 0.25, 'triangle', 0.1); },
+  pomoStart() {
+    this.playTone(220, 0.25, 'triangle', 0.1);
+  },
+
   pomoEnd() {
     this.ensureCtx();
     const t = this.ctx.currentTime;
-    [261.63, 329.63, 392].forEach((f, i) => {
-      const o = this.ctx.createOscillator();
+    [261.63, 329.63, 392].forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
       const g = this.ctx.createGain();
-      o.type = 'sine';
-      o.frequency.value = f;
+      osc.type = 'sine';
+      osc.frequency.value = freq;
       g.gain.setValueAtTime(0.08, t);
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
-      o.connect(g);
-      g.connect(this.masterGain);
-      o.start(t + 0.05 * i);
-      o.stop(t + 0.9);
+      osc.connect(g); g.connect(this.masterGain);
+      osc.start(t + i * 0.05);
+      osc.stop(t + 0.9);
     });
   },
 
-  breakEnd() { this.ensureCtx(); this.playTone(392, 0.15, 'sine', 0.1); setTimeout(() => this.playTone(523, 0.15, 'sine', 0.1), 170); },
-  buttonClick() { this.playTone(4000, 0.03, 'sine', 0.03); },
+  breakEnd() {
+    this.ensureCtx();
+    const t = this.ctx.currentTime;
+    this.playTone(392, 0.15, 'sine', 0.1);
+    setTimeout(() => this.playTone(523, 0.15, 'sine', 0.1), 170);
+  },
+
+  buttonClick() {
+    this.playTone(4000, 0.03, 'sine', 0.03);
+  },
 
   taskAdded() {
     this.ensureCtx();
-    const len = Math.floor(0.05 * this.ctx.sampleRate);
-    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
-    const ch = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) ch[i] = 0.3 * (2 * Math.random() - 1);
-    const src = this.ctx.createBufferSource();
+    const bufferSize = this.ctx.sampleRate * 0.05;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.3;
+    const source = this.ctx.createBufferSource();
     const g = this.ctx.createGain();
-    src.buffer = buf;
+    source.buffer = buffer;
     g.gain.value = 0.04;
-    src.connect(g);
-    g.connect(this.masterGain);
-    src.start();
+    source.connect(g); g.connect(this.masterGain);
+    source.start();
   },
 
+  // Ambient sound generators
   createNoiseBuffer() {
     this.ensureCtx();
     const sr = this.ctx.sampleRate;
+    // Cache noise buffers per sample rate to avoid regenerating large arrays
     if (this.noiseBuffers[sr]) return this.noiseBuffers[sr];
-    const len = 2 * sr;
-    const b = this.ctx.createBuffer(1, len, sr);
-    const d = b.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = 2 * Math.random() - 1;
-    this.noiseBuffers[sr] = b;
-    return b;
+    const len = sr * 2;
+    const buffer = this.ctx.createBuffer(1, len, sr);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    this.noiseBuffers[sr] = buffer;
+    return buffer;
   },
 
   startAmbient(type) {
-    // Do not start ambient sounds when performance-lite is active
-    if (typeof document !== 'undefined' && document.body && document.body.classList.contains('performance-lite')) return;
-
-    if (this.activeSounds[type]) return;
     this.ensureCtx();
-    const buf = this.createNoiseBuffer();
-    const src = this.ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-    const g = this.ctx.createGain();
-    g.gain.value = 0.5;
-    let node = null;
+    if (this.activeSounds[type]) return;
 
+    const buffer = this.createNoiseBuffer();
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    const gainNode = this.ctx.createGain();
+    gainNode.gain.value = 0.5;
+
+    let chain;
     if (type === 'rain') {
-      const f = this.ctx.createBiquadFilter();
-      f.type = 'lowpass'; f.frequency.value = 400; f.Q.value = 1;
-      src.connect(f); f.connect(g);
-      node = { source: src, gain: g, filter: f };
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 400; lp.Q.value = 1;
+      source.connect(lp); lp.connect(gainNode);
+      chain = { source, gain: gainNode, filter: lp };
     } else if (type === 'whitenoise') {
-      src.connect(g);
-      node = { source: src, gain: g };
+      source.connect(gainNode);
+      chain = { source, gain: gainNode };
     } else if (type === 'forest') {
-      const f = this.ctx.createBiquadFilter();
-      f.type = 'bandpass'; f.frequency.value = 800; f.Q.value = 2;
-      src.connect(f); f.connect(g);
-      node = { source: src, gain: g, filter: f };
+      const bp = this.ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = 800; bp.Q.value = 2;
+      source.connect(bp); bp.connect(gainNode);
+      chain = { source, gain: gainNode, filter: bp };
     } else if (type === 'cafe') {
-      const f1 = this.ctx.createBiquadFilter(); f1.type = 'lowpass'; f1.frequency.value = 600; f1.Q.value = 0.7;
-      const f2 = this.ctx.createBiquadFilter(); f2.type = 'highpass'; f2.frequency.value = 100;
-      src.connect(f1); f1.connect(f2); f2.connect(g);
-      node = { source: src, gain: g, filter: f1 };
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 600; lp.Q.value = 0.7;
+      const hp = this.ctx.createBiquadFilter();
+      hp.type = 'highpass'; hp.frequency.value = 100;
+      source.connect(lp); lp.connect(hp); hp.connect(gainNode);
+      chain = { source, gain: gainNode, filter: lp };
     }
 
-    g.connect(this.masterGain);
-    src.start();
-    this.activeSounds[type] = node;
+    gainNode.connect(this.masterGain);
+    source.start();
+    this.activeSounds[type] = chain;
     this.saveState();
   },
 
   stopAmbient(type) {
     const s = this.activeSounds[type];
     if (s) {
-      try { s.source.stop(); } catch (e) {}
+      s.source.stop();
       delete this.activeSounds[type];
       this.saveState();
     }
   },
 
   toggleAmbient(type) {
-    if (this.activeSounds[type]) { this.stopAmbient(type); return false; }
-    this.startAmbient(type); return true;
+    if (this.activeSounds[type]) {
+      this.stopAmbient(type);
+      return false;
+    } else {
+      this.startAmbient(type);
+      return true;
+    }
   },
 
-  isActive(type) { return !!this.activeSounds[type]; },
-  hasAnySoundActive() { return Object.keys(this.activeSounds).length > 0; }
-};
+  isActive(type) {
+    return !!this.activeSounds[type];
+  },
 
-window.FluxAudio = FluxAudio;
+  hasAnySoundActive() {
+    return Object.keys(this.activeSounds).length > 0;
+  }
+};

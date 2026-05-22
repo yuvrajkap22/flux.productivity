@@ -1,1 +1,298 @@
-const FluxChallenges={activeTab:"active",isBound:!1,predefined:[{id:"p1",title:"20 Pomodoro Sessions",desc:"Complete 20 focus sessions this month",icon:"🍅",cat:"focus",target:20,metric:"sessions"},{id:"p2",title:"10 Hours of Focus",desc:"Accumulate 10 total hours of focused work",icon:"⏱",cat:"focus",target:36e3,metric:"totalTime"},{id:"p3",title:"7-Day Streak",desc:"Focus every day for 7 days straight",icon:"🔥",cat:"consistency",target:7,metric:"streak"},{id:"p4",title:"Complete 30 Tasks",desc:"Check off 30 tasks this month",icon:"✅",cat:"tasks",target:30,metric:"tasksCompleted"},{id:"p5",title:"Study 5 Days in a Row",desc:"Log at least one session for 5 consecutive days",icon:"📅",cat:"consistency",target:5,metric:"streak"},{id:"p6",title:"30h Monthly Focus",desc:"Hit 30 hours of total focus this month",icon:"🎯",cat:"focus",target:108e3,metric:"totalTime"},{id:"p7",title:"Early Bird Week",desc:"Start a session before 9 AM for 5 days",icon:"🌅",cat:"wellness",target:5,metric:"earlyBird"},{id:"p8",title:"No-Distraction Day",desc:"Complete 4 pomodoros in a single day",icon:"🧘",cat:"focus",target:4,metric:"dailySessions"},{id:"p9",title:"Category Explorer",desc:"Track tasks in all 5 categories",icon:"🗂",cat:"tasks",target:5,metric:"categories"},{id:"p10",title:"Long Haul",desc:"Complete 3 long (25+ min) pomodoros in one day",icon:"🏋",cat:"focus",target:3,metric:"longSessions"}],init(){document.querySelectorAll(".challenge-tab").forEach(e=>{e.addEventListener("click",()=>{document.querySelectorAll(".challenge-tab").forEach(e=>e.classList.remove("active")),e.classList.add("active"),this.activeTab=e.dataset.ctab,this.render(),FluxAudio.buttonClick()})}),document.getElementById("custom-challenge-add-btn")?.addEventListener("click",()=>this.addCustom()),document.getElementById("custom-challenge-input")?.addEventListener("keydown",e=>{"Enter"===e.key&&this.addCustom()}),this.isBound||this.bindGridActions(),this.render()},bindGridActions(){this.isBound=!0;const e=document.getElementById("challenges-grid");e&&e.addEventListener("click",e=>{const t=e.target.closest(".challenge-delete-btn");if(t?.dataset.id)return void this.deleteCustom(t.dataset.id);const s=e.target.closest(".challenge-complete-btn");s?.dataset.id&&this.markDone(s.dataset.id,e)})},getChallengeData:()=>Flux.load("flux_challenges",{completed:{},custom:[],progress:{}}),saveData(e){Flux.saveNow("flux_challenges",e)},getProgress(e){const t=Flux.load("flux_stats",{sessions:{},totalTime:{}}),s=Flux.load("flux_todos",[]),a=t.events||{},n=new Date,l=n.getFullYear(),o=n.getMonth();let c=0,i=0,r=0;const d=new Date(l,o+1,0).getDate();for(let e=1;e<=d;e++){const s=new Date(l,o,e).toISOString().split("T")[0];c+=t.sessions?.[s]||0,i+=t.totalTime?.[s]||0}const u=[];r=s.filter(e=>{if(!e.completed||!e.createdAt)return!1;const t=new Date(e.createdAt).getMonth(),s=new Date(e.createdAt).getFullYear();return t===o&&s===l}).length;for(let e=1;e<=d;e++)u.push(new Date(l,o,e).toISOString().split("T")[0]);const g=(()=>{let e=0,s=0;return u.forEach(a=>{(t.sessions?.[a]||0)>0?(s+=1,e=Math.max(e,s)):s=0}),e})(),m=Math.max(...u.map(e=>t.sessions?.[e]||0),0),h=(()=>{let e=0;return u.forEach(t=>{(a[t]||[]).some(e=>Number.isInteger(e.hour)&&e.hour<9)&&(e+=1)}),e})(),p=(()=>{let e=0;return u.forEach(t=>{const s=(a[t]||[]).filter(e=>(e.duration||0)>=1500).length;e=Math.max(e,s)}),e})();switch(e){case"sessions":return c;case"totalTime":return i;case"streak":return g;case"tasksCompleted":return r;case"categories":return new Set(s.filter(e=>e.completed).map(e=>e.category)).size;case"dailySessions":return m;case"earlyBird":return h;case"longSessions":return p;default:return 0}},render(){const e=this.getChallengeData(),t=document.getElementById("challenges-grid"),s=document.getElementById("challenges-month-label"),a=new Date;s.textContent=a.toLocaleString("default",{month:"long",year:"numeric"});const n=[...this.predefined.map(e=>({...e,isCustom:!1})),...(e.custom||[]).map(e=>({...e,isCustom:!0}))],l=n.length,o=n.filter(t=>e.completed?.[t.id]).length;document.getElementById("challenges-total-count").textContent=l,document.getElementById("challenges-done-count").textContent=o,document.getElementById("challenges-prog-pct").textContent=l>0?Math.round(o/l*100)+"%":"0%";const c=l>0?o/l:0;document.getElementById("challenges-prog-ring").style.strokeDashoffset=163*(1-c);let i=n;if("completed"===this.activeTab?i=n.filter(t=>e.completed?.[t.id]):"active"===this.activeTab?i=n.filter(t=>!e.completed?.[t.id]):"custom"===this.activeTab&&(i=n.filter(e=>e.isCustom)),0===i.length)return void(t.innerHTML=`<div class="challenges-empty">\n        ${"completed"===this.activeTab?"No completed challenges yet. Keep going! 💪":"custom"===this.activeTab?"No custom challenges yet. Add one below!":"All challenges completed! 🎉"}\n      </div>`);const r={focus:window.FluxTheme?.getAccentPalette?.(Flux.load("flux_settings",{})?.accent)?.primary||"var(--accent)",consistency:"#22d3a0",tasks:"#60a5fa",wellness:"#f59e0b"};t.innerHTML=i.map(t=>{const s=!!e.completed?.[t.id],a=!s&&t.metric?this.getProgress(t.metric):s?t.target:0,n=t.target?Math.min(Math.round(a/t.target*100),100):0,l=r[t.cat]||"var(--accent)";return`<div class="challenge-card glass-panel ${s?"challenge-done":""}">\n        <div class="challenge-card-head">\n          <div class="challenge-card-top">\n            <span class="challenge-icon">${t.icon}</span>\n            <span class="challenge-cat-badge" style="background:${l}22;color:${l}">${t.cat}</span>\n            ${s?'<span class="challenge-done-badge">Completed</span>':""}\n          </div>\n          ${t.isCustom?`<button class="challenge-delete-btn" data-id="${t.id}" title="Delete" type="button">✕</button>`:""}\n        </div>\n        <h3 class="challenge-card-title">${Flux.sanitize(t.title)}</h3>\n        <p class="challenge-card-desc">${Flux.sanitize(t.desc)}</p>\n        ${t.target&&!t.isCustom?`\n        <div class="challenge-card-meter">\n          <div class="challenge-progress-wrap">\n            <div class="challenge-prog-bar-bg">\n              <div class="challenge-prog-bar-fill" style="width:${n}%;background:${l}"></div>\n            </div>\n            <span class="challenge-prog-val" style="color:${l}">${n}%</span>\n          </div>\n          <div class="challenge-prog-label">${Math.min(a,t.target)} / ${this.formatTarget(t.target,t.metric)}</div>\n        </div>\n        `:""}\n        <div class="challenge-card-footer">\n          ${s?'<span class="challenge-finished-tag">Great job</span>':`<button class="challenge-complete-btn" style="--btn-color:${l}" data-id="${t.id}" type="button">Mark Complete</button>`}\n        </div>\n      </div>`}).join("")},formatTarget:(e,t)=>"totalTime"===t?Flux.formatTime(e):e,markDone(e,t){const s=this.getChallengeData();s.completed||(s.completed={}),s.completed[e]=!0,this.saveData(s),Flux.showToast("Challenge completed! 🏆"),FluxAudio.taskComplete();const a=t?.currentTarget;if(a){const e=a.getBoundingClientRect();Flux.confetti(e.left+e.width/2,e.top+e.height/2)}else Flux.confetti(window.innerWidth/2,window.innerHeight/3);this.render()},addCustom(){const e=document.getElementById("custom-challenge-input"),t=document.getElementById("custom-challenge-cat").value,s=Flux.cleanText(e.value,80);if(!s)return;const a=this.getChallengeData();a.custom||(a.custom=[]);a.custom.push({id:"c_"+Date.now().toString(36),title:s,desc:"Your personal challenge",icon:{focus:"🎯",consistency:"📅",tasks:"✅",wellness:"🌿"}[t]||"⭐",cat:t,isCustom:!0}),this.saveData(a),e.value="",FluxAudio.taskAdded(),this.activeTab="custom",document.querySelectorAll(".challenge-tab").forEach(e=>e.classList.remove("active")),document.querySelector('[data-ctab="custom"]').classList.add("active"),this.render()},deleteCustom(e){const t=this.getChallengeData();t.custom=(t.custom||[]).filter(t=>t.id!==e),t.completed&&delete t.completed[e],this.saveData(t),FluxAudio.buttonClick(),this.render()}};
+/* ═══════════════════════════════════════
+   FLUX — Monthly Challenges
+   ═══════════════════════════════════════ */
+
+const FluxChallenges = {
+  activeTab: 'active',
+  isBound: false,
+
+  // Predefined monthly challenges
+  predefined: [
+    { id: 'p1', title: '20 Pomodoro Sessions', desc: 'Complete 20 focus sessions this month', icon: '🍅', cat: 'focus',       target: 20, metric: 'sessions' },
+    { id: 'p2', title: '10 Hours of Focus',    desc: 'Accumulate 10 total hours of focused work', icon: '⏱', cat: 'focus',   target: 36000, metric: 'totalTime' },
+    { id: 'p3', title: '7-Day Streak',          desc: 'Focus every day for 7 days straight', icon: '🔥', cat: 'consistency',  target: 7, metric: 'streak' },
+    { id: 'p4', title: 'Complete 30 Tasks',     desc: 'Check off 30 tasks this month', icon: '✅', cat: 'tasks',             target: 30, metric: 'tasksCompleted' },
+    { id: 'p5', title: 'Study 5 Days in a Row', desc: 'Log at least one session for 5 consecutive days', icon: '📅', cat: 'consistency', target: 5, metric: 'streak' },
+    { id: 'p6', title: '30h Monthly Focus',     desc: 'Hit 30 hours of total focus this month', icon: '🎯', cat: 'focus',    target: 108000, metric: 'totalTime' },
+    { id: 'p7', title: 'Early Bird Week',        desc: 'Start a session before 9 AM for 5 days', icon: '🌅', cat: 'wellness', target: 5, metric: 'earlyBird' },
+    { id: 'p8', title: 'No-Distraction Day',    desc: 'Complete 4 pomodoros in a single day', icon: '🧘', cat: 'focus',      target: 4, metric: 'dailySessions' },
+    { id: 'p9', title: 'Category Explorer',     desc: 'Track tasks in all 5 categories', icon: '🗂', cat: 'tasks',           target: 5, metric: 'categories' },
+    { id: 'p10', title: 'Long Haul',            desc: 'Complete 3 long (25+ min) pomodoros in one day', icon: '🏋', cat: 'focus', target: 3, metric: 'longSessions' },
+  ],
+
+  init() {
+    document.querySelectorAll('.challenge-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.challenge-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        this.activeTab = tab.dataset.ctab;
+        this.render();
+        FluxAudio.buttonClick();
+      });
+    });
+
+    document.getElementById('custom-challenge-add-btn')?.addEventListener('click', () => this.addCustom());
+    document.getElementById('custom-challenge-input')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.addCustom();
+    });
+
+    if (!this.isBound) this.bindGridActions();
+
+    this.render();
+  },
+
+  bindGridActions() {
+    this.isBound = true;
+    const grid = document.getElementById('challenges-grid');
+    if (!grid) return;
+
+    grid.addEventListener('click', (event) => {
+      const deleteBtn = event.target.closest('.challenge-delete-btn');
+      if (deleteBtn?.dataset.id) {
+        this.deleteCustom(deleteBtn.dataset.id);
+        return;
+      }
+
+      const doneBtn = event.target.closest('.challenge-complete-btn');
+      if (doneBtn?.dataset.id) {
+        this.markDone(doneBtn.dataset.id, event);
+      }
+    });
+  },
+
+  getChallengeData() {
+    return Flux.load('flux_challenges', { completed: {}, custom: [], progress: {} });
+  },
+
+  saveData(data) {
+    Flux.saveNow('flux_challenges', data);
+  },
+
+  getProgress(metric) {
+    const stats = Flux.load('flux_stats', { sessions: {}, totalTime: {} });
+    const todos = Flux.load('flux_todos', []);
+    const events = stats.events || {};
+    const now   = new Date();
+    const year  = now.getFullYear();
+    const month = now.getMonth();
+
+    // Compute this-month totals
+    let monthSessions = 0, monthTime = 0, monthTasksCompleted = 0;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = new Date(year, month, d).toISOString().split('T')[0];
+      monthSessions += (stats.sessions?.[key]) || 0;
+      monthTime     += (stats.totalTime?.[key]) || 0;
+    }
+    const monthKeys = [];
+    // Count tasks completed this month by checking createdAt
+    monthTasksCompleted = todos.filter(t => {
+      if (!t.completed || !t.createdAt) return false;
+      const taskMonth = new Date(t.createdAt).getMonth();
+      const taskYear = new Date(t.createdAt).getFullYear();
+      return taskMonth === month && taskYear === year;
+    }).length;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      monthKeys.push(new Date(year, month, d).toISOString().split('T')[0]);
+    }
+
+    const monthMaxStreak = (() => {
+      let best = 0;
+      let cur = 0;
+      monthKeys.forEach((key) => {
+        if ((stats.sessions?.[key] || 0) > 0) {
+          cur += 1;
+          best = Math.max(best, cur);
+        } else {
+          cur = 0;
+        }
+      });
+      return best;
+    })();
+
+    const monthMaxDailySessions = Math.max(...monthKeys.map((key) => stats.sessions?.[key] || 0), 0);
+
+    const earlyBirdDays = (() => {
+      let count = 0;
+      monthKeys.forEach((key) => {
+        const dayEvents = events[key] || [];
+        if (dayEvents.some((evt) => Number.isInteger(evt.hour) && evt.hour < 9)) count += 1;
+      });
+      return count;
+    })();
+
+    const longHaulBestDay = (() => {
+      let best = 0;
+      monthKeys.forEach((key) => {
+        const dayEvents = events[key] || [];
+        const longCount = dayEvents.filter((evt) => (evt.duration || 0) >= 1500).length;
+        best = Math.max(best, longCount);
+      });
+      return best;
+    })();
+
+    switch (metric) {
+      case 'sessions':       return monthSessions;
+      case 'totalTime':      return monthTime;
+      case 'streak':         return monthMaxStreak;
+      case 'tasksCompleted': return monthTasksCompleted;
+      case 'categories': {
+        const cats = new Set(todos.filter(t => t.completed).map(t => t.category));
+        return cats.size;
+      }
+      case 'dailySessions': {
+        return monthMaxDailySessions;
+      }
+      case 'earlyBird':      return earlyBirdDays;
+      case 'longSessions':   return longHaulBestDay;
+      default: return 0;
+    }
+  },
+
+  render() {
+    const data     = this.getChallengeData();
+    const grid     = document.getElementById('challenges-grid');
+    const monthLabel = document.getElementById('challenges-month-label');
+    const now = new Date();
+    monthLabel.textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    // Update month label in header
+    const allChallenges = [
+      ...this.predefined.map(c => ({ ...c, isCustom: false })),
+      ...(data.custom || []).map(c => ({ ...c, isCustom: true }))
+    ];
+
+    const totalCount = allChallenges.length;
+    const doneCount  = allChallenges.filter(c => data.completed?.[c.id]).length;
+    document.getElementById('challenges-total-count').textContent = totalCount;
+    document.getElementById('challenges-done-count').textContent  = doneCount;
+    document.getElementById('challenges-prog-pct').textContent    = totalCount > 0 ? Math.round(doneCount / totalCount * 100) + '%' : '0%';
+
+    const circumference = 163;
+    const pct = totalCount > 0 ? doneCount / totalCount : 0;
+    document.getElementById('challenges-prog-ring').style.strokeDashoffset = circumference * (1 - pct);
+
+    // Filter by tab
+    let filtered = allChallenges;
+    if (this.activeTab === 'completed') filtered = allChallenges.filter(c => data.completed?.[c.id]);
+    else if (this.activeTab === 'active') filtered = allChallenges.filter(c => !data.completed?.[c.id]);
+    else if (this.activeTab === 'custom') filtered = allChallenges.filter(c => c.isCustom);
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="challenges-empty">
+        ${this.activeTab === 'completed' ? 'No completed challenges yet. Keep going! 💪' :
+          this.activeTab === 'custom'    ? 'No custom challenges yet. Add one below!' :
+          'All challenges completed! 🎉'}
+      </div>`;
+      return;
+    }
+
+    const accent = window.FluxTheme?.getAccentPalette?.(Flux.load('flux_settings', {})?.accent)?.primary || 'var(--accent)';
+    const catColors = { focus: accent, consistency: '#22d3a0', tasks: '#60a5fa', wellness: '#f59e0b' };
+
+    grid.innerHTML = filtered.map(c => {
+      const done     = !!(data.completed?.[c.id]);
+      const progress = !done && c.metric ? this.getProgress(c.metric) : (done ? c.target : 0);
+      const pct      = c.target ? Math.min(Math.round(progress / c.target * 100), 100) : 0;
+      const color    = catColors[c.cat] || 'var(--accent)';
+
+      return `<div class="challenge-card glass-panel ${done ? 'challenge-done' : ''}">
+        <div class="challenge-card-head">
+          <div class="challenge-card-top">
+            <span class="challenge-icon">${c.icon}</span>
+            <span class="challenge-cat-badge" style="background:${color}22;color:${color}">${c.cat}</span>
+            ${done ? '<span class="challenge-done-badge">Completed</span>' : ''}
+          </div>
+          ${c.isCustom ? `<button class="challenge-delete-btn" data-id="${c.id}" title="Delete" type="button">✕</button>` : ''}
+        </div>
+        <h3 class="challenge-card-title">${Flux.sanitize(c.title)}</h3>
+        <p class="challenge-card-desc">${Flux.sanitize(c.desc)}</p>
+        ${c.target && !c.isCustom ? `
+        <div class="challenge-card-meter">
+          <div class="challenge-progress-wrap">
+            <div class="challenge-prog-bar-bg">
+              <div class="challenge-prog-bar-fill" style="width:${pct}%;background:${color}"></div>
+            </div>
+            <span class="challenge-prog-val" style="color:${color}">${pct}%</span>
+          </div>
+          <div class="challenge-prog-label">${Math.min(progress, c.target)} / ${this.formatTarget(c.target, c.metric)}</div>
+        </div>
+        ` : ''}
+        <div class="challenge-card-footer">
+          ${!done ? `<button class="challenge-complete-btn" style="--btn-color:${color}" data-id="${c.id}" type="button">Mark Complete</button>` : '<span class="challenge-finished-tag">Great job</span>'}
+        </div>
+      </div>`;
+    }).join('');
+  },
+
+  formatTarget(target, metric) {
+    if (metric === 'totalTime') return Flux.formatTime(target);
+    return target;
+  },
+
+  markDone(id, event) {
+    const data = this.getChallengeData();
+    if (!data.completed) data.completed = {};
+    data.completed[id] = true;
+    this.saveData(data);
+    Flux.showToast('Challenge completed! 🏆');
+    FluxAudio.taskComplete();
+    
+    // Award XP for challenge completion
+    try {
+      if (window.FluxXP) {
+        window.FluxXP.awardXP(200, 'Challenge Completed');
+        window.FluxXP.checkWeekBonus();
+      }
+    } catch (e) {
+      console.error('XP award error:', e);
+    }
+    
+    const source = event?.currentTarget;
+    if (source) {
+      const rect = source.getBoundingClientRect();
+      Flux.confetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    } else {
+      Flux.confetti(window.innerWidth / 2, window.innerHeight / 3);
+    }
+    this.render();
+  },
+
+  addCustom() {
+    const input = document.getElementById('custom-challenge-input');
+    const cat   = document.getElementById('custom-challenge-cat').value;
+    const text  = Flux.cleanText(input.value, 80);
+    if (!text) return;
+
+    const data = this.getChallengeData();
+    if (!data.custom) data.custom = [];
+
+    const catEmoji = { focus: '🎯', consistency: '📅', tasks: '✅', wellness: '🌿' };
+    data.custom.push({
+      id: 'c_' + Date.now().toString(36),
+      title: text,
+      desc: 'Your personal challenge',
+      icon: catEmoji[cat] || '⭐',
+      cat,
+      isCustom: true,
+    });
+
+    this.saveData(data);
+    input.value = '';
+    FluxAudio.taskAdded();
+    this.activeTab = 'custom';
+    document.querySelectorAll('.challenge-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('[data-ctab="custom"]').classList.add('active');
+    this.render();
+  },
+
+  deleteCustom(id) {
+    const data = this.getChallengeData();
+    data.custom = (data.custom || []).filter(c => c.id !== id);
+    if (data.completed) delete data.completed[id];
+    this.saveData(data);
+    FluxAudio.buttonClick();
+    this.render();
+  }
+};

@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
-import { firebaseConfig } from './firebase-config.js';
+import { firebaseConfig, shouldUseFirebaseEmulators } from './firebase-config.js';
 import {
-  getFirestore, doc, setDoc, deleteDoc, serverTimestamp, getDoc, collection,
+  getFirestore, connectFirestoreEmulator, doc, setDoc, deleteDoc, serverTimestamp, getDoc, collection,
   query, where, orderBy, limit, onSnapshot, getCountFromServer, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
 
@@ -14,6 +14,13 @@ try {
   app = null;
 }
 const db = app ? getFirestore(app) : null;
+if (db && shouldUseFirebaseEmulators()) {
+  try {
+    connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  } catch (error) {
+    console.warn('Firestore emulator connection skipped or failed', error);
+  }
+}
 
 function _getVisibilitySetting() {
   try {
