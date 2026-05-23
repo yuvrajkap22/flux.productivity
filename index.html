@@ -958,40 +958,5 @@
   <script src="js/stats.js?v=2.0.2"></script>
   <script src="js/challenges.js?v=2.0.2"></script>
   <script src="js/app.js?v=2.0.2"></script>
-  <script>
-    (function(){
-      const btn = document.getElementById('topbar-leader-btn');
-      const mini = document.getElementById('topbar-leader-mini');
-      const badge = document.getElementById('topbar-leader-badge');
-      const miniList = document.getElementById('topbar-mini-list');
-      const openBtn = document.getElementById('topbar-mini-open');
-      if (btn && mini) {
-        btn.addEventListener('click', (e) => { mini.classList.toggle('hidden'); });
-      }
-      if (openBtn) openBtn.addEventListener('click', ()=>{ try{ window.showView('leaderboard'); } catch(e){ document.querySelector('.nav-item[data-view="leaderboard"]')?.click(); } });
-
-      function toMillis(value){ if(!value) return 0; if(typeof value.toMillis==='function') return value.toMillis(); if(typeof value.seconds==='number') return value.seconds*1000; const p=new Date(value).getTime(); return Number.isFinite(p)?p:0; }
-
-      function renderMini(users){
-        try{
-          const now = Date.now();
-          const live = (users||[]).filter(u => { const t = toMillis(u?.lastPresenceAt || u?.lastUpdated); return t && (now - t) < 90*1000 && Boolean(u?.isLive); });
-          if (badge) badge.textContent = live.length > 0 ? `${live.length} LIVE` : 'IDLE';
-          if (!miniList) return;
-          miniList.innerHTML = '';
-          if (!users || users.length === 0) { miniList.textContent = 'No users yet.'; return; }
-          users.slice(0,6).forEach(u => {
-            const row = document.createElement('div'); row.className = 'mini-row';
-            const name = document.createElement('div'); name.textContent = u.displayName||u.username||'User'; name.style.fontWeight='600';
-            const state = document.createElement('div'); state.textContent = ( (toMillis(u?.lastPresenceAt||u?.lastUpdated) > 0 && (Date.now() - toMillis(u?.lastPresenceAt||u?.lastUpdated) < 90*1000) && u.isLive) ? 'Live' : 'Idle'); state.style.marginLeft='auto'; state.style.fontSize='12px'; state.style.color='var(--text-dim)';
-            row.appendChild(name); row.appendChild(state); miniList.appendChild(row);
-          });
-        } catch(e){}
-      }
-
-      window.addEventListener('flux-leaderboard-updated', (e) => { const users = e?.detail?.users || window._fluxLeaderboardLast || []; renderMini(users); });
-      setTimeout(()=>{ try{ renderMini(window._fluxLeaderboardLast || []); } catch(e){} }, 200);
-    })();
-  </script>
 </body>
 </html>

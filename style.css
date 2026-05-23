@@ -261,6 +261,10 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
   border-radius: 999px;
   background: rgba(0,0,0,0.18);
 }
+.topbar-leader-badge.live {
+  background: linear-gradient(90deg,var(--green),#22c1a4);
+  color: #042018;
+}
 .topbar-leader-mini {
   position: absolute;
   right: 0;
@@ -277,6 +281,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
 .topbar-leader-mini .mini-header { font-weight:700; margin-bottom:6px; }
 .topbar-leader-mini .mini-list { max-height:180px; overflow:auto; font-size:13px; color:var(--text-dim); }
 .topbar-leader-mini .mini-list .mini-row { display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px dashed rgba(255,255,255,0.02); }
+.topbar-leader-mini .mini-list .mini-row:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .topbar-leader-mini .mini-actions { margin-top:8px; text-align:right; }
 .mini-open { background:var(--accent); color:#fff; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; }
 
