@@ -233,6 +233,59 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
 .sidebar { display: none !important; }
 /* Remove left margin reserved for sidebar */
 .main-content { margin-left: 0 !important; }
+
+/* Topbar right controls */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+.topbar-leader-btn {
+  position: relative;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid rgba(255,255,255,0.03);
+  cursor: pointer;
+}
+.topbar-leader-btn:hover { color: var(--text); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.topbar-leader-badge {
+  font-weight:700;
+  font-size:12px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.18);
+}
+.topbar-leader-mini {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 220px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+  padding: 10px;
+  z-index: 1200;
+}
+.topbar-leader-mini.hidden { display: none; }
+.topbar-leader-mini .mini-header { font-weight:700; margin-bottom:6px; }
+.topbar-leader-mini .mini-list { max-height:180px; overflow:auto; font-size:13px; color:var(--text-dim); }
+.topbar-leader-mini .mini-list .mini-row { display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px dashed rgba(255,255,255,0.02); }
+.topbar-leader-mini .mini-actions { margin-top:8px; text-align:right; }
+.mini-open { background:var(--accent); color:#fff; padding:6px 10px; border-radius:8px; border:none; cursor:pointer; }
+
+/* Responsive collapse for topbar */
+@media (max-width: 800px) {
+  .topbar-nav { display: none; }
+  .sidebar { display: none !important; }
+  .topbar-right { margin-left: 8px; }
+}
 .sidebar-toggle:hover { background: var(--accent-subtle); }
 
 .logo { display: flex; align-items: center; gap: 8px; }

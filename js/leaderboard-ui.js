@@ -257,9 +257,20 @@
 
   function render(container, users) {
     window._fluxLeaderboardLast = users;
+    try { window.dispatchEvent(new CustomEvent('flux-leaderboard-updated', { detail: { users } })); } catch (e) {}
     container.replaceChildren();
     const currentUid = window.FluxAuth?.user?.()?.uid || null;
     const header = buildHeader();
+    // update header badge with live/idle state
+    try {
+      const badge = header.querySelector('.leaderboard-badge');
+      const now = Date.now();
+      const liveCount = (users || []).filter(u => toMillis(u?.lastPresenceAt || u?.lastUpdated) > 0 && (now - toMillis(u?.lastPresenceAt || u?.lastUpdated)) < 90 * 1000 && Boolean(u?.isLive)).length;
+      if (badge) {
+        if (liveCount > 0) { badge.textContent = `${liveCount} LIVE`; badge.classList.add('live'); badge.classList.remove('idle'); }
+        else { badge.textContent = 'IDLE'; badge.classList.add('idle'); badge.classList.remove('live'); }
+      }
+    } catch (e) {}
     container.appendChild(header);
     // ensure active tab
     const activeKey = window._fluxLeaderboardMetric || 'focusMinutesTotal';

@@ -31,7 +31,9 @@ function _getVisibilitySetting() {
 }
 
 async function syncLeaderboard(options = {}) {
-  // Debounced by default; force can be used for session boundary and presence writes.
+  // Presence-only writes should be immediate to reflect live status.
+  if (options && options.presenceOnly) return _syncLeaderboardImmediate(options);
+  // Force can also bypass debounce for full syncs (session boundary)
   if (options && options.force) return _syncLeaderboardImmediate(options);
   return _syncLeaderboardDebounced(options);
 }
