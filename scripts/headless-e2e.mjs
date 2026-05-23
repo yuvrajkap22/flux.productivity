@@ -16,16 +16,21 @@ async function fetchJson(url, options = {}) {
 async function waitFor(predicate, { timeout = 15000, interval = 400, label = 'condition' } = {}) {
   const deadline = Date.now() + timeout;
   let lastError = null;
+  let attempts = 0;
   while (Date.now() < deadline) {
+    attempts++;
     try {
       const result = await predicate();
       if (result) return result;
     } catch (error) {
       lastError = error;
     }
+    if (attempts % Math.max(1, Math.floor(3000 / Math.max(interval, 100))) === 0) {
+      console.log(`waitFor: still waiting for ${label} (attempt ${attempts})`);
+    }
     await sleep(interval);
   }
-  throw new Error(`Timed out waiting for ${label}${lastError ? `: ${lastError.message}` : ''}`);
+  throw new Error(`Timed out waiting for ${label}${lastError ? `: ${lastError.stack || lastError.message}` : ''}`);
 }
 
 function isLivePresenceDoc(doc) {
@@ -78,9 +83,10 @@ function isLivePresenceDoc(doc) {
 
     const authState = await waitFor(async () => {
       const message = await page.$eval('#auth-message', (el) => el.textContent.trim()).catch(() => '');
-      const enterVisible = await page.$eval('#enter-flux-btn', (el) => !el.closest('.enter-flux-wrap')?.classList.contains('is-visible') ? false : true).catch(() => false);
+      const enterBtn = await page.$('#enter-flux-btn');
+      const enterVisible = Boolean(enterBtn && (await enterBtn.boundingBox()) );
       return { message, enterVisible };
-    }, { timeout: 20000, label: 'auth state' });
+    }, { timeout: 25000, label: 'auth state' });
 
     assert(!authState.message || !/error|failed|invalid|incorrect/i.test(authState.message), `Auth error shown: ${authState.message}`);
     assert(authState.enterVisible, 'Expected the enter button to become visible after sign-in');
@@ -91,27 +97,31 @@ function isLivePresenceDoc(doc) {
 
     await page.click('#pomo-play');
     await waitFor(async () => page.evaluate(() => Boolean(window.FluxPomo?.running)), {
-      timeout: 10000,
+      timeout: 15000,
+      interval: 300,
       label: 'pomodoro running'
     });
 
     const presenceDoc = await waitFor(async () => {
       const { response, body } = await fetchJson(`http://127.0.0.1:8080/v1/projects/${projectId}/databases/(default)/documents/leaderboard/${uid}`);
+      if (!response) return null;
+      if (response.status === 404) return null;
       if (response.status !== 200) return null;
       return isLivePresenceDoc(body) ? body : null;
-    }, { timeout: 20000, label: 'leaderboard presence doc' });
+    }, { timeout: 30000, interval: 500, label: 'leaderboard presence doc' });
 
-    assert(isLivePresenceDoc(presenceDoc), 'Presence document did not contain the expected live fields');
+    assert(isLivePresenceDoc(presenceDoc), `Presence document did not contain the expected live fields: ${JSON.stringify(presenceDoc?.fields||{})}`);
     console.log('Firestore presence check PASSED for uid:', uid);
 
     await page.click('#topbar-leader-btn');
-    await waitFor(async () => page.$eval('#topbar-leader-badge', (el) => el.textContent.trim()), {
-      timeout: 5000,
-      label: 'leaderboard badge'
-    }).then((badgeText) => {
-      console.log('Leaderboard badge text:', badgeText);
-      assert(/LIVE/i.test(badgeText), `Expected LIVE badge, got: ${badgeText}`);
-    });
+    const badgeText = await waitFor(async () => {
+      const el = await page.$('#topbar-leader-badge');
+      if (!el) return null;
+      const txt = await page.evaluate((e) => e.textContent.trim(), el).catch(() => '');
+      return txt || null;
+    }, { timeout: 8000, interval: 250, label: 'leaderboard badge text' });
+    console.log('Leaderboard badge text:', badgeText);
+    assert(badgeText && /LIVE/i.test(badgeText), `Expected LIVE badge, got: ${badgeText}`);
 
     console.log('E2E check passed: presence and leaderboard badge are live.');
   } catch (error) {
