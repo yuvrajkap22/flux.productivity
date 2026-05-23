@@ -492,6 +492,8 @@
         FluxChallenges.render();
       } else if (view === 'leaderboard') {
         const leaderboardView = document.getElementById('view-leaderboard');
+        // If the panel was marked hidden in markup, make sure to un-hide it before activating.
+        leaderboardView?.classList.remove('hidden');
         leaderboardView?.classList.add('active');
         const root = document.getElementById('leaderboard-root');
         if (root && window.LeaderboardUI) {
