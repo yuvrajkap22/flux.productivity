@@ -4,6 +4,7 @@
   "private": true,
   "description": "Flux Productivity: Pomodoro timer and simple productivity tools.",
   "scripts": {
+    "generate:social": "node scripts/generate-social-card.mjs",
     "build": "npm run build:dist",
     "build:dist": "node scripts/build-dist.mjs",
     "ci": "npm run build",
