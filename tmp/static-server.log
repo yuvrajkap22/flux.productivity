@@ -1,28 +1,99 @@
-Traceback (most recent call last):
-  File "<frozen runpy>", line 198, in _run_module_as_main
-  File "<frozen runpy>", line 88, in _run_code
-  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 1432, in <module>
-    test(
-    ~~~~^
-        HandlerClass=handler_class,
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ...<6 lines>...
-        tls_password=tls_key_password,
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 1348, in test
-    server = ServerClass(addr, HandlerClass)
-  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 457, in __init__
-    self.server_bind()
-    ~~~~~~~~~~~~~~~~^^
-  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 1419, in server_bind
-    return super().server_bind()
-           ~~~~~~~~~~~~~~~~~~~^^
-  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 148, in server_bind
-    socketserver.TCPServer.server_bind(self)
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 478, in server_bind
-    self.socket.bind(self.server_address)
-    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
-OSError: [Errno 48] Address already in use
+ INFO  Accepting connections at http://localhost:8081
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 GET /login.html
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 Returned 301 in 32 ms
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 GET /login
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 Returned 200 in 3 ms
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 GET /assets/flux-logo.svg
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 GET /js/auth-shared.js?v=2.0.2
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 Returned 200 in 3 ms
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 Returned 200 in 2 ms
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 GET /js/firebase-config.js?v=2.0.2
+ HTTP  5/24/2026 2:40:27 AM 127.0.0.1 Returned 200 in 2 ms
+ HTTP  5/24/2026 2:40:27 AM ::1 GET /login
+ HTTP  5/24/2026 2:40:27 AM ::1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:40:27 AM ::1 GET /assets/flux-logo.svg
+ HTTP  5/24/2026 2:40:27 AM ::1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:40:27 AM ::1 GET /js/auth-shared.js?v=2.0.2
+ HTTP  5/24/2026 2:40:27 AM ::1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:40:27 AM ::1 GET /js/firebase-config.js?v=2.0.2
+ HTTP  5/24/2026 2:40:27 AM ::1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:40:27 AM ::1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:40:27 AM ::1 Returned 200 in 4 ms
+ HTTP  5/24/2026 2:40:27 AM ::1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:40:27 AM ::1 Returned 304 in 0 ms
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 GET /login.html
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 Returned 301 in 0 ms
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 GET /login
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 Returned 200 in 4 ms
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 GET /assets/flux-logo.svg
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 GET /js/auth-shared.js?v=2.0.2
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 GET /js/firebase-config.js?v=2.0.2
+ HTTP  5/24/2026 2:43:20 AM 127.0.0.1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:20 AM ::1 GET /login
+ HTTP  5/24/2026 2:43:20 AM ::1 Returned 200 in 2 ms
+ HTTP  5/24/2026 2:43:20 AM ::1 GET /assets/flux-logo.svg
+ HTTP  5/24/2026 2:43:20 AM ::1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:20 AM ::1 GET /js/auth-shared.js?v=2.0.2
+ HTTP  5/24/2026 2:43:20 AM ::1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:20 AM ::1 GET /js/firebase-config.js?v=2.0.2
+ HTTP  5/24/2026 2:43:20 AM ::1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:20 AM ::1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:43:20 AM ::1 Returned 200 in 4 ms
+ HTTP  5/24/2026 2:43:20 AM ::1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:43:20 AM ::1 Returned 304 in 1 ms
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 GET /login.html
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 Returned 301 in 2 ms
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 GET /login
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 GET /assets/flux-logo.svg
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 Returned 200 in 0 ms
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 GET /js/auth-shared.js?v=2.0.2
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 GET /js/firebase-config.js?v=2.0.2
+ HTTP  5/24/2026 2:43:34 AM 127.0.0.1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:34 AM ::1 GET /login
+ HTTP  5/24/2026 2:43:34 AM ::1 Returned 200 in 0 ms
+ HTTP  5/24/2026 2:43:34 AM ::1 GET /assets/flux-logo.svg
+ HTTP  5/24/2026 2:43:34 AM ::1 GET /js/auth-shared.js?v=2.0.2
+ HTTP  5/24/2026 2:43:34 AM ::1 Returned 200 in 2 ms
+ HTTP  5/24/2026 2:43:34 AM ::1 Returned 200 in 3 ms
+ HTTP  5/24/2026 2:43:34 AM ::1 GET /js/firebase-config.js?v=2.0.2
+ HTTP  5/24/2026 2:43:34 AM ::1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:43:34 AM ::1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:43:34 AM ::1 Returned 200 in 7 ms
+ HTTP  5/24/2026 2:43:34 AM ::1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:43:34 AM ::1 Returned 304 in 0 ms
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 GET /index.html
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 Returned 301 in 0 ms
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 GET /index
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 Returned 301 in 0 ms
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 GET /
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 Returned 200 in 2 ms
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 Returned 200 in 3 ms
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:44:45 AM 127.0.0.1 Returned 304 in 0 ms
+ HTTP  5/24/2026 2:45:30 AM 127.0.0.1 GET /index.html
+ HTTP  5/24/2026 2:45:30 AM 127.0.0.1 Returned 301 in 0 ms
+ HTTP  5/24/2026 2:45:35 AM 127.0.0.1 GET /index.html
+ HTTP  5/24/2026 2:45:35 AM 127.0.0.1 Returned 301 in 1 ms
+ HTTP  5/24/2026 2:45:43 AM 127.0.0.1 GET /index.html
+ HTTP  5/24/2026 2:45:43 AM 127.0.0.1 Returned 301 in 0 ms
+ HTTP  5/24/2026 2:45:54 AM 127.0.0.1 GET /index.html
+ HTTP  5/24/2026 2:45:54 AM 127.0.0.1 Returned 301 in 1 ms
+ HTTP  5/24/2026 2:45:54 AM 127.0.0.1 GET /index
+ HTTP  5/24/2026 2:45:54 AM 127.0.0.1 Returned 301 in 0 ms
+ HTTP  5/24/2026 2:45:54 AM 127.0.0.1 GET /
+ HTTP  5/24/2026 2:45:54 AM 127.0.0.1 Returned 200 in 0 ms
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 GET /index.html
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 Returned 301 in 1 ms
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 GET /index
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 Returned 301 in 0 ms
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 GET /
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 Returned 200 in 1 ms
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 Returned 200 in 3 ms
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 GET /assets/flux-favicon.svg
+ HTTP  5/24/2026 2:46:20 AM 127.0.0.1 Returned 304 in 0 ms
