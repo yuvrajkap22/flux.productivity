@@ -208,6 +208,13 @@ const FluxPomo = {
         this.totalFocusToday++;
         this.getTodoApi()?.addTrackedTime?.(1);
         this.updateStatsBar();
+        // Sync leaderboard more proactively while a focus session runs: once per minute
+        try {
+          const elapsed = this.duration - this.remaining;
+          if (elapsed > 0 && elapsed % 60 === 0) {
+            window.Leaderboard?.syncLeaderboard?.({ force: true, presenceOnly: false, isLive: true });
+          }
+        } catch (e) { /* ignore leaderboard errors from timer path */ }
       }
       this.updateDisplay();
 

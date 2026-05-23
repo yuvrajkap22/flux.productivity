@@ -206,6 +206,33 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
   padding: 6px; border-radius: 8px; display: flex; align-items: center;
   transition: background 0.2s;
 }
+
+/* Topbar layout overrides: hide legacy sidebar and surface a compact top navigation */
+.topbar-nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-left: 18px;
+}
+.topbar-nav .nav-item {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.topbar-nav .nav-item.active,
+.topbar-nav .nav-item:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text);
+}
+
+/* Keep the sidebar markup available but hidden — easier rollback */
+.sidebar { display: none !important; }
+/* Remove left margin reserved for sidebar */
+.main-content { margin-left: 0 !important; }
 .sidebar-toggle:hover { background: var(--accent-subtle); }
 
 .logo { display: flex; align-items: center; gap: 8px; }
