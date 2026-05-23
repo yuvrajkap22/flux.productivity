@@ -789,12 +789,13 @@
 
   <script src="js/auth-shared.js?v=2.0.2"></script>
   <script type="module">
-    import { firebaseConfig, isFirebaseConfigured } from './js/firebase-config.js?v=2.0.2';
+    import { firebaseConfig, isFirebaseConfigured, shouldUseFirebaseEmulators } from './js/firebase-config.js?v=2.0.2';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
     import {
       browserLocalPersistence,
       createUserWithEmailAndPassword,
       getAuth,
+      connectAuthEmulator,
       GoogleAuthProvider,
       onAuthStateChanged,
       sendPasswordResetEmail,
@@ -992,6 +993,14 @@
       }
       const app = initializeApp(firebaseConfig);
       state.auth = getAuth(app);
+      if (shouldUseFirebaseEmulators && shouldUseFirebaseEmulators()) {
+        try {
+          connectAuthEmulator(state.auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+        } catch (e) {
+          // ignore if emulator connect fails
+          console.warn('connectAuthEmulator failed', e);
+        }
+      }
       state.provider = new GoogleAuthProvider();
       state.provider.setCustomParameters({ prompt: 'select_account' });
       setPersistence(state.auth, browserLocalPersistence).catch(() => {});
