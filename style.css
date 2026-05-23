@@ -23,6 +23,7 @@
   --radius: 16px;
   --radius-sm: 10px;
   --header-h: 56px;
+  --bg-alt: var(--bg-panel);
   --top-nav-h: 52px;
   --sidebar-w: 260px;
   --sidebar-collapsed: 64px;
@@ -240,6 +241,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
   align-items: center;
   gap: 12px;
   margin-left: auto;
+  position: relative;
 }
 .topbar-leader-btn {
   position: relative;
@@ -1847,7 +1849,7 @@ body {
     radial-gradient(circle at top, color-mix(in srgb, var(--accent-subtle) 80%, transparent), transparent 28%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg-2, var(--bg)) 100%);
   color: var(--text);
-  cursor: none;
+  cursor: auto;
   transition: background 0.4s var(--ease), color 0.4s var(--ease);
 }
 
@@ -1921,7 +1923,7 @@ h1, h2, h3, .logo-text, .sidebar-stat-value, .pomo-time, .sidebar-stat-value,
 .custom-challenge-input,
 .custom-challenge-cat,
 .pomo-settings-dropdown input[type="number"] {
-  cursor: none;
+  cursor: pointer;
 }
 
 .logo-icon {

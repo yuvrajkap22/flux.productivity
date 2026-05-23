@@ -23,6 +23,7 @@
   --radius: 16px;
   --radius-sm: 10px;
   --header-h: 56px;
+  --bg-alt: var(--bg-panel);
   --top-nav-h: 52px;
   --sidebar-w: 260px;
   --sidebar-collapsed: 64px;
@@ -1836,7 +1837,7 @@ h1, h2, h3, .logo-text, .sidebar-stat-value, .pomo-time, .sidebar-stat-value,
 .custom-challenge-input,
 .custom-challenge-cat,
 .pomo-settings-dropdown input[type="number"] {
-  cursor: none;
+  cursor: pointer;
 }
 
 .logo-icon {
