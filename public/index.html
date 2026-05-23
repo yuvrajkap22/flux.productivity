@@ -443,6 +443,11 @@
             <button class="sound-btn" data-sound="cafe" id="sound-cafe">☕<span>Café</span></button>
             <button class="sound-btn" data-sound="forest" id="sound-forest">🌿<span>Forest</span></button>
           </div>
+          <div class="sound-presets" id="sound-presets" aria-label="Sound presets">
+            <button class="preset-btn" data-preset="focus">Focus</button>
+            <button class="preset-btn" data-preset="relax">Relax</button>
+            <button class="preset-btn" data-preset="cafe">Café</button>
+          </div>
           <div class="sound-volume">
             <label>Volume</label>
             <input type="range" id="sound-volume-slider" min="0" max="100" value="30" />
@@ -739,6 +744,20 @@
               <small>Disable decorative animations and heavy transitions.</small>
             </span>
             <input type="checkbox" id="settings-motion-toggle" />
+          </label>
+          <label class="settings-toggle-row" for="settings-notify-desktop">
+            <span>
+              <strong>Desktop notifications</strong>
+              <small>Show desktop notifications for session end and important events.</small>
+            </span>
+            <input type="checkbox" id="settings-notify-desktop" />
+          </label>
+          <label class="settings-toggle-row" for="settings-notify-session-end">
+            <span>
+              <strong>Notify on session end</strong>
+              <small>Send a notification when a Pomodoro session ends.</small>
+            </span>
+            <input type="checkbox" id="settings-notify-session-end" />
           </label>
         </div>
 

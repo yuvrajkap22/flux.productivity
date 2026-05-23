@@ -2000,6 +2000,25 @@ h1, h2, h3, .logo-text, .sidebar-stat-value, .pomo-time, .sidebar-stat-value,
   overflow: hidden;
 }
 
+/* Leaderboard layout fixes: center content and ensure full-width list */
+#view-leaderboard .panel-inner {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+#leaderboard-root {
+  max-width: var(--lb-max-w);
+  width: 100%;
+  margin: 12px auto;
+  padding: 18px;
+  box-sizing: border-box;
+  background: var(--bg-alt);
+  border-radius: 12px;
+}
+
+.leader-list { width: 100%; }
+
 .quote-accent-stripe { width: 3px; background: var(--accent); }
 .quote-text { font-size: 14px; line-height: 1.6; }
 .quote-author { margin-top: 3px; color: var(--accent); }

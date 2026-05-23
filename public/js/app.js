@@ -694,6 +694,85 @@
     if (volumeValue) volumeValue.textContent = savedSounds.volume + '%';
   }
 
+  /* ─── Sound Presets ─── */
+  const presetButtons = document.querySelectorAll('.preset-btn');
+  function applySoundPreset(name) {
+    if (!name) return;
+    if (name === 'focus') {
+      FluxAudio.setVolume(30);
+      if (!FluxAudio.isActive('rain')) FluxAudio.startAmbient('rain');
+      if (!FluxAudio.isActive('whitenoise')) FluxAudio.startAmbient('whitenoise');
+      if (FluxAudio.isActive('forest')) FluxAudio.stopAmbient('forest');
+      if (FluxAudio.isActive('cafe')) FluxAudio.stopAmbient('cafe');
+    } else if (name === 'relax') {
+      FluxAudio.setVolume(40);
+      if (!FluxAudio.isActive('forest')) FluxAudio.startAmbient('forest');
+      if (!FluxAudio.isActive('rain')) FluxAudio.startAmbient('rain');
+      if (FluxAudio.isActive('cafe')) FluxAudio.stopAmbient('cafe');
+      if (FluxAudio.isActive('whitenoise')) FluxAudio.stopAmbient('whitenoise');
+    } else if (name === 'cafe') {
+      FluxAudio.setVolume(35);
+      if (!FluxAudio.isActive('cafe')) FluxAudio.startAmbient('cafe');
+      if (!FluxAudio.isActive('rain')) FluxAudio.startAmbient('rain');
+      if (FluxAudio.isActive('forest')) FluxAudio.stopAmbient('forest');
+      if (FluxAudio.isActive('whitenoise')) FluxAudio.stopAmbient('whitenoise');
+    }
+    // sync UI
+    if (volumeSlider) volumeSlider.value = FluxAudio.volume;
+    if (volumeValue) volumeValue.textContent = FluxAudio.volume + '%';
+    document.querySelectorAll('.sound-btn').forEach((b) => {
+      b.classList.toggle('active', FluxAudio.isActive(b.dataset.sound));
+      b.setAttribute('aria-pressed', FluxAudio.isActive(b.dataset.sound) ? 'true' : 'false');
+    });
+    if (waveBars) waveBars.classList.toggle('hidden', !FluxAudio.hasAnySoundActive());
+    FluxAudio.saveState && FluxAudio.saveState();
+    Flux.showToast && Flux.showToast('Sound preset applied: ' + name);
+  }
+
+  presetButtons.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const p = btn.dataset.preset;
+      applySoundPreset(p);
+      FluxAudio.buttonClick();
+    });
+  });
+
+  /* ─── Notification Preferences ─── */
+  const settingsNotifyDesktop = document.getElementById('settings-notify-desktop');
+  const settingsNotifySessionEnd = document.getElementById('settings-notify-session-end');
+
+  function syncNotificationSettings() {
+    const s = getCurrentSettings();
+    if (settingsNotifyDesktop) settingsNotifyDesktop.checked = Boolean(s.notifyDesktop);
+    if (settingsNotifySessionEnd) settingsNotifySessionEnd.checked = Boolean(s.notifyOnSessionEnd);
+  }
+
+  settingsNotifyDesktop?.addEventListener('change', (e) => {
+    saveSettingsPatch({ notifyDesktop: e.target.checked });
+  });
+
+  settingsNotifySessionEnd?.addEventListener('change', (e) => {
+    saveSettingsPatch({ notifyOnSessionEnd: e.target.checked });
+  });
+
+  // Listen for Pomodoro end events and show notification if enabled
+  window.addEventListener('flux-pomo-end', () => {
+    const s = getCurrentSettings();
+    if (!s.notifyOnSessionEnd) return;
+    if (s.notifyDesktop && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        new Notification('Flux — Focus session finished', { body: 'Great work! Time for a break.' });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then((perm) => {
+          if (perm === 'granted') new Notification('Flux — Focus session finished', { body: 'Great work! Time for a break.' });
+        });
+      }
+    }
+  });
+
+  // initialize notification UI
+  syncNotificationSettings();
+
   function bootstrapModules(user) {
     if (window.__fluxModulesBootstrapped) {
       if (user && typeof FluxProfile !== 'undefined') FluxProfile.init(user);
