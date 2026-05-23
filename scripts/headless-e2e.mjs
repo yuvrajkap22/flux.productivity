@@ -68,6 +68,8 @@ function isLivePresenceDoc(doc) {
     // Bypass UI sign-in: programmatically inject the emulator user into the app
     console.log('Opening app and injecting auth for uid:', uid);
     await page.goto(`${base}/index.html`, { waitUntil: 'networkidle2' });
+    // wait for the app runtime to be available before injecting auth
+    await page.waitForFunction(() => typeof window.FluxApp === 'object' && typeof window.FluxApp.onAuthChange === 'function', { timeout: 10000 }).catch(() => {});
     const injected = await page.evaluate((u, e) => {
       try {
         const user = { uid: u, email: e, displayName: e.split('@')[0], photoURL: '', isGuest: false };
