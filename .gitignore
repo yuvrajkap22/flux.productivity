@@ -13,6 +13,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-.DS_Store
-.DS_Store
+firebase-debug.log
+firestore-debug.log
+
+# Test artifacts and backups
+headless-check.json
+headless-check.png
+*.bak
+
 .DS_Store

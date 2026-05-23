@@ -6,10 +6,12 @@
   "scripts": {
     "build": "npm run build:dist",
     "build:dist": "node scripts/build-dist.mjs",
+    "ci": "npm run build",
     "release": "bash scripts/release.sh",
     "serve": "npx serve dist -l 8080",
     "test:headless": "node scripts/headless-check.mjs http://127.0.0.1:8080/login.html",
-    "test:headless:ci": "node scripts/headless-ci.mjs"
+    "test:headless:ci": "node scripts/headless-ci.mjs",
+    "test:e2e": "node scripts/headless-e2e.mjs http://127.0.0.1:8081"
   },
   "devDependencies": {
     "clean-css": "^5.3.3",

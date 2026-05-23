@@ -41,6 +41,115 @@
     return parts.join(' • ');
   }
 
+  function getTopbarNodes() {
+    const button = document.getElementById('topbar-leader-btn');
+    const mini = document.getElementById('topbar-leader-mini');
+    const badge = document.getElementById('topbar-leader-badge');
+    const list = document.getElementById('topbar-mini-list');
+    const open = document.getElementById('topbar-mini-open');
+    return { button, mini, badge, list, open };
+  }
+
+  function setTopbarOpen(open) {
+    const { button, mini } = getTopbarNodes();
+    if (!button || !mini) return;
+    const visible = Boolean(open);
+    button.setAttribute('aria-expanded', visible ? 'true' : 'false');
+    mini.classList.toggle('hidden', !visible);
+    mini.setAttribute('aria-hidden', visible ? 'false' : 'true');
+  }
+
+  function updateTopbarMini(users = window._fluxLeaderboardLast || []) {
+    const { button, mini, badge, list } = getTopbarNodes();
+    if (!button || !mini || !badge || !list) return;
+
+    const now = Date.now();
+    const liveUsers = (users || []).filter((u) => {
+      const lastSeen = toMillis(u?.lastPresenceAt || u?.lastUpdated);
+      return lastSeen > 0 && (now - lastSeen) < 90 * 1000 && Boolean(u?.isLive);
+    });
+
+    badge.textContent = liveUsers.length > 0 ? `${liveUsers.length} LIVE` : 'IDLE';
+    badge.classList.toggle('live', liveUsers.length > 0);
+    badge.classList.toggle('idle', liveUsers.length === 0);
+
+    list.replaceChildren();
+    if (!users || users.length === 0) {
+      list.textContent = 'No users yet.';
+      return;
+    }
+
+    users.slice(0, 6).forEach((u) => {
+      const row = document.createElement('div');
+      row.className = 'mini-row';
+
+      const name = document.createElement('div');
+      name.textContent = u.displayName || u.username || 'User';
+      name.style.fontWeight = '600';
+
+      const state = document.createElement('div');
+      state.textContent = presenceLabel(u);
+      state.style.marginLeft = 'auto';
+      state.style.fontSize = '12px';
+      state.style.color = 'var(--text-dim)';
+
+      row.appendChild(name);
+      row.appendChild(state);
+      list.appendChild(row);
+    });
+  }
+
+  function openLeaderboardView() {
+    try {
+      if (typeof window.showView === 'function') {
+        window.showView('leaderboard');
+        return;
+      }
+    } catch (error) {
+      // fall through
+    }
+
+    try {
+      document.querySelector('.nav-item[data-view="leaderboard"]')?.click();
+    } catch (error) {
+      window.location.hash = '#leaderboard';
+    }
+  }
+
+  function bindTopbarLeaderboard() {
+    if (window._fluxLeaderboardTopbarBound) return;
+    const { button, mini, open } = getTopbarNodes();
+    if (!button || !mini) return;
+
+    window._fluxLeaderboardTopbarBound = true;
+    button.setAttribute('aria-expanded', 'false');
+    mini.setAttribute('aria-hidden', 'true');
+
+    button.addEventListener('click', () => {
+      const isOpen = mini.classList.contains('hidden');
+      setTopbarOpen(isOpen);
+      if (isOpen) updateTopbarMini();
+    });
+
+    open?.addEventListener('click', openLeaderboardView);
+
+    document.addEventListener('click', (event) => {
+      if (mini.classList.contains('hidden')) return;
+      if (button.contains(event.target) || mini.contains(event.target)) return;
+      setTopbarOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') setTopbarOpen(false);
+    });
+
+    window.addEventListener('flux-leaderboard-updated', (event) => {
+      updateTopbarMini(event?.detail?.users || window._fluxLeaderboardLast || []);
+    });
+
+    updateTopbarMini(window._fluxLeaderboardLast || []);
+  }
+
   function createAvatarEl(u) {
     const wrap = document.createElement('div');
     wrap.className = 'avatar-col';
@@ -220,6 +329,7 @@
     if (!container) return;
     if (container.dataset.leaderboardBound === 'true') return;
     container.dataset.leaderboardBound = 'true';
+    bindTopbarLeaderboard();
     container.addEventListener('click', (e) => {
       const metricBtn = e.target.closest('[data-leader-metric]');
       if (metricBtn) {
@@ -257,6 +367,7 @@
 
   function render(container, users) {
     window._fluxLeaderboardLast = users;
+    bindTopbarLeaderboard();
     container.replaceChildren();
     const currentUid = window.FluxAuth?.user?.()?.uid || null;
     const header = buildHeader();
