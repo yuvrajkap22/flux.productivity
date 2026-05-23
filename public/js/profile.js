@@ -159,12 +159,19 @@ const FluxProfile = {
     const menu = document.getElementById('profile-avatar-menu');
     if (!menu) return;
     menu.classList.remove('hidden');
+    const btn = document.getElementById('profile-avatar-btn');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    const first = menu.querySelector('button, [tabindex]:not([tabindex="-1"])');
+    if (first) first.focus();
   },
 
   closeMenu() {
     const menu = document.getElementById('profile-avatar-menu');
     if (!menu) return;
     menu.classList.add('hidden');
+    const btn = document.getElementById('profile-avatar-btn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    if (btn) btn.focus();
   },
 
   toggleMenu() {
@@ -245,6 +252,13 @@ const FluxProfile = {
     document.getElementById('profile-avatar-btn')?.addEventListener('click', () => {
       this.toggleMenu();
       FluxAudio.buttonClick();
+    });
+
+    document.getElementById('profile-avatar-btn')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        document.getElementById('profile-avatar-btn')?.click();
+      }
     });
 
     document.getElementById('profile-menu-open')?.addEventListener('click', () => {

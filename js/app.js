@@ -25,16 +25,32 @@
     window.FluxTheme?.applyTheme(theme, { persist });
   }
 
+  function updateThemeToggleState() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    if (themeToggle) {
+      themeToggle.setAttribute('aria-pressed', current === 'dark' ? 'true' : 'false');
+      themeToggle.title = `Switch to ${current === 'dark' ? 'light' : 'dark'} theme`;
+    }
+  }
+
   themeToggle?.addEventListener('click', () => {
     const current = document.documentElement.getAttribute('data-theme');
     setTheme(current === 'dark' ? 'light' : 'dark');
     FluxAudio.buttonClick();
   });
 
+  themeToggle?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      themeToggle.click();
+    }
+  });
+
   // Load saved theme
   const savedSettings = Flux.load('flux_settings', {});
   const savedSounds = Flux.load('flux_sounds', { volume: 30, muted: false, active: {} });
   if (savedSettings.theme) setTheme(savedSettings.theme, false);
+  updateThemeToggleState();
 
   /* ─── Accent Color ─── */
   function setAccent(color, persist = true) {
@@ -307,6 +323,7 @@
   window.addEventListener('flux-theme-change', syncSettingsPanel);
   window.addEventListener('flux-accent-change', syncSettingsPanel);
   window.addEventListener('flux-sound-change', syncSettingsPanel);
+  window.addEventListener('flux-theme-change', updateThemeToggleState);
   window.addEventListener('flux-profile-change', syncSettingsPanel);
   window.addEventListener('storage', (event) => {
     if (event.key === 'flux_settings' || event.key === 'flux_sounds' || event.key === 'flux_profile') {
@@ -639,8 +656,16 @@
       const type = btn.dataset.sound;
       const active = FluxAudio.toggleAmbient(type);
       btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
       waveBars.classList.toggle('hidden', !FluxAudio.hasAnySoundActive());
       FluxAudio.buttonClick();
+    });
+
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        btn.click();
+      }
     });
   });
 
@@ -651,8 +676,16 @@
   });
 
   // Sound master toggle
-  document.getElementById('sound-master-toggle')?.addEventListener('click', () => {
+  const soundMaster = document.getElementById('sound-master-toggle');
+  soundMaster?.addEventListener('click', () => {
     FluxAudio.toggleMute();
+    soundMaster.setAttribute('aria-pressed', FluxAudio.muted ? 'true' : 'false');
+  });
+  soundMaster?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      soundMaster.click();
+    }
   });
 
   // Restore saved sound state
