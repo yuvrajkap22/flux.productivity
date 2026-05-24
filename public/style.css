@@ -370,6 +370,9 @@ body.sounds-muted .icon-speaker-off { display: block; }
   background: var(--accent-subtle);
 }
 
+/* Load leaderboard overrides last so they can safely override global .hidden rules */
+@import url('css/leaderboard-override.css');
+
 .sidebar.collapsed { width: var(--sidebar-collapsed); }
 .sidebar.collapsed .sidebar-brand-copy,
 .sidebar.collapsed .sidebar-stat-label,

@@ -1,0 +1,94 @@
+/* Clean, robust leaderboard styles (override) */
+:root {
+  --lb-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+  --lb-card: rgba(255,255,255,0.02);
+  --lb-accent: var(--accent);
+  --lb-radius: 12px;
+}
+
+/* Ensure the root is visible even if a global `.hidden` exists */
+#leaderboard-root,
+#leaderboard-root * {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+#leaderboard-root.hidden,
+#leaderboard-root .hidden {
+  display: block !important;
+  visibility: visible !important;
+}
+
+#leaderboard-root {
+  box-sizing: border-box;
+  max-width: 1100px;
+  margin: 18px auto;
+  padding: 18px;
+  background: var(--lb-bg);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.03);
+  color: var(--text);
+}
+
+/* Header */
+#leaderboard-root .leaderboard-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+#leaderboard-root .leaderboard-title h1 {
+  margin: 0;
+  font-size: 28px;
+}
+#leaderboard-root .leaderboard-subtitle { color: var(--text-dim); font-size: 13px; }
+
+/* Badge */
+#leaderboard-root .leaderboard-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(34, 211, 160, 0.06);
+  color: var(--green);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Tabs & actions */
+#leaderboard-root .leaderboard-actions { display:flex; gap:10px; align-items:center; }
+#leaderboard-root .leaderboard-tabs { display:flex; gap:8px; }
+#leaderboard-root .leaderboard-tabs .tab { padding:8px 10px; border-radius:999px; background:transparent; border:1px solid transparent; color:var(--text-dim); cursor:pointer; }
+#leaderboard-root .leaderboard-tabs .tab.active { background: rgba(255,255,255,0.03); color:var(--text); border-color: rgba(255,255,255,0.04); }
+
+/* Body layout */
+#leaderboard-root .leaderboard-body { display:flex; gap:18px; align-items:flex-start; }
+#leaderboard-root .leader-podium-wrap { flex: 0 0 420px; }
+#leaderboard-root .leader-list-wrap { flex: 1 1 auto; }
+
+/* Podium */
+#leaderboard-root .leader-podium { display:flex; gap:12px; align-items:end; justify-content:center; }
+#leaderboard-root .podium-slot { background: var(--lb-card); padding:12px; border-radius:12px; text-align:center; min-width:120px; }
+#leaderboard-root .podium-slot .avatar img { width:72px; height:72px; border-radius:50%; object-fit:cover; }
+#leaderboard-root .podium-slot .meta .name { font-weight:700; margin-top:8px; }
+
+/* List */
+#leaderboard-root .leader-list { border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.02); }
+#leaderboard-root .leader-row { display:flex; gap:12px; align-items:center; padding:10px; border-bottom:1px solid rgba(255,255,255,0.02); }
+#leaderboard-root .leader-row .avatar-col img { width:40px; height:40px; border-radius:50%; object-fit:cover; }
+#leaderboard-root .leader-row .name-col .primary { font-weight:600; }
+#leaderboard-root .leader-row .stat-col { color:var(--lb-accent); font-weight:700; }
+
+/* Responsive */
+@media (max-width: 880px) {
+  #leaderboard-root { padding:12px; }
+  #leaderboard-root .leaderboard-body { flex-direction:column; }
+  #leaderboard-root .leader-podium-wrap { width:100%; }
+  #leaderboard-root .leader-list-wrap { width:100%; }
+}
+
+/* keyboard focus */
+#leaderboard-root .tab:focus { outline: 3px solid rgba(255,184,56,0.16); }
+
+/* Make sure topbar mini is visible */
+#topbar-leader-mini, #topbar-leader-badge { display:inline-flex !important; visibility:visible !important; }
