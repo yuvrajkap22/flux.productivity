@@ -4,6 +4,9 @@
   --lb-card: rgba(255,255,255,0.02);
   --lb-accent: var(--accent);
   --lb-radius: 12px;
+  --lb-heading-wght: 700;
+  --lb-body-wght: 400;
+  --lb-gap: 18px;
 }
 
 /* Ensure the root is visible even if a global `.hidden` exists */
@@ -30,6 +33,9 @@
   color: var(--text);
   font-family: 'DM Sans', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   -webkit-font-smoothing: antialiased;
+  /* prefer Inter variable if available */
+  font-family: Inter, 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  font-weight: var(--lb-body-wght);
 }
 
 /* Header */
@@ -43,8 +49,10 @@
 #leaderboard-root .leaderboard-title h1 {
   margin: 0;
   font-size: clamp(22px, 3.2vw, 34px);
-  line-height: 1.06;
-  font-weight: 700;
+  line-height: 1.04;
+  font-weight: var(--lb-heading-wght);
+  /* prefer variable axis when available */
+  font-variation-settings: 'wght' var(--lb-heading-wght);
   letter-spacing: -0.01em;
   color: var(--text);
 }
@@ -77,20 +85,20 @@
 #leaderboard-root .leaderboard-tabs .tab.active { background: rgba(255,255,255,0.03); color:var(--text); border-color: rgba(255,255,255,0.04); }
 
 /* Body layout */
-#leaderboard-root .leaderboard-body { display:flex; gap:18px; align-items:flex-start; }
-#leaderboard-root .leader-podium-wrap { flex: 0 0 420px; }
+#leaderboard-root .leaderboard-body { display:flex; gap:var(--lb-gap); align-items:flex-start; }
+#leaderboard-root .leader-podium-wrap { flex: 0 0 380px; }
 #leaderboard-root .leader-list-wrap { flex: 1 1 auto; }
 
 /* Podium */
 #leaderboard-root .leader-podium { display:flex; gap:12px; align-items:end; justify-content:center; }
-#leaderboard-root .podium-slot { background: var(--lb-card); padding:14px; border-radius:12px; text-align:center; min-width:140px; box-shadow: var(--lb-glow, none); }
+#leaderboard-root .podium-slot { background: var(--lb-card); padding:16px; border-radius:12px; text-align:center; min-width:140px; box-shadow: var(--lb-glow, none); }
 #leaderboard-root .podium-slot .avatar img { width:76px; height:76px; border-radius:50%; object-fit:cover; }
 #leaderboard-root .podium-slot .meta .name { font-weight:700; margin-top:8px; font-size: clamp(13px, 1.3vw, 16px); line-height:1.15; }
 #leaderboard-root .podium-slot .meta .val { font-size: clamp(13px, 1.1vw, 15px); color: var(--lb-accent); font-weight:800; }
 
 /* List */
 #leaderboard-root .leader-list { border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.02); }
-#leaderboard-root .leader-row { display:flex; gap:12px; align-items:center; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.02); background: transparent; }
+#leaderboard-root .leader-row { display:flex; gap:14px; align-items:center; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.02); background: transparent; }
 #leaderboard-root .leader-row:hover { background: rgba(255,255,255,0.01); }
 #leaderboard-root .leader-row .avatar-col img { width:44px; height:44px; border-radius:50%; object-fit:cover; }
 #leaderboard-root .leader-row .name-col .primary { font-weight:700; font-size: clamp(13px, 1.1vw, 16px); }
