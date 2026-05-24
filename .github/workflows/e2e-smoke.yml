@@ -1,0 +1,40 @@
+name: E2E Smoke (emulators)
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  e2e-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools
+
+      - name: Start Firebase emulators (auth, firestore)
+        run: |
+          nohup npx firebase emulators:start --only auth,firestore --project flux-productivity-39c09 --export-on-exit &>/tmp/firebase-emulators.log &
+          # wait for Firestore emulator to be ready
+          npx wait-on http://127.0.0.1:8080 || (sleep 3 && npx wait-on http://127.0.0.1:8080)
+
+      - name: Run smoke E2E
+        env:
+          FIREBASE_PROJECT: flux-productivity-39c09
+        run: |
+          npm run e2e:smoke || (cat /tmp/firebase-emulators.log && exit 1)
+
+      - name: Archive debug files
+        run: node scripts/cleanup-debug.mjs || true

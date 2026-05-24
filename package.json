@@ -14,6 +14,7 @@
     "test:headless:ci": "node scripts/headless-ci.mjs",
     "test:e2e": "node scripts/headless-e2e.mjs http://127.0.0.1:8081"
     ,"e2e:simple": "node scripts/headless-e2e-simple.mjs",
+    "e2e:smoke": "npm run e2e:simple",
     "e2e:ui": "node scripts/headless-e2e.mjs http://127.0.0.1:8081",
     "cleanup-debug": "node scripts/cleanup-debug.mjs"
   },
