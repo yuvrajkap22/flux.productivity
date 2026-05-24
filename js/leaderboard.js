@@ -160,6 +160,20 @@ function _toMillis(value) {
   }
 }
 
+function _normalizeDocData(docData) {
+  if (!docData || typeof docData !== 'object') return {};
+  const out = { ...docData };
+  ['focusMinutesTotal', 'sessionsTotal', 'tasksDoneTotal', 'currentStreak'].forEach(k => {
+    if (out[k] !== undefined) out[k] = Number(out[k]) || 0;
+  });
+  ['lastPresenceAt', 'lastUpdated'].forEach(k => {
+    if (out[k] && typeof out[k].toMillis === 'function') out[k] = out[k].toMillis();
+    else if (out[k] && typeof out[k].seconds === 'number') out[k] = out[k].seconds * 1000;
+    else if (typeof out[k] === 'string') out[k] = new Date(out[k]).getTime();
+  });
+  return out;
+}
+
 function _isRenderableLeaderboardUser(user, currentUid = null) {
   if (!user || typeof user !== 'object') return false;
   if (currentUid && user.id === currentUid) return true;
@@ -215,16 +229,16 @@ function subscribeLeaderboard(metric, range, callback) {
     if (fallbackUnsub) return;
     const fallbackQuery = query(col, where('showOnLeaderboard', '==', true), limit(500));
     fallbackUnsub = onSnapshot(fallbackQuery, (snap) => {
-      const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      callback(_sortAndFilterUsers(users, metric, range, currentUid).slice(0, 50), snap.metadata.fromCache);
+      const users = snap.docs.map((d) => ({ id: d.id, ..._normalizeDocData(d.data()) }));
+      _scheduleLeaderboardCallback(_sortAndFilterUsers(users, metric, range, currentUid).slice(0, 50), snap.metadata.fromCache, callback);
     }, (fallbackErr) => {
       console.warn('leaderboard fallback subscription error', fallbackErr);
     });
   };
 
   const unsub = onSnapshot(primaryQuery, (snap) => {
-    const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    callback(_sortAndFilterUsers(users, metric, range, currentUid).slice(0, 50), snap.metadata.fromCache);
+    const users = snap.docs.map((d) => ({ id: d.id, ..._normalizeDocData(d.data()) }));
+    _scheduleLeaderboardCallback(_sortAndFilterUsers(users, metric, range, currentUid).slice(0, 50), snap.metadata.fromCache, callback);
   }, (err) => {
     const code = err?.code || '';
     const isIndexIssue = code === 'failed-precondition' || code === 'invalid-argument';
@@ -239,6 +253,23 @@ function subscribeLeaderboard(metric, range, callback) {
     try { unsub?.(); } catch (e) {}
     try { fallbackUnsub?.(); } catch (e) {}
   };
+}
+
+// Throttle leaderboard UI callbacks to avoid rapid re-renders
+let _leaderboardCallbackTimer = null;
+let _leaderboardCallbackLast = null;
+function _scheduleLeaderboardCallback(users, fromCache, cb) {
+  _leaderboardCallbackLast = { users, fromCache };
+  if (_leaderboardCallbackTimer) return;
+  _leaderboardCallbackTimer = setTimeout(() => {
+    try {
+      const last = _leaderboardCallbackLast || { users: [], fromCache: true };
+      cb(last.users, last.fromCache);
+    } catch (e) { console.warn('leaderboard callback error', e); }
+    _leaderboardCallbackLast = null;
+    clearTimeout(_leaderboardCallbackTimer);
+    _leaderboardCallbackTimer = null;
+  }, 250);
 }
 
 window.Leaderboard = window.Leaderboard || {};
