@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#141214" />
+      <stop offset="1" stop-color="#0a0905" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)" />
+  <g transform="translate(56,56)">
+    <rect x="0" y="0" width="1088" height="518" rx="24" fill="rgba(255,255,255,0.02)" />
+    <text x="44" y="120" font-family="Space Grotesk, Inter, system-ui, sans-serif" font-size="64" fill="#FFB938" font-weight="700">Flux</text>
+    <text x="44" y="190" font-family="Inter, system-ui, sans-serif" font-size="28" fill="#f4eadb">Your productivity companion — Pomodoro, tasks, and focus stats</text>
+    <g transform="translate(44,260)">
+      <rect x="0" y="0" width="420" height="48" rx="8" fill="#f59e0b" opacity="0.14" />
+      <text x="22" y="34" font-family="Inter, system-ui, sans-serif" font-size="20" fill="#fff">Start focusing — join the leaderboard</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Flux social preview banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070705"/>
+      <stop offset="1" stop-color="#171209"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="18%" cy="16%" r="46%">
+      <stop offset="0" stop-color="#fbbf24" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="86%" cy="82%" r="42%">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="0.45" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(255,255,255,0.07)"/>
+      <stop offset="1" stop-color="rgba(255,255,255,0.03)"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <g opacity="0.55">
+    <circle cx="1028" cy="118" r="74" fill="rgba(245,158,11,0.1)"/>
+    <circle cx="1060" cy="92" r="22" fill="rgba(251,191,36,0.16)"/>
+    <circle cx="980" cy="154" r="30" fill="rgba(251,191,36,0.08)"/>
+  </g>
+
+  <rect x="54" y="54" width="1092" height="522" rx="34" fill="url(#panel)" stroke="rgba(245,158,11,0.24)" stroke-width="2"/>
+
+  <g transform="translate(96 94)">
+    <rect x="0" y="0" width="118" height="118" rx="34" fill="#100d08" stroke="rgba(245,158,11,0.42)" stroke-width="2"/>
+    <path d="M36 22h40l-14 26h17L42 96l12-30H32z" fill="url(#accent)"/>
+    <path d="M41 31h28l-9 17h11L47 79l7-18H40z" fill="#fff7dc" opacity="0.96"/>
+  </g>
+
+  <text x="242" y="154" fill="#fff8e7" font-family="Space Grotesk, Inter, sans-serif" font-size="78" font-weight="700" letter-spacing="-1.6">Flux</text>
+  <text x="100" y="250" fill="#fbbf24" font-family="Inter, sans-serif" font-size="22" letter-spacing="3.4">DEEP WORK MADE SIMPLE</text>
+  <text x="100" y="318" fill="#fef9ec" font-family="Space Grotesk, Inter, sans-serif" font-size="56" font-weight="700" letter-spacing="-0.7">Stay in flow, all day.</text>
+  <text x="100" y="372" fill="rgba(254,249,236,0.80)" font-family="Inter, sans-serif" font-size="29">Pomodoro, tasks, ambient sounds, stats, and challenges in one focused workspace.</text>
+
+  <g transform="translate(100 430)">
+    <g>
+      <rect x="0" y="0" width="198" height="56" rx="28" fill="rgba(245,158,11,0.12)" stroke="rgba(245,158,11,0.28)"/>
+      <text x="24" y="36" fill="#fef9ec" font-family="Inter, sans-serif" font-size="24" font-weight="600">Pomodoro</text>
+    </g>
+    <g transform="translate(212 0)">
+      <rect x="0" y="0" width="164" height="56" rx="28" fill="rgba(255,255,255,0.05)" stroke="rgba(245,158,11,0.2)"/>
+      <text x="24" y="36" fill="#fef9ec" font-family="Inter, sans-serif" font-size="24" font-weight="600">Tasks</text>
+    </g>
+    <g transform="translate(388 0)">
+      <rect x="0" y="0" width="220" height="56" rx="28" fill="rgba(255,255,255,0.05)" stroke="rgba(245,158,11,0.2)"/>
+      <text x="24" y="36" fill="#fef9ec" font-family="Inter, sans-serif" font-size="24" font-weight="600">Ambient sounds</text>
+    </g>
+    <g transform="translate(620 0)">
+      <rect x="0" y="0" width="148" height="56" rx="28" fill="rgba(255,255,255,0.05)" stroke="rgba(245,158,11,0.2)"/>
+      <text x="24" y="36" fill="#fef9ec" font-family="Inter, sans-serif" font-size="24" font-weight="600">Stats</text>
+    </g>
+  </g>
+
+  <g transform="translate(760 198)">
+    <rect x="0" y="0" width="332" height="258" rx="26" fill="rgba(8,7,5,0.55)" stroke="rgba(245,158,11,0.24)"/>
+    <rect x="22" y="22" width="120" height="18" rx="9" fill="rgba(255,255,255,0.1)"/>
+    <rect x="22" y="60" width="288" height="16" rx="8" fill="rgba(255,255,255,0.08)"/>
+    <rect x="22" y="86" width="210" height="16" rx="8" fill="rgba(255,255,255,0.08)"/>
+    <rect x="22" y="120" width="288" height="72" rx="18" fill="rgba(245,158,11,0.12)" stroke="rgba(245,158,11,0.22)"/>
+    <circle cx="54" cy="156" r="16" fill="url(#accent)"/>
+    <rect x="82" y="144" width="174" height="14" rx="7" fill="rgba(255,255,255,0.9)"/>
+    <rect x="82" y="166" width="128" height="10" rx="5" fill="rgba(255,255,255,0.5)"/>
+    <rect x="22" y="208" width="84" height="28" rx="14" fill="rgba(255,255,255,0.06)"/>
+    <rect x="116" y="208" width="84" height="28" rx="14" fill="rgba(255,255,255,0.06)"/>
+    <rect x="210" y="208" width="100" height="28" rx="14" fill="rgba(245,158,11,0.18)"/>
+  </g>
+
+  <text x="100" y="548" fill="rgba(254,249,236,0.56)" font-family="Inter, sans-serif" font-size="20">Focus tools for productive days</text>
+</svg>

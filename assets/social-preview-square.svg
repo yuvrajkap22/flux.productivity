@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-label="Flux social preview square">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#090705"/>
+      <stop offset="1" stop-color="#171005"/>
+    </linearGradient>
+    <radialGradient id="orb" cx="30%" cy="20%" r="50%">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#bg)"/>
+  <rect width="1200" height="1200" fill="url(#orb)"/>
+  <rect x="70" y="70" width="1060" height="1060" rx="56" fill="rgba(255,255,255,0.02)" stroke="rgba(245,158,11,0.26)" stroke-width="2"/>
+
+  <g transform="translate(190 170)">
+    <rect x="0" y="0" width="180" height="180" rx="50" fill="#0f0c06" stroke="rgba(245,158,11,0.45)" stroke-width="3"/>
+    <path d="M54 32h64l-22 40h26L64 154l20-46H48z" fill="url(#gold)"/>
+    <path d="M62 46h44l-15 27h18L72 126l11-25H61z" fill="#fff2cc" opacity="0.95"/>
+  </g>
+
+  <text x="410" y="293" fill="#fff6e2" font-family="Space Grotesk, Inter, sans-serif" font-size="130" font-weight="700" letter-spacing="-2">Flux</text>
+  <text x="190" y="430" fill="#fbbf24" font-family="Inter, sans-serif" font-size="44" letter-spacing="4">VERSION 2.0</text>
+  <text x="190" y="540" fill="#fef9ec" font-family="Space Grotesk, Inter, sans-serif" font-size="88" font-weight="700" letter-spacing="-1.2">Focus. Track.</text>
+  <text x="190" y="630" fill="#fef9ec" font-family="Space Grotesk, Inter, sans-serif" font-size="88" font-weight="700" letter-spacing="-1.2">Achieve.</text>
+
+  <text x="190" y="740" fill="rgba(254,249,236,0.78)" font-family="Inter, sans-serif" font-size="42">Pomodoro • Tasks • Sounds • Stats • Challenges</text>
+
+  <g transform="translate(190 810)">
+    <rect x="0" y="0" width="320" height="74" rx="37" fill="rgba(245,158,11,0.12)" stroke="rgba(245,158,11,0.35)"/>
+    <text x="40" y="47" fill="#fef9ec" font-family="Inter, sans-serif" font-size="34" font-weight="600">Firebase Auth</text>
+
+    <rect x="340" y="0" width="356" height="74" rx="37" fill="rgba(245,158,11,0.12)" stroke="rgba(245,158,11,0.35)"/>
+    <text x="380" y="47" fill="#fef9ec" font-family="Inter, sans-serif" font-size="34" font-weight="600">Profile Avatars</text>
+  </g>
+
+  <text x="190" y="1024" fill="rgba(254,249,236,0.56)" font-family="Inter, sans-serif" font-size="32">github.com/yuvrajkapoor/flux-productivity</text>
+</svg>
