@@ -72,6 +72,10 @@
     badge.textContent = liveUsers.length > 0 ? `${liveUsers.length} LIVE` : 'IDLE';
     badge.classList.toggle('live', liveUsers.length > 0);
     badge.classList.toggle('idle', liveUsers.length === 0);
+    // accessibility: announce changes to the badge
+    badge.setAttribute('role', 'status');
+    badge.setAttribute('aria-live', 'polite');
+    badge.setAttribute('aria-atomic', 'true');
 
     list.replaceChildren();
     if (!users || users.length === 0) {
@@ -182,7 +186,11 @@
     const heading = document.createElement('div'); heading.className = 'leaderboard-heading';
     const h = document.createElement('h1'); h.textContent = 'Leaderboard';
     const subtitle = document.createElement('div'); subtitle.className = 'leaderboard-subtitle'; subtitle.textContent = 'Global focus race for active users';
+    subtitle.id = 'leaderboard-subtitle';
     const badge = document.createElement('div'); badge.className = 'leaderboard-badge'; badge.textContent = 'LIVE';
+    badge.setAttribute('role', 'status');
+    badge.setAttribute('aria-live', 'polite');
+    badge.setAttribute('aria-atomic', 'true');
     heading.appendChild(h); heading.appendChild(subtitle);
     titleWrap.appendChild(heading); titleWrap.appendChild(badge);
 
@@ -195,6 +203,7 @@
     const ranges = [ { key: 'today', label: 'Today' }, { key: 'week', label: 'This Week' }, { key: 'month', label: 'This Month' } ];
     ranges.forEach(r => {
       const t = document.createElement('button'); t.className = 'tab'; t.type = 'button'; t.dataset.leaderRange = r.key; t.textContent = r.label; t.setAttribute('aria-label', `Range ${r.label}`); tabs.appendChild(t);
+      t.setAttribute('tabindex', '0');
     });
 
     const metrics = [
@@ -205,6 +214,7 @@
     const metricGroup = document.createElement('div'); metricGroup.className = 'leaderboard-tabs';
     metrics.forEach((m) => {
       const btn = document.createElement('button'); btn.className = 'tab'; btn.type = 'button'; btn.dataset.leaderMetric = m.key; btn.textContent = m.label; btn.setAttribute('aria-label', `Metric ${m.label}`); metricGroup.appendChild(btn);
+      btn.setAttribute('tabindex', '0');
     });
 
     const cta = document.createElement('button'); cta.className = 'leaderboard-cta'; cta.type = 'button'; cta.textContent = 'Sign in to compete';

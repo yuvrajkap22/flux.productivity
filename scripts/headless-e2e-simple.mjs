@@ -9,11 +9,16 @@ const PROJECT_ID = process.env.FIREBASE_PROJECT || 'flux-productivity-39c09';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchJson(url, opts = {}) {
-  const res = await fetch(url, opts);
-  const text = await res.text();
-  let body = null;
-  try { body = text ? JSON.parse(text) : {}; } catch (e) { body = { raw: text }; }
-  return { res, body };
+  try {
+    const res = await fetch(url, opts);
+    const text = await res.text();
+    let body = null;
+    try { body = text ? JSON.parse(text) : {}; } catch (e) { body = { raw: text }; }
+    return { res, body };
+  } catch (err) {
+    console.error('Network error fetching', url, err && err.stack || err);
+    return { res: null, body: null };
+  }
 }
 
 (async function main() {
