@@ -62,7 +62,45 @@
     }
 
     .flux-loader-panel {
-      <!-- Sidebar removed: topbar navigation used instead -->
+      /* Sidebar removed: topbar navigation used instead */
+    }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.classList.add('flux-loading');
+      var domReadyAt = Date.now();
+      var pageLoaded = false;
+      var authReady = false;
+      var hidden = false;
+
+      var hideLoader = function () {
+        if (hidden) return;
+        hidden = true;
+        var loader = document.getElementById('flux-page-loader');
+        if (!loader) {
+          document.body.classList.remove('flux-loading');
+          return;
+        }
+
+        loader.classList.add('is-hidden');
+        window.setTimeout(function () {
+          loader.remove();
+          document.body.classList.remove('flux-loading');
+        }, 460);
+      };
+
+      var maybeHide = function () {
+        if (!pageLoaded || !authReady) return;
+
+        var minVisibleMs = 900;
+        var elapsed = Date.now() - domReadyAt;
+        var delay = Math.max(0, minVisibleMs - elapsed);
+        window.setTimeout(hideLoader, delay);
+      };
+
+      window.addEventListener('load', function () {
+        pageLoaded = true;
+        maybeHide();
 
         // In case auth does not emit, fail open to keep the app accessible.
         window.setTimeout(hideLoader, 3500);
