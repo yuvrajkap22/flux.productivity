@@ -26,7 +26,7 @@ jobs:
 
       - name: Start Firebase emulators (auth, firestore)
         run: |
-          nohup npx firebase emulators:start --only auth,firestore --project flux-productivity-39c09 --export-on-exit &>/tmp/firebase-emulators.log &
+          nohup npx firebase emulators:start --only auth,firestore --project flux-productivity-39c09 &>/tmp/firebase-emulators.log &
           # wait for Firestore emulator to be ready
           npx wait-on http://127.0.0.1:8080 || (sleep 3 && npx wait-on http://127.0.0.1:8080)
 
