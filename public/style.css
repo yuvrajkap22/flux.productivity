@@ -398,6 +398,26 @@ body.sounds-muted .icon-speaker-off { display: block; }
   width: 100%; text-align: left; white-space: nowrap;
   transition: all 0.2s var(--ease);
 }
+
+/* Accessible focus styles */
+:where(button, a, .tab, .nav-item, .header-icon-btn, .sidebar-close-btn):focus {
+  outline: none;
+}
+:where(button, a, .tab, .nav-item, .header-icon-btn, .sidebar-close-btn):focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  border-color: var(--border-hover);
+  background: rgba(255,255,255,0.02);
+  transition: box-shadow 0.12s ease;
+}
+
+/* Ensure keyboard users can see interactive elements */
+.tab { outline: none; }
+.tab:focus-visible { box-shadow: 0 0 0 3px rgba(255, 184, 56, 0.18); }
+.leaderboard-cta:focus-visible { box-shadow: 0 0 0 3px rgba(34, 211, 160, 0.14); }
+
+/* Improve contrast for small text in mini list */
+.mini-row { color: var(--text); }
+.mini-row .initials { background: rgba(255,255,255,0.04); }
 .nav-item:hover { color: var(--text); background: rgba(255, 255, 255, 0.03); }
 .nav-item.active {
   color: var(--text); background: linear-gradient(135deg, var(--accent-subtle), rgba(255, 255, 255, 0.03));

@@ -9,15 +9,32 @@ const PROJECT_ID = process.env.FIREBASE_PROJECT || 'flux-productivity-39c09';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchJson(url, opts = {}) {
-  try {
-    const res = await fetch(url, opts);
-    const text = await res.text();
-    let body = null;
-    try { body = text ? JSON.parse(text) : {}; } catch (e) { body = { raw: text }; }
-    return { res, body };
-  } catch (err) {
-    console.error('Network error fetching', url, err && err.stack || err);
-    return { res: null, body: null };
+  const attempts = Number(opts.attempts) || 3;
+  const timeoutMs = Number(opts.timeoutMs) || 5000;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...opts, signal: controller.signal });
+      clearTimeout(id);
+      const text = await res.text();
+      let body = null;
+      try { body = text ? JSON.parse(text) : {}; } catch (e) { body = { raw: text }; }
+      return { res, body };
+    } catch (err) {
+      clearTimeout(id);
+      const isAbort = err && err.name === 'AbortError';
+      console.warn(`fetchJson attempt ${attempt}/${attempts} failed for ${url}:`, isAbort ? 'timeout' : (err && err.message));
+      if (attempt < attempts) {
+        // exponential backoff
+        const backoff = 200 * Math.pow(2, attempt - 1);
+        await sleep(backoff);
+        continue;
+      }
+      console.error('Network error fetching', url, err && err.stack || err);
+      return { res: null, body: null };
+    }
   }
 }
 
